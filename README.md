@@ -26,13 +26,9 @@ bun prisma db seed
 ```
 
 The default credentials for the user is:
-<p align="center">
-
   | email    | admin@admin.com |
   |----------|-----------------|
   | password | 123             |
-
-<p>
 
 Start the Development Server (Turbopack)
 ```
