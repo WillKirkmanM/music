@@ -1,5 +1,7 @@
 use actix_web::http::header;
 use actix_web::{ HttpResponse, get, Responder, web };
+use tokio::fs;
+use std::os::windows::fs::MetadataExt;
 use std::time::Instant;
 use std::sync::{ Arc, Mutex };
 use std::fs::File;
@@ -91,15 +93,20 @@ async fn stream_song(path: web::Path<(String, u64)>) -> impl Responder {
 
     // let song = "C:\\Users\\willi\\Documents\\Lawliet\\Music\\Kendrick Lamar - Discography (2009 - 2022) [FLAC] vtwin88cube\\2015 - To Pimp A Butterfly\\12.- Complexion (A Zulu Love).flac";
 
-    let bitrate = 1000;
+    let file = fs::metadata(song).await.unwrap();
+    let song_file_size = file.len();
+
+    let duration = Tag::new().read_from_path(song).unwrap().duration().unwrap().round() as u64;
+
+    let bitrate = song_file_size * 8 / duration / 1000; // convert bytes to kilobits
 
     let start = 0;
-    let end = seconds * bitrate * 1000 / 8; // convert seconds to bytes
+    let end = (seconds * bitrate * 1000 / 8) as usize; // convert seconds to bytes
 
     let mut file = File::open(song).unwrap();
-    file.seek(SeekFrom::Start(start)).unwrap();
-    let mut buffer = vec![0; end as usize];
-    file.read_exact(&mut buffer).unwrap();
+    file.seek(SeekFrom::Start(start as u64)).unwrap();
+    let mut buffer = vec![0; end];
+    file.read(&mut buffer).unwrap();
 
     HttpResponse::PartialContent()
         .append_header((header::CONTENT_TYPE, "audio/flac"))
