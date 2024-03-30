@@ -1,10 +1,13 @@
+import Image from "next/image"
 import { Slider } from "../ui/slider"
 
 export default function Player() {
   return (
 <footer className="fixed bottom-0 bg-gray-600 border-t border-gray-700 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 w-full">
   <section className="flex items-center gap-3">
-    <div className="w-24 h-20 bg-gray-500 rounded-md"></div>
+    <div className="w-20 h-20 bg-gray-500 rounded-md">
+      <Image alt="Return of the Mack Cover" src="https://m.media-amazon.com/images/I/71U4T6RxDBS._UF1000,1000_QL80_.jpg" width={334} height={332}/>
+    </div>
       <div>
         <p className="whitespace-nowrap">Return of the Mack</p>
         <p className="text-xs text-gray-400">Mark Morrison</p>
