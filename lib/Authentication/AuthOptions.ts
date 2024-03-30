@@ -1,5 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import prisma from '@/prisma/prisma';
+import { User } from '@prisma/client';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 
@@ -43,6 +44,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
+          username: user.username
         };
       },
     }),
@@ -50,10 +52,11 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     jwt: ({ token, user }) => {
       if (user) {
-        const u = user as unknown as any;
+        const u: User & { randomKey: string } = user as User & { randomKey: string };
         return {
           ...token,
           id: u.id,
+          username: u.username,
           randomKey: u.randomKey,
         };
       }
@@ -65,6 +68,7 @@ export const authOptions: NextAuthOptions = {
         user: {
           ...params.session.user,
           id: params.token.id as string,
+          username: params.token.username,
           randomKey: params.token.randomKey,
         },
       };
