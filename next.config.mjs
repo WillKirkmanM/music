@@ -7,7 +7,17 @@ const nextConfig = {
         hostname: "m.media-amazon.com",
       }
     ]
+  },
+
+  /*
+  typescript: {
+    ignoreBuildErrors: true
+  },
+
+  eslint: {
+    ignoreDuringBuilds: true
   }
+  */
 };
 
 export default nextConfig;
