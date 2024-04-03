@@ -80,7 +80,6 @@ export function usePlayer(audioSource: string) {
   }
   function stepBack() {
     let audio = audioRef.current || new Audio()
-    console.log("CURRENT AUDIO", audio.currentTime)
     setTimeout(() => {
       audio.currentTime -= 1
     }, 200)
@@ -90,7 +89,6 @@ export function usePlayer(audioSource: string) {
     const audio = audioRef.current;
     if (audio) {
       audio.addEventListener('timeupdate', handleTimeUpdate);
-
         const handleKeyPress = (event: KeyboardEvent) => {
           switch (event.key.toLocaleLowerCase()) {
             case " ":
