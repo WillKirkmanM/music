@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { useSession } from "next-auth/react"
 import { SessionProvider } from "next-auth/react"
 import { signIn, signOut } from "next-auth/react"
+import Link from "next/link"
 
 export default function ClientAuth() {
   return (
@@ -20,14 +21,27 @@ export function AuthButtons() {
 
   return (
     <>
-      {session ? (
+      {session.status == "authenticated" ? (
         <>
+        <div className="flex flex-row justify-center">
           <Button onClick={() => signIn()}>Sign In</Button>
           <Button onClick={() => signOut()}>Sign Out</Button>
+          <Link href="/settings">
+            <p className="text-white">Settings</p>
+          </Link>
+        </div>
         </>
-        ) : (
-          <Button onClick={() => "/register"}>Register</Button>
-        )}
+      ) : (
+        <>
+        <div className="flex flex-row justify-center">
+          <Button onClick={() => signIn()}>Sign In</Button>
+          <Button onClick={() => signOut()}>Sign Out</Button>
+          <Link href="/register">
+            <p className="text-white">Register</p>
+          </Link>
+        </div>
+        </>
+      )}
     </>
   )
 }
