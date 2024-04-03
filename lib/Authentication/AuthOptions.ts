@@ -3,6 +3,7 @@ import prisma from '@/prisma/prisma';
 import { User } from '@prisma/client';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
+import argon2 from "argon2"
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
@@ -12,32 +13,24 @@ export const authOptions: NextAuthOptions = {
       name: 'Sign in',
       id: 'credentials',
       credentials: {
-        email: {
-          label: 'Email',
-          type: 'email',
-          placeholder: 'example@example.com',
-        },
+        username: { label: 'Username', type: 'username', placeholder: 'tonybraxton' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials.password) {
-          return null; // validate
+        if (credentials == undefined) return null
+        if (!credentials.username|| !credentials.password) {
+          return null;
         }
 
-        console.log("Looking for user in prisma db")
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.findFirst({
           where: {
-            email: String(credentials.email),
+            username: credentials.username,
           },
         });
-        console.log("FOUND USER? ", user)
 
-        if (
-          !user ||
-          // !(await crypto.compare(String(credentials.password), user.password!))
-          !user
-        ) {
-          return null;
+        let passwordVerified = await argon2.verify(user!.password, credentials.password)
+        if (!user || !passwordVerified) {
+          return null
         }
 
         return {
