@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { signIn } from "next-auth/react"
 
 const registerSchema = z.object({
   username: z.string().min(1, { message: "Username must be longer than 1 character" }),
@@ -41,7 +42,15 @@ async function onSubmit(values: z.infer<typeof registerSchema>) {
         password: values.password,
       }),
     });
-    console.log("Sent the request", response)
+
+    if (response.ok) {
+      await signIn("credentials", {
+        username: values.username,
+        password: values.password,
+        redirect: true,
+        callbackUrl: "/"
+      })
+    }
 
     if (!response.ok) {
       throw new Error('Response was not ok');
