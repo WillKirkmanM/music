@@ -90,7 +90,7 @@ export default function Player() {
         <button>Devices</button>
         <div className="flex items-center gap-1 flex-grow">
           <button onClick={toggleMute}>
-            {muted ? <SpeakerXMark /> : <SpeakerWave />}
+            {muted || !volume ? <SpeakerXMark /> : <SpeakerWave />}
           </button>
           <input type="range" className="h-0.1 w-full" value={volume * 100} min={0} max={100} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAudioVolume(e.target.value)} />
         </div>
