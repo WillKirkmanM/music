@@ -11,20 +11,30 @@ import { Slider } from "../ui/slider"
 import ArrowPath from "../Icons/ArrowPath"
 import SpeakerXMark from "../Icons/SpeakerXMark"
 import SpeakerWave from "../Icons/SpeakerWave"
+import { usePlayer } from "./usePlayer"
 
 export default function Player() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [onLoop, setOnLoop] = useState(false)
   const [liked, setLiked] = useState(false)
   const [lineHovered, setLineHovered] = useState(false)
-  const [muted, setMuted] = useState(false)
-  const [volume, setVolume] = useState(100)
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  
+
   const audioSource = "/More Than a Woman.mp3"
+  const {
+  isPlaying,
+  onLoop,
+  volume,
+  currentTime,
+  duration,
+  togglePlayPause,
+  toggleLoopSong,
+  muted,
+  setAudioVolume,
+  handleTimeChange,
+  handleTimeUpdate,
+  toggleMute,
+} = usePlayer(audioSource)
+
   
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
@@ -32,114 +42,7 @@ export default function Player() {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
   
-  const toggleLoopSong = useCallback(() => {
-    const audio = audioRef.current || new Audio()
-    audio.loop = !onLoop 
-    setOnLoop(!onLoop)
-  }, [onLoop])
 
-  const toggleMute = useCallback(() => {
-    const audio = audioRef.current || new Audio()
-    audio.muted = !muted
-    setMuted(!muted)  
-  }, [muted])
-  
-  function setAudioVolume(value: string) {
-    let volume = parseFloat(value) / 100
-
-    let audio = audioRef.current || new Audio()
-    audio.volume = volume
-
-    setVolume(volume)
-  }
-
-  function handleTimeChange(value: string) {
-    let newTime = parseFloat(value)
-
-    let audio = audioRef.current || new Audio()
-    audio.currentTime = newTime
-    setCurrentTime(newTime)
-  }
-  
-  const togglePlayPause = useCallback(() => {
-    const audio = audioRef.current;
-    setTimeout(() => {
-      if (audio) {
-        if (isPlaying) {
-          audio.pause();
-        } else {
-          audio.play();
-        }
-        setIsPlaying(!isPlaying);
-      };
-    }, 100)
-  }, [isPlaying])
-  
-  const handleTimeUpdate = useCallback(() => {
-    const audio = audioRef.current || new Audio();
-    setCurrentTime(audio.currentTime);
-    setDuration(audio.duration);
-  }, []);
-  
-  
-  const handleTimeUpdateThrottled = useCallback(() => {
-      setTimeout(() => {
-        handleTimeUpdate()
-      }, 1000)
-    }, [handleTimeUpdate])
-    
-    useEffect(() => {
-      const audio = audioRef.current || new Audio() ;
-      
-      audio.addEventListener('timeupdate', handleTimeUpdateThrottled);
-      
-      function stepForward() {
-        let audio = audioRef.current || new Audio()
-        console.log("CURRENT AUDIO", audio.currentTime)
-        setTimeout(() => {
-          audio.currentTime += 1
-        }, 200)
-      }
-      function stepBack() {
-        let audio = audioRef.current || new Audio()
-        console.log("CURRENT AUDIO", audio.currentTime)
-        setTimeout(() => {
-          audio.currentTime -= 1
-        }, 200)
-      }
-
-      function handleKeyPress(event: KeyboardEvent) {
-        switch (event.key.toLocaleLowerCase()) {
-          case " ":
-            togglePlayPause()
-            break
-          case "m":
-            toggleMute()
-            break
-          case "l":
-            toggleLoopSong()
-            break
-          }
-        }
-        
-        function handleKeyUp(event: KeyboardEvent) {
-          switch (event.key.toLowerCase()) {
-            case "arrowleft":
-              stepBack()
-              break
-            case "arrowright":
-              stepForward()
-              break
-          }
-        }
-
-      document.addEventListener("keydown", handleKeyPress)
-      document.addEventListener("keyup", handleKeyUp)
-        
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdateThrottled);
-    };
-  }, [handleTimeUpdateThrottled, togglePlayPause, currentTime, toggleLoopSong, toggleMute]);
 
   return (
     <footer className="fixed bottom-0 bg-gray-600 border-t border-gray-700 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 w-full">
