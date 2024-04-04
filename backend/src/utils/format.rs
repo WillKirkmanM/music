@@ -1,7 +1,7 @@
 use regex::Regex;
 
 pub fn format_contributing_artists(artists: Vec<String>) -> Vec<(String, Vec<String>)> {
-  let re = Regex::new(r"(?i)(&|featuring|ft|with|feat\.?|and|presents|\u{0000}|,|vs\.?|x)").unwrap();
+  let re = Regex::new(r"(?i)(&|featuring|ft|with|Feat|feat\.?|and|presents|\u{0000}|,|vs\.?|x)").unwrap();
 
   let mut formatted_artists = Vec::new();
 
