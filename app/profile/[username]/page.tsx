@@ -1,7 +1,8 @@
-import Profile from "@/components/User/Settings"
 import prisma from "@/prisma/prisma"
 import { User } from "@prisma/client"
 import { redirect } from "next/navigation"
+import Image from "next/image"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 type UsernamePageParams = {
   params: {
@@ -15,24 +16,28 @@ export default async function UsernamePage({ params }: UsernamePageParams) {
       username: params.username,
     },
   });
+
   return (
-    <>
+    <div className="flex items-center justify-center h-screen">
       {user ? (
-        <>
-        <div>
-          <h1>User Details</h1>
-          {Object.entries(user as User).map(([key, value]) => (
-            <p key={key}>
-              <strong>{key}:</strong> {String(value)}
-            </p>
-          ))}
+        <div className="text-center">
+          {user.image ? (
+            <Image src={user.image} alt=""/>
+          ) : (
+            <Avatar>
+              <AvatarFallback>
+                {user.username.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          )}
+
+          <p className="text-lg">{user.name}</p>
+          <p>@{user.username}</p>
+          
         </div>
-        
-        <Profile user={user} />
-        </>
       ) : (
         redirect("/404")
       )}
-    </>
-  );
+    </div>
+);
 }
