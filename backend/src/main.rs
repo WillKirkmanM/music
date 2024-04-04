@@ -3,6 +3,7 @@ mod structures;
 mod utils;
 
 use actix_web::{HttpServer, App};
+use std::env;
 
 use routes::music::{
     songs_list,
@@ -11,7 +12,7 @@ use routes::music::{
     format_contributing_artists_route
 };
 
-use tracing::Level;
+use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 
 #[actix_web::main]
@@ -22,6 +23,21 @@ async fn main() -> std::io::Result<()> {
     tracing::subscriber::set_global_default(subscriber)
         .expect("setting default subscriber failed");
 
+    let mut port = 3001; // Default port
+
+    let args: Vec<String> = env::args().collect();
+    for i in 0..args.len() {
+        if args[i] == "-p" || args[i] == "--port" {
+            if i + 1 < args.len() {
+                port = args[i + 1].parse().unwrap_or(3001);
+            }
+            break;
+        }
+    }
+
+
+    info!("Starting server on port {}", port); 
+
     HttpServer::new(|| {
         App::new()
             .service(songs_list)
@@ -29,7 +45,7 @@ async fn main() -> std::io::Result<()> {
             .service(stream_song)
             .service(format_contributing_artists_route)
     })
-    .bind(("127.0.0.1", 3001))?
+    .bind(("127.0.0.1", port))?
     .run()
     .await
 }
