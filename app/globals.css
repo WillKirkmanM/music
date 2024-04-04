@@ -6,6 +6,7 @@
 
   .slider::-webkit-slider-runnable-track {
     transform: translateX(-6px); 
+    background-color: gray-300;  
     height: 3px;                 
     border-radius: 2px;          
   }
@@ -41,6 +42,7 @@
 
   .slider::-webkit-progress-bar {
     background-color: black;
+    height: 4px;
   }
 
   .slider::-moz-range-progress {
