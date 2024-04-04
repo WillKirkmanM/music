@@ -7,7 +7,6 @@ import IconPause from "../Icons/Pause"
 import IconPlay from "../Icons/Play"
 import PlusCircle from "../Icons/PlusCircle"
 import CheckCircle from "../Icons/CheckCircle"
-import { Slider } from "../ui/slider"
 import ArrowPath from "../Icons/ArrowPath"
 import SpeakerXMark from "../Icons/SpeakerXMark"
 import SpeakerWave from "../Icons/SpeakerWave"
@@ -21,29 +20,26 @@ export default function Player() {
 
   const audioSource = "/More Than a Woman.mp3"
   const {
-  isPlaying,
-  onLoop,
-  volume,
-  currentTime,
-  duration,
-  togglePlayPause,
-  toggleLoopSong,
-  muted,
-  setAudioVolume,
-  handleTimeChange,
-  handleTimeUpdate,
-  toggleMute,
-} = usePlayer(audioSource)
+    isPlaying,
+    onLoop,
+    volume,
+    currentTime,
+    duration,
+    togglePlayPause,
+    toggleLoopSong,
+    muted,
+    setAudioVolume,
+    handleTimeChange,
+    handleTimeUpdate,
+    toggleMute,
+  } = usePlayer(audioSource)
 
-  
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
   
-
-
   return (
     <footer className="fixed bottom-0 bg-gray-600 border-t border-gray-700 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 w-full">
       <section className="flex items-center gap-3">
