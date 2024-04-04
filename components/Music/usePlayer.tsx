@@ -14,6 +14,17 @@ export function usePlayer(audioSource: string) {
     audioRef.current = new Audio(audioSource);
   }, [audioSource]);
 
+  const playAudioSource = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.src = audioSource;
+      audio.play();
+      setIsPlaying(true);
+    }
+  }, [audioSource]);
+
   const toggleMute = useCallback(() => {
     const audio = audioRef.current || new Audio()
     audio.muted = !muted
@@ -89,6 +100,7 @@ export function usePlayer(audioSource: string) {
     const audio = audioRef.current;
     if (audio) {
       audio.addEventListener('timeupdate', handleTimeUpdate);
+        
         const handleKeyPress = (event: KeyboardEvent) => {
           switch (event.key.toLocaleLowerCase()) {
             case " ":
@@ -114,7 +126,7 @@ export function usePlayer(audioSource: string) {
             }
           }
 
-          document.addEventListener("keydown", handleKeyPress)
+        document.addEventListener("keydown", handleKeyPress)
         document.addEventListener("keyup", handleKeyUp)
           
       return () => {
@@ -126,6 +138,7 @@ export function usePlayer(audioSource: string) {
   }, [handleTimeUpdate, handleTimeUpdateThrottled, toggleLoopSong, toggleMute, togglePlayPause]);
 
   return {
+    playAudioSource,
     isPlaying,
     onLoop,
     volume,
