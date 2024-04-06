@@ -11,7 +11,7 @@ bun install
 ```
 Create the Database, this command generates the types in the prisma client so you have intellisense in your IDE.
 ```
-bun generate
+npx turbo run generate --scope music
 ```
 
 If you make any changes to `prisma/schema.prisma`, run this command along with the `bun generate` command. This will make sure all changes are reflected in the database.
