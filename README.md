@@ -3,8 +3,7 @@ The self-hosted solution to music streaming.
 
 ## Get Started
 ### For Developers
-[!NOTE]
-We are using an SQLite database so there is no need to externally host a database. 
+> We are using an SQLite database so there is no need to externally host a database. 
 
 Install Dependencies
 ```bash
@@ -26,13 +25,18 @@ bun prisma db seed
 ```
 
 The default credentials for the user is:
-  | email    | admin@admin.com |
+  | username | admin |
   |----------|-----------------|
-  | password | 123             |
+  | password | password |
 
 Start the Development Server (Turbopack)
 ```
-bun run dev
+turbo run dev
+```
+
+Run only frontend package
+```
+turbo run dev --filter music
 ```
 
 You should be able to access the server at `http://localhost:3000`
