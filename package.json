@@ -5,7 +5,12 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+
+    "generate": "prisma generate",
+    "push": "prisma db push",
+    "studio": "npx prisma studio",
+    "migrate": "prisma migrate dev"
   },
   "devDependencies": {
     "prettier": "^3.2.5",
