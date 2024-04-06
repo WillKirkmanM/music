@@ -9,9 +9,9 @@ async function main() {
     where: { email: 'admin@admin.com' },
     update: {},
     create: {
-      email: 'admin@admin.com',
+      username: 'admin',
       name: 'Admin',
-      password: "123"
+      password: "password"
     },
   });
   console.log({ user });
