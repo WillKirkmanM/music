@@ -12,6 +12,10 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "generate": {
+      "dependsOn": [],
+      "outputs": ["@prisma/client"]
     }
   }
 }
