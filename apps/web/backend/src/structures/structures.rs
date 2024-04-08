@@ -9,6 +9,7 @@ pub struct Artist {
 #[derive(Serialize, Deserialize)]
 pub struct Album {
     pub name: String,
+    pub cover_url: String,
     pub songs: Vec<Song>,
 }
 
