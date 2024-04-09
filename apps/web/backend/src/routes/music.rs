@@ -1,5 +1,6 @@
 use actix_web::http::header;
 use actix_web::{ HttpResponse, get, Responder, web };
+use reqwest::StatusCode;
 use tokio::fs;
 use std::time::Instant;
 use std::sync::{ Arc, Mutex };
@@ -8,8 +9,10 @@ use std::io::{Read, SeekFrom, Seek};
 
 use walkdir::WalkDir;
 use audiotags::Tag;
-use tracing::info;
+use tracing::{info, warn};
 use rayon::prelude::*;
+use tokio::time::{sleep, Duration};
+
 use crate::structures::structures::{Album, Artist, Song};
 use crate::utils::format::format_contributing_artists;
 
@@ -89,7 +92,7 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
         let album = if let Some(album_position) = album_position {
             &mut artist.albums[album_position]
         } else {
-            let new_album = Album { name: album_name.clone(), songs: Vec::new() };
+            let new_album = Album { name: album_name.clone(), songs: Vec::new(), cover_url: String::new() };
             artist.albums.push(new_album);
             artist.albums.sort_by(|a, b| a.name.cmp(&b.name));
             artist.albums.last_mut().unwrap()
@@ -99,12 +102,117 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
         album.songs.sort_by(|a, b| a.track_number.cmp(&b.track_number));
     });
 
-    let elapsed = now.elapsed().as_millis();
-
-    info!("Finished Indexing Library in {}ms", elapsed);
-
     let mut library = library.lock().unwrap();
     library.sort_by(|a, b| a.name.cmp(&b.name));
+    let elapsed = now.elapsed().as_millis();
+
+    let client = reqwest::Client::builder()
+            .user_agent("ParsonLabsMusic/0.1 (will@parsonlabs.com)")
+            .build()
+            .unwrap();
+
+    // Adding metadata from musicbrainz
+    let total_album_count: usize = library.iter().map(|artist| artist.albums.len()).sum();
+    info!("Searching cover art for {} albums...", total_album_count);
+
+    for artist in library.iter_mut() {
+        for album in &mut artist.albums {
+            let url = format!("https://musicbrainz.org/ws/2/release/?query=artist:\"{}\" AND release:\"{}\" AND status:\"Official\"&fmt=json", artist.name, album.name);
+            let response = client.get(&url).send().await;
+    
+            match response {
+                Ok(response) => {
+                    let body = response.text().await.unwrap();
+                    let v: serde_json::Value = serde_json::from_str(&body).unwrap_or("[]".into());
+    
+                    if let Some(albums) = v["releases"].as_array() {
+                        for first_album in albums {
+                            let album_id = first_album["id"].as_str().unwrap();
+    
+                            let cover_art_url = format!("http://coverartarchive.org/release/{}", album_id);
+                            let cover_art_response = client.get(&cover_art_url).send().await;
+    
+                            match cover_art_response {
+                                Ok(cover_art_response) => {
+                                    if cover_art_response.status().is_success() {
+                                        let cover_art_body = cover_art_response.text().await.unwrap();
+                                        let cover_art: serde_json::Value = serde_json::from_str(&cover_art_body).unwrap();
+    
+                                        if let Some(images) = cover_art["images"].as_array() {
+                                            if let Some(first_image) = images.get(0) {
+                                                if let Some(image_url) = first_image["image"].as_str() {
+                                                    album.cover_url = image_url.to_string();
+                                                    info!("Cover art found for Album: {}", album.name);
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        warn!("Cover art for album {} could not be found initially, alternative art will be searched.", album.name);
+                                    }
+                                },
+                                Err(e) => {
+                                    if e.status() == Some(StatusCode::SERVICE_UNAVAILABLE) {
+                                        warn!("Service unavailable (503) when trying to fetch cover art for album: {}", album.name);
+                                    } else {
+                                        warn!("Error when trying to fetch cover art for album: {}. Error: {}", album.name, e);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                Err(e) => {
+                    if e.status() == Some(StatusCode::SERVICE_UNAVAILABLE) {
+                        warn!("Service unavailable (503) when trying to fetch data for artist: {} and album: {}", artist.name, album.name);
+                    } else {
+                        warn!("Error when trying to fetch data for artist: {} and album: {}. Error: {}", artist.name, album.name, e);
+                    }
+                }
+            }
+            sleep(Duration::from_secs(1)).await
+        }
+    }
+    
+            // Parse the response body to JSON
+            // let v: Value = serde_json::from_str(&body).unwrap();
+    
+            // Get the id of the first album
+            /*
+            if let Some(first_album) = v["releases"].as_array().and_then(|a| a.get(0)) {
+                let album_id = first_album["id"].as_str().unwrap();
+            
+                let tracklist_url = format!("https://musicbrainz.org/ws/2/release/{}/?inc=aliases+artist-credits+labels+discids+recordings&fmt=json", album_id);
+                let tracklist_response = client.get(&tracklist_url).send().await.unwrap();
+                let tracklist_body = tracklist_response.text().await.unwrap();
+            
+                // Parse the tracklist response to JSON
+                let tracklist: Value = serde_json::from_str(&tracklist_body).unwrap();
+            
+                // Print the songs
+                if let Some(media) = tracklist["media"].as_array() {
+                    for medium in media {
+                        if let Some(tracks) = medium["tracks"].as_array() {
+                            for track in tracks {
+                                let title = track["title"].as_str().unwrap();
+                                let duration = track["length"].as_i64().unwrap_or(0) / 1000; // Convert from ms to s
+                                let position = track["position"].as_i64().unwrap_or(0);
+                                let artist = track["artist-credit"].as_array().and_then(|a| a.get(0)).and_then(|a| a["artist"]["name"].as_str()).unwrap_or("Unknown artist");
+            
+                                // Extract additional information
+                                let disc_id = track["id"].as_str().unwrap_or("Unknown disc id");
+                                let label_info = track["label-info"].as_array().and_then(|a| a.get(0)).and_then(|a| a["label"]["name"].as_str()).unwrap_or("Unknown label");
+            
+                                println!("Title: {}, Duration: {}s, Position: {}, Artist: {}, Disc ID: {}, Label: {}", title, duration, position, artist, disc_id, label_info);
+                            }
+                        }
+                    }
+                }
+            }
+            */
+    
+    info!("Finished Indexing Library in {}ms", elapsed);
+
     let json = serde_json::to_string(&*library).unwrap();
     HttpResponse::Ok().body(json)
 }
