@@ -1,11 +1,14 @@
 use actix_web::http::header;
 use actix_web::{ HttpResponse, get, Responder, web };
+use lofty::{AudioFile, Probe};
 use reqwest::StatusCode;
 use tokio::fs;
+use std::ffi::OsStr;
+use std::path::Path;
 use std::time::Instant;
 use std::sync::{ Arc, Mutex };
 use std::fs::File;
-use std::io::{Read, SeekFrom, Seek};
+use std::io::Read;
 
 use walkdir::WalkDir;
 use audiotags::Tag;
@@ -217,33 +220,46 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
     HttpResponse::Ok().body(json)
 }
 
-#[get("/stream/{song}/{seconds}")]
-async fn stream_song(path: web::Path<(String, u64)>) -> impl Responder {
-    // let song = path.0.to_string();
-    let seconds = path.1 + 3; // IT offsets by 3 seconds
 
-    let song = "C:\\Users\\willi\\Documents\\Lawliet\\Music\\Kendrick Lamar - Discography (2009 - 2022) [FLAC] vtwin88cube\\2015 - To Pimp A Butterfly\\12.- Complexion (A Zulu Love).flac";
+#[get("/stream/{song}")]
+async fn stream_song(path: web::Path<String>) -> impl Responder {
+    let song = path.into_inner();
 
-    let file = fs::metadata(song).await.unwrap();
+    let file = fs::metadata(&song).await.unwrap();
     let song_file_size = file.len();
 
-    let duration = Tag::new().read_from_path(song).unwrap().duration().unwrap().round() as u64;
+    let path = Path::new(&song);
 
-    let bitrate = song_file_size * 8 / duration / 1000; // convert bytes to kilobits
+    if !path.is_file() {
+        panic!("ERROR: Path is not a file!");
+    }
 
-    let start = 0;
-    let end = (seconds * bitrate * 1000 / 8) as usize; // convert seconds to bytes
+    let tagged_file = Probe::open(path)
+        .expect("ERROR: Bad path provided!")
+        .read()
+        .expect("ERROR: Failed to read file!");
 
-    let mut file = File::open(song).unwrap();
-    file.seek(SeekFrom::Start(start as u64)).unwrap();
-    let mut buffer = vec![0; end];
-    file.read(&mut buffer).unwrap();
+    let duration_seconds = tagged_file.properties().duration().as_secs_f32().round() as u64; // Keep precision
 
-    HttpResponse::PartialContent()
-        .append_header((header::CONTENT_TYPE, "audio/flac"))
-        .append_header((header::CONTENT_RANGE, format!("bytes {}-{}/{}", start, end, file.metadata().unwrap().len())))
-        .append_header((header::ACCEPT_RANGES, "bytes"))
-        .append_header((header::CONTENT_LENGTH, (end - start + 1).to_string()))
+    dbg!(song_file_size, duration_seconds);
+
+    let mut file = File::open(&song).unwrap();
+    let mut buffer = Vec::new();
+    file.read_to_end(&mut buffer).unwrap();
+
+    let extension = path.extension().and_then(OsStr::to_str);
+    let mime_type = match extension {
+        Some("mp3") => "audio/mpeg",
+        Some("flac") => "audio/flac",
+        Some("wav") => "audio/wav",
+        Some("ogg") => "audio/ogg",
+        Some("aac") => "audio/aac",
+        _ => "application/octet-stream",
+    };
+
+    HttpResponse::Ok()
+        .append_header((header::CONTENT_TYPE, mime_type))
+        .append_header((header::CONTENT_LENGTH, song_file_size.to_string()))
         .body(buffer)
 }
 
