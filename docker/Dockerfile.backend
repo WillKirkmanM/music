@@ -1,5 +1,5 @@
 # Dockerfile for Rust
-FROM rust:1.56 as builder
+FROM rust:latest as builder
 WORKDIR /usr/src
 
 # Copy your source code
@@ -10,8 +10,12 @@ WORKDIR /usr/src/backend
 RUN cargo build --release
 
 # Start a new stage
-FROM debian:buster-slim
-COPY --from=builder /usr/src/backend/target/release/backend /usr/local/bin
+FROM debian:bullseye-slim
+
+# Install libssl
+RUN apt-get update && apt-get install -y libssl1.1 && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/src/backend/target/release/music-backend /usr/local/bin
 
 # Run the binary
-CMD ["backend"]
+CMD ["music-backend"]
