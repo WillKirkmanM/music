@@ -8,7 +8,8 @@ edition = "2021"
 [dependencies]
 actix-web = "4"
 audiotags = "0.5"
-rayon = "1.8.1"
+lofty = "0.18.2"
+rayon = "1.8.0"
 regex = "1.10.3"
 reqwest = "0.12.3"
 serde = { version = "1.0.190", features = ["derive"] }
