@@ -18,7 +18,6 @@ export default async function Home() {
         </div>
 
         <HomeSelection />
-
       </div>
 
         <Player />
