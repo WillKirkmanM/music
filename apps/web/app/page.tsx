@@ -3,6 +3,7 @@ import ClientAuth from "../components/Authentication/ClientAuth";
 import ListAlbums from "@/components/Music/ListAlbums";
 import Player from "@/components/Music/Player";
 import HomeSelection from "@/components/Music/HomeSelection";
+import { PlayerProvider } from "@/components/Music/usePlayer";
 
 export default async function Home() {
   const session = await getServerSession()
@@ -15,10 +16,15 @@ export default async function Home() {
           <ClientAuth />
         </div>
 
-      <HomeSelection />
+      <PlayerProvider>
+        <HomeSelection />
+      </PlayerProvider>
 
       </div>
-      <Player />
+
+      <PlayerProvider>
+        <Player />
+      </PlayerProvider>
     </>
   );
 }
