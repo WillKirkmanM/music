@@ -11,12 +11,8 @@ export default async function Home() {
   return (
     <>
       <PlayerProvider>
+      <div className="text-4xl text-white jusify-center text-center">{session && session.user && <p>Welcome {session?.user.username}</p>}</div>
       <div className="flex justify-center items-center h-screen flex-col">
-        <div className="fixed top-0 right-0 p-4">
-          {session ? (<p>Welcome {session.user!.username ?? session.user?.name}</p>) : (<p>Hey! Sign in...</p>)}
-          <ClientAuth />
-        </div>
-
         <HomeSelection />
       </div>
 
