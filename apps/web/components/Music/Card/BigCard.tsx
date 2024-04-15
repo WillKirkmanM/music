@@ -35,7 +35,7 @@ export default function BigCard({ imageSrc, title, artistName, songURL, albumURL
       </SongMenuContext>
 
       <div className="flex flex-col text-left mt-3">
-        <p className="font-bold text-white overflow-hidden overflow-ellipsis whitespace-nowrap">{title}</p>
+        <p className="font-bold text-white overflow-hidden overflow-ellipsis whitespace-nowrap" title={title}>{title}</p>
         <p className="text-gray-400">{type} • {artistName}</p>
       </div>
     </div>
