@@ -9,6 +9,6 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile.frontend
+      dockerfile: ./docker/Dockerfile.frontend/
     ports:
       - "3000:3000"
