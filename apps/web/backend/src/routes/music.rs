@@ -1,6 +1,7 @@
 use actix_web::http::header;
 use actix_web::{ HttpResponse, get, Responder, web };
 use lofty::{AudioFile, Probe};
+use regex::Regex;
 use reqwest::StatusCode;
 use tokio::fs;
 use std::ffi::OsStr;
@@ -68,6 +69,9 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
         let contributing_artists = formatted_artists[0].1.clone();
 
         let album_name = tag.album_title().unwrap_or_default().to_string();
+        let re = Regex::new(r"\(.*\)").unwrap();
+        let album_name_without_cd = re.replace_all(&album_name, "").trim().to_string();
+
         let song = Song {
             name: tag.title().unwrap_or_default().to_string(),
             artist: artist_name.clone(),
@@ -90,12 +94,46 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
             library.last_mut().unwrap()
         };
 
-        let album_position = artist.albums.iter().position(|a| a.name == album_name);
+        let album_position = artist.albums.iter().position(|a| a.name == album_name_without_cd);
 
         let album = if let Some(album_position) = album_position {
             &mut artist.albums[album_position]
         } else {
-            let new_album = Album { name: album_name.clone(), songs: Vec::new(), cover_url: String::new() };
+            let mut new_album = Album { name: album_name_without_cd.clone(), songs: Vec::new(), cover_url: String::new() };
+
+            if let Some(parent_path) = path.parent() {
+                let mut cover_found = false;
+            
+                // First, look for cover in the current directory
+                for image_path in WalkDir::new(parent_path)
+                    .into_iter()
+                    .filter_map(|e| e.ok())
+                    .filter(|e| {
+                        e.file_type().is_file() &&
+                        matches!(e.path().extension().and_then(|s| s.to_str()), Some("jpg") | Some("jpeg") | Some("png") | Some("gif") | Some("bmp") | Some("ico") | Some("tif") | Some("tiff") | Some("webp"))
+                    }) {
+                    new_album.cover_url = image_path.path().to_str().unwrap_or_default().to_string();
+                    cover_found = true;
+                    break;
+                }
+            
+                // If no cover was found in the current directory, look in the parent directory
+                if !cover_found {
+                    if let Some(grandparent_path) = parent_path.parent() {
+                        for image_path in WalkDir::new(grandparent_path)
+                            .into_iter()
+                            .filter_map(|e| e.ok())
+                            .filter(|e| {
+                                e.file_type().is_file() &&
+                                matches!(e.path().extension().and_then(|s| s.to_str()), Some("jpg") | Some("jpeg") | Some("png") | Some("gif") | Some("bmp") | Some("ico") | Some("tif") | Some("tiff") | Some("webp"))
+                            }) {
+                            new_album.cover_url = image_path.path().to_str().unwrap_or_default().to_string();
+                            break;
+                        }
+                    }
+                }
+            }
+
             artist.albums.push(new_album);
             artist.albums.sort_by(|a, b| a.name.cmp(&b.name));
             artist.albums.last_mut().unwrap()
@@ -104,10 +142,12 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
         album.songs.push(song);
         album.songs.sort_by(|a, b| a.track_number.cmp(&b.track_number));
     });
-
+    
     let mut library = library.lock().unwrap();
+    library.iter_mut().for_each(|artist| {
+        artist.albums.retain(|album| album.songs.len() > 2);
+    });
     library.sort_by(|a, b| a.name.cmp(&b.name));
-    let elapsed = now.elapsed().as_millis();
 
     let client = reqwest::Client::builder()
             .user_agent("ParsonLabsMusic/0.1 (will@parsonlabs.com)")
@@ -115,65 +155,74 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
             .unwrap();
 
     // Adding metadata from musicbrainz
-    let total_album_count: usize = library.iter().map(|artist| artist.albums.len()).sum();
-    info!("Searching cover art for {} albums...", total_album_count);
+    // let total_album_count: usize = library.iter().map(|artist| artist.albums.len()).sum();
+    // info!("Searching cover art for {} albums...", total_album_count);
+    let albums_without_cover_count = library.iter_mut().flat_map(|artist| artist.albums.iter_mut())
+    .filter(|album| album.cover_url.is_empty())
+    .collect::<Vec<_>>()
+    .len();
+
+    info!("Searching cover art for {} albums...", albums_without_cover_count);
 
     for artist in library.iter_mut() {
         for album in &mut artist.albums {
-            let url = format!("https://musicbrainz.org/ws/2/release/?query=artist:\"{}\" AND release:\"{}\" AND status:\"Official\"&fmt=json", artist.name, album.name);
-            let response = client.get(&url).send().await;
-    
-            match response {
-                Ok(response) => {
-                    let body = response.text().await.unwrap();
-                    let v: serde_json::Value = serde_json::from_str(&body).unwrap_or("[]".into());
-    
-                    if let Some(albums) = v["releases"].as_array() {
-                        for first_album in albums {
-                            let album_id = first_album["id"].as_str().unwrap();
-    
-                            let cover_art_url = format!("http://coverartarchive.org/release/{}", album_id);
-                            let cover_art_response = client.get(&cover_art_url).send().await;
-    
-                            match cover_art_response {
-                                Ok(cover_art_response) => {
-                                    if cover_art_response.status().is_success() {
-                                        let cover_art_body = cover_art_response.text().await.unwrap();
-                                        let cover_art: serde_json::Value = serde_json::from_str(&cover_art_body).unwrap();
-    
-                                        if let Some(images) = cover_art["images"].as_array() {
-                                            if let Some(first_image) = images.get(0) {
-                                                if let Some(image_url) = first_image["image"].as_str() {
-                                                    album.cover_url = image_url.to_string();
-                                                    info!("Cover art found for Album: {}", album.name);
-                                                    break;
+            if album.cover_url.is_empty() {
+                let url = format!("https://musicbrainz.org/ws/2/release/?query=artist:\"{}\" AND release:\"{}\" AND (status:\"Official\" OR status:\"Promotion\")&fmt=json", artist.name, album.name);
+                let response = client.get(&url).send().await;
+        
+                match response {
+                    Ok(response) => {
+                        let body = response.text().await.unwrap();
+
+                        let v: serde_json::Value = serde_json::from_str(&body).unwrap_or("[]".into());
+        
+                        if let Some(albums) = v["releases"].as_array() {
+                            for first_album in albums {
+                                let album_id = first_album["id"].as_str().unwrap();
+        
+                                let cover_art_url = format!("http://coverartarchive.org/release/{}", album_id);
+                                let cover_art_response = client.get(&cover_art_url).send().await;
+        
+                                match cover_art_response {
+                                    Ok(cover_art_response) => {
+                                        if cover_art_response.status().is_success() {
+                                            let cover_art_body = cover_art_response.text().await.unwrap();
+                                            let cover_art: serde_json::Value = serde_json::from_str(&cover_art_body).unwrap();
+        
+                                            if let Some(images) = cover_art["images"].as_array() {
+                                                if let Some(first_image) = images.get(0) {
+                                                    if let Some(image_url) = first_image["image"].as_str() {
+                                                        album.cover_url = image_url.to_string();
+                                                        info!("Cover art found online for Album: {}", album.name);
+                                                        break;
+                                                    }
                                                 }
                                             }
+                                        } else {
+                                            warn!("Cover art for album {} could not be found initially, alternative art will be searched.", album.name);
                                         }
-                                    } else {
-                                        warn!("Cover art for album {} could not be found initially, alternative art will be searched.", album.name);
-                                    }
-                                },
-                                Err(e) => {
-                                    if e.status() == Some(StatusCode::SERVICE_UNAVAILABLE) {
-                                        warn!("Service unavailable (503) when trying to fetch cover art for album: {}", album.name);
-                                    } else {
-                                        warn!("Error when trying to fetch cover art for album: {}. Error: {}", album.name, e);
+                                    },
+                                    Err(e) => {
+                                        if e.status() == Some(StatusCode::SERVICE_UNAVAILABLE) {
+                                            warn!("Service unavailable (503) when trying to fetch cover art for album: {}", album.name);
+                                        } else {
+                                            warn!("Error when trying to fetch cover art for album: {}. Error: {}", album.name, e);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                },
-                Err(e) => {
-                    if e.status() == Some(StatusCode::SERVICE_UNAVAILABLE) {
-                        warn!("Service unavailable (503) when trying to fetch data for artist: {} and album: {}", artist.name, album.name);
-                    } else {
-                        warn!("Error when trying to fetch data for artist: {} and album: {}. Error: {}", artist.name, album.name, e);
+                    },
+                    Err(e) => {
+                        if e.status() == Some(StatusCode::SERVICE_UNAVAILABLE) {
+                            warn!("Service unavailable (503) when trying to fetch data for artist: {} and album: {}", artist.name, album.name);
+                        } else {
+                            warn!("Error when trying to fetch data for artist: {} and album: {}. Error: {}", artist.name, album.name, e);
+                        }
                     }
                 }
+                sleep(Duration::from_millis(500)).await
             }
-            sleep(Duration::from_secs(1)).await
         }
     }
     
@@ -214,7 +263,9 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
             }
             */
     
-    info!("Finished Indexing Library in {}ms", elapsed);
+
+    let elapsed = now.elapsed().as_secs();
+    info!("Finished Indexing Library in {} seconds", elapsed);
 
     let json = serde_json::to_string(&*library).unwrap();
     HttpResponse::Ok().body(json)
@@ -238,10 +289,6 @@ async fn stream_song(path: web::Path<String>) -> impl Responder {
         .expect("ERROR: Bad path provided!")
         .read()
         .expect("ERROR: Failed to read file!");
-
-    let duration_seconds = tagged_file.properties().duration().as_secs_f32().round() as u64; // Keep precision
-
-    dbg!(song_file_size, duration_seconds);
 
     let mut file = File::open(&song).unwrap();
     let mut buffer = Vec::new();
