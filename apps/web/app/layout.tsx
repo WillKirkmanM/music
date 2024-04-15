@@ -3,11 +3,20 @@ import { Inter as FontSans } from "next/font/google"
 
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/sonner"
+import { Metadata } from "next"
+import NavBar from "@/components/Layout/Navbar"
 
 const fontSans = FontSans({
   subsets: ["latin"],
   variable: "--font-sans",
 })
+
+export const metadata: Metadata = {
+  title: {
+    default: "ParsonLabs Music",
+    template: "%s | ParsonLabs Music"
+  }
+}
 
 export default function RootLayout({ children }: any) {
   return (
@@ -19,6 +28,7 @@ export default function RootLayout({ children }: any) {
           fontSans.variable
         )}
       >
+        <NavBar />
         {children}
         <Toaster />
       </body>

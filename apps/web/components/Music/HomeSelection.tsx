@@ -54,7 +54,6 @@ const randomSongs = allSongs.slice(0, 5);
 // randomSongs.forEach(song => console.log(`http://localhost:3001/stream/${encodeURIComponent(song.path)}`))
 randomSongs.forEach(song => console.log(song.image))
 
-
 function imageToBase64(src: string) {
     const image = fs.readFileSync(src);
     const base64Image = Buffer.from(image).toString('base64');
@@ -73,6 +72,7 @@ return (
           albumURL=""
           songURL={`http://localhost:3001/stream/${encodeURIComponent(song.path)}`}
           type="Song"
+          song={song}
         />
       </div>
     ))}
