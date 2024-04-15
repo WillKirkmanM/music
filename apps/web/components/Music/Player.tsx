@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef } from "react"
 import IconPause from "../Icons/Pause"
 import IconPlay from "../Icons/Play"
 import PlusCircle from "../Icons/PlusCircle"
@@ -32,7 +32,7 @@ export default function Player() {
     handleTimeChange,
     handleTimeUpdate,
     toggleMute,
-  } = usePlayer(audioSource)
+  } = usePlayer()
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
@@ -58,11 +58,11 @@ export default function Player() {
         <div className="flex items-center gap-4">
           <button>Shuffle</button>
           <button>Previous</button>
-          <button onClick={togglePlayPause}>
+          <button onClick={() => togglePlayPause}>
             {isPlaying ? <IconPause /> : <IconPlay />}
           </button>
           <button>Next</button>
-          <button onClick={toggleLoopSong}>
+          <button onClick={() => toggleLoopSong}>
             {onLoop ? <ArrowPath style={{ strokeWidth: 2, color: 'white' }} /> : <ArrowPath />}
           </button>
         </div>
@@ -85,14 +85,14 @@ export default function Player() {
         <button>List</button>
         <button>Devices</button>
         <div className="flex items-center gap-1 flex-grow">
-          <button onClick={toggleMute}>
+          <button onClick={() => toggleMute}>
             {muted || !volume ? <SpeakerXMark /> : <SpeakerWave />}
           </button>
           <input type="range" className="h-0.1 w-full" value={volume * 100} min={0} max={100} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAudioVolume(e.target.value)} />
         </div>
         <button>Fullscreen</button>
       </section>
-      <audio ref={audioRef} src={audioSource} onTimeUpdate={handleTimeUpdate}/>
+      <audio ref={audioRef} src={audioSource} onTimeUpdate={() => handleTimeUpdate}/>
     </footer>
   )
 }
