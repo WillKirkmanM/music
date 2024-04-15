@@ -16,7 +16,6 @@ export default function Player() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const [liked, setLiked] = useState(false)
-  const [lineHovered, setLineHovered] = useState(false)
 
   const {
     isPlaying,
@@ -77,8 +76,6 @@ export default function Player() {
               max={duration} 
               value={currentTime} 
               onChange={e => handleTimeChange(e.target.value)}
-              onMouseEnter={() => setLineHovered(true)}
-              onMouseLeave={() => setLineHovered(false)}
             />
             <span className="text-xs text-gray-400">{formatTime(duration)}</span>
         </div>
