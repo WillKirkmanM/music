@@ -3,11 +3,19 @@ import { Inter as FontSans } from "next/font/google"
 
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/sonner"
+import { Metadata } from "next"
 
 const fontSans = FontSans({
   subsets: ["latin"],
   variable: "--font-sans",
 })
+
+export const metadata: Metadata = {
+  title: {
+    default: "ParsonLabs Music",
+    template: "%s | ParsonLabs Music"
+  }
+}
 
 export default function RootLayout({ children }: any) {
   return (
