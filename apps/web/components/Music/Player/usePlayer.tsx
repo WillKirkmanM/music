@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect, useCallback, useContext } from "react";
 import { createContext } from "react";
 
-const isBrowser = typeof window !== "undefined"
+import type Song from "@/types/Music/Song";
 
+const isBrowser = typeof window !== "undefined"
 const audioElement = isBrowser ? new Audio() : null
 
 type PlayerContextType = {
@@ -22,15 +23,25 @@ type PlayerContextType = {
   handleTimeUpdate: Function;
   toggleMute: Function;
   setAudioSource: Function;
+  setSong: Function;
+  setImageSrc: Function;
+  imageSrc: string;
+  song: Song
 };
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
 
-export function PlayerProvider({ children }: { children: React.ReactNode }){
+interface PlayerProviderProps {
+  children: React.ReactNode,
+}
+
+export function PlayerProvider({ children }: PlayerProviderProps){
   const audioRef = useRef<HTMLAudioElement>(audioElement);
   const audio = audioRef.current as HTMLAudioElement
 
+  const [imageSrc, setImageSrc] = useState("")
   const [audioSource, setAudioSource] = useState("")
+  const [song, setSong] = useState<Song>({ artist: "", contributing_artists: [], name: "", path: "", track_number: 0 })
   const [isPlaying, setIsPlaying] = useState(false);
   const [onLoop, setOnLoop] = useState(false);
   const [muted, setMuted] = useState(false)
@@ -46,17 +57,23 @@ export function PlayerProvider({ children }: { children: React.ReactNode }){
     if (audio) {
       audio.src = audioSource;
       audio.load()
+      audio.oncanplaythrough = () => {
+        audio.play()
+        setIsPlaying(true)
+      }
     }
 
-  }, [audioSource, audio]);
+  }, [audioSource, audio, song]);
   
   const playAudioSource = useCallback(() => {
     if (audio) {
       audio.pause();
       audio.currentTime = 0;
       audio.src = audioSource;
-      audio.play();
-      setIsPlaying(true);
+      audio.oncanplaythrough = () => {
+        audio.play();
+        setIsPlaying(true);
+      }
     }
   }, [audioSource, audio]);
 
@@ -185,7 +202,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }){
       handleTimeChange,
       handleTimeUpdate,
       toggleMute,
-      setAudioSource
+      setAudioSource,
+      setSong,
+      song,
+      setImageSrc,
+      imageSrc,
     }}>
       {children}
     </PlayerContext.Provider>

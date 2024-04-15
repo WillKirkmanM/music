@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import IconPause from "../Icons/Pause"
 import IconPlay from "../Icons/Play"
 import PlusCircle from "../Icons/PlusCircle"
@@ -10,15 +10,13 @@ import CheckCircle from "../Icons/CheckCircle"
 import ArrowPath from "../Icons/ArrowPath"
 import SpeakerXMark from "../Icons/SpeakerXMark"
 import SpeakerWave from "../Icons/SpeakerWave"
-import { usePlayer } from "./usePlayer"
+import { usePlayer } from "./Player/usePlayer"
 
 export default function Player() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const [liked, setLiked] = useState(false)
-  const [lineHovered, setLineHovered] = useState(false)
 
-  const audioSource = "/More Than a Woman.mp3"
   const {
     isPlaying,
     onLoop,
@@ -32,6 +30,8 @@ export default function Player() {
     handleTimeChange,
     handleTimeUpdate,
     toggleMute,
+    imageSrc,
+    song
   } = usePlayer()
 
   const formatTime = (time: number) => {
@@ -39,16 +39,17 @@ export default function Player() {
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
-  
+
   return (
     <footer className="fixed bottom-0 bg-gray-600 border-t border-gray-700 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 w-full">
       <section className="flex items-center gap-3">
         <div className="w-20 h-20 bg-gray-500 rounded-md">
-          <Image alt="Return of the Mack Cover" src="https://m.media-amazon.com/images/I/71U4T6RxDBS._UF1000,1000_QL80_.jpg" width={334} height={332}/>
+          {/* <Image alt="Return of the Mack Cover" src="https:/m.media-amazon.com/images/I/71U4T6RxDBS._UF1000,1000_QL80_.jpg" width={334} height={332}/> */}
+          <Image alt={song.name + "Image"} src={imageSrc} width={334} height={332} />
         </div>
-          <div>
-            <p className="whitespace-nowrap">Return of the Mack</p>
-            <p className="text-xs text-gray-400">Mark Morrison</p>
+          <div className="max-w-52 overflow-hidden">
+            <p className="whitespace-nowrap animate-marquee">{song.name}</p>
+            <p className="text-xs text-gray-400">{song.artist}</p>
           </div>
         <button className="text-gray-400 hover:text-white transition-colors duration-300">
           {liked ? <CheckCircle /> : <PlusCircle />}
@@ -58,7 +59,7 @@ export default function Player() {
         <div className="flex items-center gap-4">
           <button>Shuffle</button>
           <button>Previous</button>
-          <button onClick={() => togglePlayPause}>
+          <button onClick={() => togglePlayPause()}>
             {isPlaying ? <IconPause /> : <IconPlay />}
           </button>
           <button>Next</button>
@@ -75,8 +76,6 @@ export default function Player() {
               max={duration} 
               value={currentTime} 
               onChange={e => handleTimeChange(e.target.value)}
-              onMouseEnter={() => setLineHovered(true)}
-              onMouseLeave={() => setLineHovered(false)}
             />
             <span className="text-xs text-gray-400">{formatTime(duration)}</span>
         </div>
@@ -85,14 +84,14 @@ export default function Player() {
         <button>List</button>
         <button>Devices</button>
         <div className="flex items-center gap-1 flex-grow">
-          <button onClick={() => toggleMute}>
+          <button onClick={() => toggleMute()}>
             {muted || !volume ? <SpeakerXMark /> : <SpeakerWave />}
           </button>
           <input type="range" className="h-0.1 w-full" value={volume * 100} min={0} max={100} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAudioVolume(e.target.value)} />
         </div>
         <button>Fullscreen</button>
       </section>
-      <audio ref={audioRef} src={audioSource} onTimeUpdate={() => handleTimeUpdate}/>
+      <audio ref={audioRef} onTimeUpdate={() => handleTimeUpdate}/>
     </footer>
   )
 }
