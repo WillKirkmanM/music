@@ -1,8 +1,36 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+"use client"
 
-export function usePlayer(audioSource: string) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+import { useState, useRef, useEffect, useCallback, useContext } from "react";
+import { createContext } from "react";
 
+const isBrowser = typeof window !== "undefined"
+
+const audioElement = isBrowser ? new Audio() : null
+
+type PlayerContextType = {
+  playAudioSource: Function;
+  isPlaying: boolean;
+  onLoop: boolean;
+  volume: number;
+  muted: boolean;
+  currentTime: number;
+  duration: number;
+  togglePlayPause: Function;
+  toggleLoopSong: Function;
+  setAudioVolume: Function;
+  handleTimeChange: Function;
+  handleTimeUpdate: Function;
+  toggleMute: Function;
+  setAudioSource: Function;
+};
+
+const PlayerContext = createContext<PlayerContextType | null>(null);
+
+export function PlayerProvider({ children }: { children: React.ReactNode }){
+  const audioRef = useRef<HTMLAudioElement>(audioElement);
+  const audio = audioRef.current as HTMLAudioElement
+
+  const [audioSource, setAudioSource] = useState("")
   const [isPlaying, setIsPlaying] = useState(false);
   const [onLoop, setOnLoop] = useState(false);
   const [muted, setMuted] = useState(false)
@@ -11,11 +39,18 @@ export function usePlayer(audioSource: string) {
   const [duration, setDuration] = useState(0);
 
   useEffect(() => {
-    audioRef.current = new Audio(audioSource);
-  }, [audioSource]);
+    if (audioRef.current) {
+      audioRef.current.src = audioSource
+    }
 
+    if (audio) {
+      audio.src = audioSource;
+      audio.load()
+    }
+
+  }, [audioSource, audio]);
+  
   const playAudioSource = useCallback(() => {
-    const audio = audioRef.current;
     if (audio) {
       audio.pause();
       audio.currentTime = 0;
@@ -23,7 +58,7 @@ export function usePlayer(audioSource: string) {
       audio.play();
       setIsPlaying(true);
     }
-  }, [audioSource]);
+  }, [audioSource, audio]);
 
   const toggleMute = useCallback(() => {
     const audio = audioRef.current || new Audio()
@@ -83,22 +118,20 @@ export function usePlayer(audioSource: string) {
       }, 1000)
     }, [handleTimeUpdate])
 
-  function stepForward() {
-    let audio = audioRef.current || new Audio()
-    setTimeout(() => {
-      audio.currentTime += 1
-    }, 200)
-  }
-  function stepBack() {
-    let audio = audioRef.current || new Audio()
-    setTimeout(() => {
-      audio.currentTime -= 1
-    }, 200)
-  }
+    
+    useEffect(() => {
+      function stepForward() {
+        setTimeout(() => {
+          audio.currentTime += 1
+        }, 200)
+      }
+      function stepBack() {
+        setTimeout(() => {
+          audio.currentTime -= 1
+        }, 200)
+      }
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
+      if (audio) {
       audio.addEventListener('timeupdate', handleTimeUpdate);
         
         const handleKeyPress = (event: KeyboardEvent) => {
@@ -115,16 +148,16 @@ export function usePlayer(audioSource: string) {
           }
         }
           
-          const handleKeyUp = (event: KeyboardEvent) => {
-            switch (event.key.toLowerCase()) {
-              case "arrowleft":
-                stepBack()
-                break
-              case "arrowright":
-                stepForward()
-                break
-            }
+        const handleKeyUp = (event: KeyboardEvent) => {
+          switch (event.key.toLowerCase()) {
+            case "arrowleft":
+              stepBack()
+              break
+            case "arrowright":
+              stepForward()
+              break
           }
+        }
 
         document.addEventListener("keydown", handleKeyPress)
         document.addEventListener("keyup", handleKeyUp)
@@ -135,21 +168,34 @@ export function usePlayer(audioSource: string) {
         document.removeEventListener("keyup", handleKeyUp)
       };
     }
-  }, [handleTimeUpdate, handleTimeUpdateThrottled, toggleLoopSong, toggleMute, togglePlayPause]);
+  }, [handleTimeUpdate, handleTimeUpdateThrottled, toggleLoopSong, toggleMute, togglePlayPause, audio]);
 
-  return {
-    playAudioSource,
-    isPlaying,
-    onLoop,
-    volume,
-    muted,
-    currentTime,
-    duration,
-    togglePlayPause,
-    toggleLoopSong,
-    setAudioVolume,
-    handleTimeChange,
-    handleTimeUpdate,
-    toggleMute,
-  };
+    return (
+    <PlayerContext.Provider value={{
+      playAudioSource,
+      isPlaying,
+      onLoop,
+      volume,
+      muted,
+      currentTime,
+      duration,
+      togglePlayPause,
+      toggleLoopSong,
+      setAudioVolume,
+      handleTimeChange,
+      handleTimeUpdate,
+      toggleMute,
+      setAudioSource
+    }}>
+      {children}
+    </PlayerContext.Provider>
+  );
+}
+
+export function usePlayer() {
+  const context = useContext(PlayerContext);
+  if (context === null) {
+    throw new Error("usePlayer must be used within a PlayerProvider");
+  }
+  return context;
 }
