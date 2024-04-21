@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/sonner"
 import { Metadata } from "next"
 import NavBar from "@/components/Layout/Navbar"
+import Player from "@/components/Music/Player"
+import { PlayerProvider } from "@/components/Music/Player/usePlayer"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -28,9 +30,12 @@ export default function RootLayout({ children }: any) {
           fontSans.variable
         )}
       >
-        <NavBar />
-        {children}
-        <Toaster />
+        <PlayerProvider>
+          <NavBar />
+          {children}
+          <Player />
+          <Toaster />
+        </PlayerProvider>
       </body>
     </html>
   )
