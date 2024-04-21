@@ -32,6 +32,7 @@
     "clsx": "^2.1.0",
     "crypto-js": "^4.2.0",
     "lucide-react": "^0.363.0",
+    "minisearch": "^6.3.0",
     "next": "14.1.4",
     "next-auth": "^4.24.7",
     "next-themes": "^0.3.0",
