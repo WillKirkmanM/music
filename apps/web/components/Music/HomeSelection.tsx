@@ -2,32 +2,13 @@ import { Album } from "lucide-react"
 import BigCard from "./Card/BigCard"
 import library from "@/public/music_with_cover_art.json"
 import fs from "fs"
+import type { Library } from "@/types/Music/Library"
 
 export default async function HomeSelection() {
 
   // const json = await fetch("http:/localhost:3001/music.json")
   // let library: Library = await json.json()
 
-type Library = Artist[]
-
-interface Artist {
-  name: string
-  albums: Album[]
-}
-
-interface Album {
-  name: string
-  cover_url: string
-  songs: Song[]
-}
-
-interface Song {
-  name: string
-  artist: string
-  contributing_artists: string[]
-  track_number: number
-  path: string
-}
   // const firstTenArtists = library.slice(0, 50).map((artist, index) => (
   //   <div key={index}>
   //     <h2 className="text-lg">{artist.name}</h2>
@@ -52,7 +33,7 @@ for (let i = allSongs.length - 1; i > 0; i--) {
 
 const randomSongs = allSongs.slice(0, 5);
 // randomSongs.forEach(song => console.log(`http://localhost:3001/stream/${encodeURIComponent(song.path)}`))
-randomSongs.forEach(song => console.log(song.image))
+// randomSongs.forEach(song => console.log(song.image))
 
 function imageToBase64(src: string) {
     const image = fs.readFileSync(src);
@@ -73,7 +54,7 @@ return (
           songURL={`http://localhost:3001/stream/${encodeURIComponent(song.path)}`}
           type="Song"
           song={song}
-        />
+          />
       </div>
     ))}
     </div>
