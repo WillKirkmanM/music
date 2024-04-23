@@ -36,3 +36,6 @@ yarn.lock
 # Misc
 .DS_Store
 *.pem
+
+# Cargo
+/target
