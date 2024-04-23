@@ -18,7 +18,7 @@ use rayon::prelude::*;
 use tokio::time::{sleep, Duration};
 
 use crate::structures::structures::{Album, Artist, Song};
-use crate::utils::format::format_contributing_artists;
+use crate::utils::{ format::format_contributing_artists, hash::{hash_album, hash_song} };
 
 #[get("/songs/list")]
 async fn songs_list() -> impl Responder {
@@ -71,12 +71,16 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
         let album_name = tag.album_title().unwrap_or_default().to_string();
         let re = Regex::new(r"\(.*\)").unwrap();
         let album_name_without_cd = re.replace_all(&album_name, "").trim().to_string();
+        let track_number = tag.track_number().unwrap_or_default();
+
+        let id = hash_song(&artist_name, &artist_name, track_number);
 
         let song = Song {
             name: tag.title().unwrap_or_default().to_string(),
+            id,
             artist: artist_name.clone(),
             contributing_artists,
-            track_number: tag.track_number().unwrap_or_default(),
+            track_number,
             path: path.to_str().unwrap_or_default().to_string(),
         };
     
@@ -99,13 +103,13 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
         let album = if let Some(album_position) = album_position {
             &mut artist.albums[album_position]
         } else {
-            let mut new_album = Album { name: album_name_without_cd.clone(), songs: Vec::new(), cover_url: String::new() };
+            let mut new_album = Album { id: hash_album(&album_name_without_cd.clone(), &artist_name), name: album_name_without_cd.clone(), songs: Vec::new(), cover_url: String::new() };
 
             if let Some(parent_path) = path.parent() {
                 let mut cover_found = false;
-            
-                // First, look for cover in the current directory
+
                 for image_path in WalkDir::new(parent_path)
+                    .max_depth(1)
                     .into_iter()
                     .filter_map(|e| e.ok())
                     .filter(|e| {
@@ -118,21 +122,29 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
                 }
             
                 // If no cover was found in the current directory, look in the parent directory
-                if !cover_found {
-                    if let Some(grandparent_path) = parent_path.parent() {
-                        for image_path in WalkDir::new(grandparent_path)
-                            .into_iter()
-                            .filter_map(|e| e.ok())
-                            .filter(|e| {
-                                e.file_type().is_file() &&
-                                matches!(e.path().extension().and_then(|s| s.to_str()), Some("jpg") | Some("jpeg") | Some("png") | Some("gif") | Some("bmp") | Some("ico") | Some("tif") | Some("tiff") | Some("webp"))
-                            }) {
-                            new_album.cover_url = image_path.path().to_str().unwrap_or_default().to_string();
-                            break;
-                        }
+
+                if !cover_found && parent_path.read_dir().unwrap().any(|e| {
+                if let Ok(entry) = e {
+                    let path = entry.path();
+                    let path_file_name = path.file_name().unwrap().to_str().unwrap();
+                    path.is_dir() && (path_file_name.starts_with("CD") || path_file_name.starts_with("Disc")|| path.file_name().unwrap() == "Covers")
+                } else {
+                    false
+                }}) {
+                if let Some(grandparent_path) = parent_path.parent() {
+                    for image_path in WalkDir::new(grandparent_path)
+                        .max_depth(1)
+                        .into_iter()
+                        .filter_map(|e| e.ok())
+                        .filter(|e| {
+                            e.file_type().is_file() &&
+                            matches!(e.path().extension().and_then(|s| s.to_str()), Some("jpg") | Some("jpeg") | Some("png") | Some("gif") | Some("bmp") | Some("ico") | Some("tif") | Some("tiff") | Some("webp"))
+                        }) {
+                        new_album.cover_url = image_path.path().to_str().unwrap_or_default().to_string();
+                        break;
                     }
                 }
-            }
+            }}
 
             artist.albums.push(new_album);
             artist.albums.sort_by(|a, b| a.name.cmp(&b.name));
@@ -194,6 +206,19 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
                                                     if let Some(image_url) = first_image["image"].as_str() {
                                                         album.cover_url = image_url.to_string();
                                                         info!("Cover art found online for Album: {}", album.name);
+
+                                                        let image_response = client.get(image_url).send().await.unwrap();
+                                                        let image_bytes = image_response.bytes().await.unwrap();
+
+                                                        fs::create_dir_all("missing_cover_art").await.unwrap();
+                                                        let cover_url_file_path = format!("missing_cover_art/{}.jpg", album.id);
+                                                        fs::write(&cover_url_file_path, image_bytes).await.unwrap();
+
+                                                        let absolute_path = fs::canonicalize(&cover_url_file_path).await.unwrap();
+                                                        let absolute_path_str = absolute_path.to_str().unwrap().to_string();
+                                                        let clean_path = absolute_path_str.trim_start_matches("\\\\?\\");
+                                                        album.cover_url = clean_path.to_string();
+
                                                         break;
                                                     }
                                                 }

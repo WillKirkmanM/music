@@ -152,6 +152,9 @@ export function PlayerProvider({ children }: PlayerProviderProps){
       audio.addEventListener('timeupdate', handleTimeUpdate);
         
         const handleKeyPress = (event: KeyboardEvent) => {
+          if ((event.target as HTMLElement).tagName.toLowerCase() === 'input') {
+            return;
+          }
           switch (event.key.toLocaleLowerCase()) {
             case " ":
               togglePlayPause()
@@ -166,6 +169,9 @@ export function PlayerProvider({ children }: PlayerProviderProps){
         }
           
         const handleKeyUp = (event: KeyboardEvent) => {
+          if ((event.target as HTMLElement).tagName.toLowerCase() === 'input') {
+            return;
+          }
           switch (event.key.toLowerCase()) {
             case "arrowleft":
               stepBack()
