@@ -18,14 +18,17 @@ RUN apk update
 WORKDIR /app
  
 # First install the dependencies (as they change less often)
-COPY .gitignore .gitignore
+# COPY .gitignore .gitignore
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/yarn.lock ./yarn.lock
+
 RUN yarn install
- 
+
 # Build the project
 COPY --from=builder /app/out/full/ .
-RUN yarn turbo run build --filter=web...
+
+RUN yarn turbo run generate --scope music
+RUN yarn turbo run build --filter=music
  
 FROM base AS runner
 WORKDIR /app
@@ -43,5 +46,5 @@ COPY --from=installer /app/apps/web/package.json .
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
- 
+
 CMD node apps/web/server.js
