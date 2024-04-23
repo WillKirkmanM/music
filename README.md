@@ -59,7 +59,7 @@ The default credentials for the user is:
   |----------|-----------------|
   | admin | password |
 
-Start the Development Server (Turbopack)
+### Start the Development Server (Turbopack)
 ```
 turbo run dev
 ```
@@ -70,4 +70,23 @@ turbo run dev --filter music
 ```
 
 You should be able to access the server at `http://localhost:3000`
+
+### Start the Production Server
+Build the app for production:
+```
+$ yarn build
+```
+
+Start the server:
+```
+$ yarn start 
+```
+
+## Adding a package to a workspace
+To add a package to a workspace, you can use the following command taken from [the handbook](https://turbo.build/repo/docs/handbook/package-installation):
+
+For example, for the workspace `music` to add the package `sharp`:
+```bash
+yarn workspace music add sharp
+```
 
