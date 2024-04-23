@@ -1,0 +1,13 @@
+.gitignore
+.editorconfig
+.npmrc
+.nvmrc
+.env
+
+node_modules
+.github
+docs
+
+**/node_modules
+**/dist
+**.md
