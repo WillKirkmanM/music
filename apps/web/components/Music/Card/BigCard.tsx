@@ -1,9 +1,10 @@
 "use client"
 
 import Image from "next/image"
-import { PlayerProvider, usePlayer } from "../Player/usePlayer"
+import { usePlayer } from "../Player/usePlayer"
 import SongContextMenu from "../SongContextMenu"
 import Song from "@/types/Music/Song"
+import { SessionProvider } from "next-auth/react"
 
 type BigCardProps = {
   imageSrc: string,
@@ -29,6 +30,7 @@ export default function BigCard({ imageSrc, title, artistName, songURL, albumURL
   }
 
   return (
+    <SessionProvider>
     <div className="w-36 h-36">
       <SongContextMenu song={song}>
         <Image src={imageSrc} alt={title + " Image"} height={256} width={256} className="rounded cursor-pointer transition-filter duration-300 hover:brightness-50" onClick={handlePlay}/>
@@ -39,5 +41,6 @@ export default function BigCard({ imageSrc, title, artistName, songURL, albumURL
         <p className="text-gray-400">{type} • {artistName}</p>
       </div>
     </div>
+    </SessionProvider>
   )
 }
