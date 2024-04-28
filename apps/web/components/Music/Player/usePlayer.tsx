@@ -41,7 +41,7 @@ export function PlayerProvider({ children }: PlayerProviderProps){
 
   const [imageSrc, setImageSrc] = useState("")
   const [audioSource, setAudioSource] = useState("")
-  const [song, setSong] = useState<Song>({ artist: "", contributing_artists: [], name: "", path: "", track_number: 0 })
+  const [song, setSong] = useState<Song>({ artist: "", contributing_artists: [], name: "", path: "", track_number: 0, id: 0 })
   const [isPlaying, setIsPlaying] = useState(false);
   const [onLoop, setOnLoop] = useState(false);
   const [muted, setMuted] = useState(false)
