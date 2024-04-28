@@ -53,6 +53,21 @@ model User {
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
+  playlists     Playlist[]
+}
+
+model Playlist {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+  songs     Song[]
+}
+
+model Song {
+  id        String   @id
+  playlists Playlist[]
 }
 
 model VerificationRequest {
