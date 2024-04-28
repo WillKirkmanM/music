@@ -34,6 +34,11 @@ import PlusCircle from "../Icons/PlusCircle";
 import ArrowUpCircle from "../Icons/ArrowUpCircle";
 import Bars3Left from "../Icons/Bars3Left";
 import Song from "@/types/Music/Song";
+import { useSession } from "next-auth/react";
+import { useState, useEffect, useTransition } from "react";
+import GetPlaylist from "@/actions/GetPlaylist";
+import getServerSession from "@/lib/Authentication/Sessions/GetServerSession";
+import AddSongToPlaylist from "@/actions/AddSongToPlaylist";
 
 export default function SongContextMenu({
   children,
@@ -42,16 +47,42 @@ export default function SongContextMenu({
   children: React.ReactNode;
   song: Song;
 }) {
+  const [playlists, setPlaylists] = useState<
+    { id: string; name: string; createdAt: Date; updatedAt: Date }[] | undefined
+  >(undefined);
+  const session = useSession();
+
+  useEffect(() => {
+    const getPlaylists = async () => {
+      if (session.status != "loading" && session.status == "authenticated") {
+        let playlists = await GetPlaylist(session.data.user.username);
+        setPlaylists(playlists);
+      }
+    };
+    getPlaylists();
+  }, [session]);
+
+  const [isPending, startTransition] = useTransition()
+
   return (
     <Dialog>
       <ContextMenu>
         <ContextMenuTrigger>{children}</ContextMenuTrigger>
 
         <ContextMenuContent className="w-64">
-          <ContextMenuItem>
-            <IconPlus />
-            Add to Playlist
-          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuSub>
+            <ContextMenuSubTrigger inset>Add to Playlist</ContextMenuSubTrigger>
+            {playlists && playlists.length !== 0 && (
+              <ContextMenuSubContent className="w-48">
+                {playlists?.map((playlist) => (
+                  <div key={playlist.name}>
+                    <ContextMenuItem onClick={() => startTransition(() => AddSongToPlaylist(String(song.id), playlist.id))}>{playlist.name}</ContextMenuItem>
+                  </div>
+                ))}
+              </ContextMenuSubContent>
+            )}
+          </ContextMenuSub>
 
           <ContextMenuItem>
             <IconQueue />
@@ -125,20 +156,14 @@ export default function SongContextMenu({
               </TableRow>
 
               <TableRow>
-                <TableCell className="font-medium">
-                  Track Number
-                </TableCell>
-                <TableCell>
-                  {song.track_number}
-                </TableCell>
+                <TableCell className="font-medium">Track Number</TableCell>
+                <TableCell>{song.track_number}</TableCell>
               </TableRow>
 
               <TableRow>
                 <TableCell className="font-medium">ID</TableCell>
                 <TableCell>{song.id}</TableCell>
               </TableRow>
-
-
             </TableBody>
           </Table>
         </DialogHeader>
