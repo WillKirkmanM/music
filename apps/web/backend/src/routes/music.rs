@@ -65,6 +65,7 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
         let artists = tag.artists().unwrap_or_default().iter().map(|&s| s.to_string()).collect::<Vec<String>>();
         let formatted_artists = format_contributing_artists(artists);
 
+        let song_name = tag.title().unwrap_or_default().to_string();
         let artist_name = formatted_artists[0].0.clone();
         let contributing_artists = formatted_artists[0].1.clone();
 
@@ -73,10 +74,10 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
         let album_name_without_cd = re.replace_all(&album_name, "").trim().to_string();
         let track_number = tag.track_number().unwrap_or_default();
 
-        let id = hash_song(&artist_name, &artist_name, track_number);
+        let id = hash_song(&song_name, &artist_name, &album_name, track_number);
 
         let song = Song {
-            name: tag.title().unwrap_or_default().to_string(),
+            name: song_name,
             id,
             artist: artist_name.clone(),
             contributing_artists,
