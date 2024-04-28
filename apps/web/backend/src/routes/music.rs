@@ -246,7 +246,7 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
                         }
                     }
                 }
-                sleep(Duration::from_millis(500)).await
+                sleep(Duration::from_secs(1)).await
             }
         }
     }
