@@ -1,8 +1,8 @@
-import "@/app/globals.css"
+import "@music/ui/globals.css"
 import { Inter as FontSans } from "next/font/google"
 
-import { cn } from "@/lib/utils"
-import { Toaster } from "@/components/ui/sonner"
+import { cn } from "@music/ui/lib/utils"
+import { Toaster } from "@music/ui/sonner"
 import { Metadata } from "next"
 import NavBar from "@/components/Layout/Navbar"
 import Player from "@/components/Music/Player"
