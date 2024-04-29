@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@music/ui/avatar";
 import Link from "next/link";
 
 export default function ProfilePageWithoutUsername() {
