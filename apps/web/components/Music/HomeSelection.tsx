@@ -17,7 +17,7 @@ export default async function HomeSelection() {
   let typedLibrary: Library = library;
   const allSongs = typedLibrary.flatMap((artist) =>
     artist.albums.flatMap((album) =>
-      album.songs.map((song) => ({
+      (album.songs.filter(Boolean) as any[]).map((song) => ({
         ...song,
         artist: artist.name,
         album: album.name,
