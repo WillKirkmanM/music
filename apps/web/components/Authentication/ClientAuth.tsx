@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@music/ui/button"
 import { useSession } from "next-auth/react"
 import { SessionProvider } from "next-auth/react"
 import { signIn, signOut } from "next-auth/react"
