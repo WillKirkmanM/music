@@ -7,7 +7,7 @@ const config = {
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    './src/**/*.{astro,html,js,jsx,md,mdx,ts,tsx}',
     '../../packages/ui/src/**/*.{ts,tsx}',
   ],
   prefix: "",
@@ -42,10 +42,15 @@ const config = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "marquee": 'marquee 50s linear infinite alternate',
+        "shine": "shine 8s ease-in-out infinite",
+      },
+      "shine": {
+        from: { backgroundPosition: '200% 0' },
+        to: { backgroundPosition: '-200% 0' },
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config
 
 export default config
