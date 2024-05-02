@@ -1,13 +1,13 @@
 "use client"
 
 import { User } from "@prisma/client"
-import { Input } from "@music/ui/input"
+import { Input } from "@music/ui/components/input"
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { Button } from "@music/ui/button"
+import { Button } from "@music/ui/components/button"
 import {
   Form,
   FormControl,
@@ -15,7 +15,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@music/ui/form"
+} from "@music/ui/components/form"
 
 type UsernameProps = {
   username: string

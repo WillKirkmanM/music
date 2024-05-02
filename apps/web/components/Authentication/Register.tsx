@@ -4,7 +4,7 @@ import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { Button } from "@music/ui/button"
+import { Button } from "@music/ui/components/button"
 import {
   Form,
   FormControl,
@@ -12,8 +12,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@music/ui/form"
-import { Input } from "@music/ui/input"
+} from "@music/ui/components/form"
+import { Input } from "@music/ui/components/input"
 import { signIn } from "next-auth/react"
 
 const registerSchema = z.object({

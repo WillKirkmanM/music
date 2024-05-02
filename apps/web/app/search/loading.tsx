@@ -1,4 +1,4 @@
-import { Skeleton } from "@music/ui/skeleton"
+import { Skeleton } from "@music/ui/components/skeleton"
 
 export default function Loading() {
   return (
