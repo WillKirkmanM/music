@@ -1,6 +1,7 @@
 import BigCard from "./Card/BigCard";
 import library from "@/public/music_with_cover_art.json";
 import fs from "fs";
+import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
 import type { Library } from "@/types/Music/Library";
 
 export default async function HomeSelection() {
@@ -32,7 +33,7 @@ export default async function HomeSelection() {
     [allSongs[i], allSongs[j]] = [allSongs[j], allSongs[i]];
   }
 
-  const randomSongs = allSongs.slice(0, 5);
+  const randomSongs = allSongs.slice(0, 10);
   // randomSongs.forEach(song => console.log(`http://localhost:3001/stream/${encodeURIComponent(song.path)}`))
   // randomSongs.forEach(song => console.log(song.image))
 
@@ -43,7 +44,7 @@ export default async function HomeSelection() {
   }
 
   return (
-    <>
+    <ScrollArea >
       <div className="flex flex-row px-5 ">
         {randomSongs.map((song, index) => (
           <div className="mr-20" key={index}>
@@ -63,6 +64,7 @@ export default async function HomeSelection() {
           </div>
         ))}
       </div>
-    </>
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
   );
 }

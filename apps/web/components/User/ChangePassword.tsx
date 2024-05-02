@@ -3,7 +3,7 @@
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Button } from "@music/ui/button"
+import { Button } from "@music/ui/components/button"
 import {
   Dialog,
   DialogContent,
@@ -13,9 +13,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@music/ui/dialog"
-import { Input } from "@music/ui/input"
-import { Label } from "@music/ui/label"
+} from "@music/ui/components/dialog"
+import { Input } from "@music/ui/components/input"
+import { Label } from "@music/ui/components/label"
 import { toast } from "sonner"
 import { User } from "@prisma/client"
 

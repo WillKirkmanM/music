@@ -9,7 +9,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
-} from "@music/ui/navigation-menu"
+} from "@music/ui/components/navigation-menu"
 
 export default function Navbar() {
   return (
