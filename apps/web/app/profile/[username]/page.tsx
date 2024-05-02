@@ -2,7 +2,7 @@ import prisma from "@/prisma/prisma"
 import { User } from "@prisma/client"
 import { redirect } from "next/navigation"
 import Image from "next/image"
-import { Avatar, AvatarFallback } from "@music/ui/avatar"
+import { Avatar, AvatarFallback } from "@music/ui/components/avatar"
 
 type UsernamePageParams = {
   params: {
