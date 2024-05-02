@@ -39,7 +39,7 @@ export default async function SearchPage({ searchParams }: SearchParamsProps) {
   const results = minisearch.search(query).slice(0, 20);
 
   return (
-    <div className="grid grid-cols-5 gap-4">
+    <div className="grid grid-cols-5 gap-4 pt-20 pb-36">
       {results?.map((result) => (
         <div key={result.id} className="flex flex-col items-center p-14">
           <BigCard

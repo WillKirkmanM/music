@@ -8,7 +8,7 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
   ContextMenuTrigger,
-} from "@music/ui/context-menu";
+} from "@music/ui/components/context-menu";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@music/ui/dialog";
+} from "@music/ui/components/dialog";
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@music/ui/table";
+} from "@music/ui/components/table";
 
 
 import IconPlus from "../Icons/IconPlus";

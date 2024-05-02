@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input } from "@music/ui/input"
+import { Input } from "@music/ui/components/input"
 
 export default function SearchBar() {
   const [query, setQuery] = useState("");

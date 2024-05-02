@@ -3,22 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
+    "./components/*": "./src/components/*.tsx",
+    "./lib/*": "./src/lib/*.ts",
     "./globals.css": "./src/globals.css",
     "./postcss.config": "./postcss.config.js",
-    "./tailwind.config": "./tailwind.config.ts",
-    "./lib/*": "./src/lib/*.ts",
-    "./avatar": "./src/avatar.tsx",
-    "./button": "./src/button.tsx",
-    "./context-menu": "./src/context-menu.tsx",
-    "./dialog": "./src/dialog.tsx",
-    "./form": "./src/form.tsx",
-    "./input": "./src/input.tsx",
-    "./label": "./src/label.tsx",
-    "./skeleton": "./src/skeleton.tsx",
-    "./slider": "./src/slider.tsx",
-    "./sonner": "./src/sonner.tsx",
-    "./table": "./src/table.tsx",
-    "./navigation-menu": "./src/navigation-menu.tsx"
+    "./tailwind.config": "./tailwind.config.ts"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
@@ -38,6 +27,8 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@radix-ui/react-navigation-menu": "^1.1.4"
+    "@radix-ui/react-navigation-menu": "^1.1.4",
+    "@radix-ui/react-scroll-area": "^1.0.5",
+    "@radix-ui/react-tooltip": "^1.0.7"
   }
 }
