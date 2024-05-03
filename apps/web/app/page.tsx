@@ -5,17 +5,15 @@ import Player from "@/components/Music/Player";
 import HomeSelection from "@/components/Music/HomeSelection";
 import { PlayerProvider } from "@/components/Music/Player/usePlayer";
 import { Suspense } from "react";
+import ToggleTheme from "@/components/Themes/ToggleTheme";
 
 export default async function Home() {
   const session = await getServerSession()
 
   return (
-    <>
-      {/* <div className="text-4xl text-white jusify-center text-center">{session && session.user && <p>Welcome {session?.user.username}</p>}</div> */}
-      <div className="flex justify-center items-center h-screen flex-col">
-        <HomeSelection />
-      </div>
-
-    </>
+    <div className="flex justify-center items-center h-screen flex-col pt-5">
+      <HomeSelection />
+      <HomeSelection />
+    </div>
   );
 }
