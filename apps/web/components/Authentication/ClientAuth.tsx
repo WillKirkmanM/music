@@ -20,7 +20,7 @@ export function AuthButtons() {
   const session = useSession()
 
   return (
-    <div className="flex flex-row justify-center space-x-6">
+    <div className="flex flex-row justify-center space-x-6 items-center">
       {session.status == "unauthenticated" && <Button onClick={() => signIn()}>Sign In</Button>}
       {session.status == "authenticated" && <Button onClick={() => signOut()}>Sign Out</Button>}
 
