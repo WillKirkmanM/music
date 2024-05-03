@@ -16,8 +16,8 @@
     "seed": "npx ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
-    "@music/ui": "*",
     "@hookform/resolvers": "^3.3.4",
+    "@music/ui": "*",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@prisma/client": "^5.11.0",
     "@radix-ui/react-avatar": "^1.0.4",
