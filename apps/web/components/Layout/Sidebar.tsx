@@ -6,7 +6,7 @@ export async function Sidebar() {
   let playlists;
   if (user) playlists = await prisma?.playlist.findMany({ where: { users: { some: { username: user.user.username } } } })
   return (
-    <aside className="fixed left-0 top-14 hidden h-full w-1/5 space-y-2 p-4 lg:block xl:w-[15%] border-r">
+    <aside className="fixed left-0 hidden h-full w-1/5 space-y-2 p-4 lg:block xl:w-[15%] border-r">
       <h3 className="font-heading text-xl">
         Welcome
       </h3>
