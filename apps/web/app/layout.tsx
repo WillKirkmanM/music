@@ -6,9 +6,8 @@ import { Toaster } from "sonner"
 import { Metadata } from "next"
 import NavBar from "@/components/Layout/Navbar"
 import Player from "@/components/Music/Player"
-import { PlayerProvider } from "@/components/Music/Player/usePlayer"
+import Providers from "@/components/Providers/Providers"
 import { Sidebar } from "@/components/Layout/Sidebar"
-import getServerSession from "@/lib/Authentication/Sessions/GetServerSession"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -32,19 +31,21 @@ export default async function RootLayout({ children }: any) {
           fontSans.variable
         )}
       >
-        <PlayerProvider>
-          <div className="fixed top-0 left-0 z-50 w-full-auto">
+        <Providers>
+          <div className="fixed top-0 left-0 z-50 w-full">
             <NavBar />
           </div>
-          <div className="grid lg:grid-cols-6 fixed h-screen overflow-auto">
+          <div className="grid grid-cols-6 gap-4 pt-16 h-screen overflow-auto">
+            <div className="col-span-1 fixed h-full overflow-auto">
               <Sidebar />
-          </div>
-            <div className="col-start-2 col-span-7 overflow-auto">
+            </div>
+            <div className="col-start-2 col-span-5 overflow-auto">
               {children}
+            </div>
           </div>
           <Player />
           <Toaster />
-        </PlayerProvider>
+        </Providers>
       </body>
     </html>
   )
