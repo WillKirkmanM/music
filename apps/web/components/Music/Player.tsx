@@ -44,13 +44,12 @@ export default function Player() {
     <footer className="fixed bottom-0 bg-gray-600 border-t border-gray-700 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 w-full">
       <section className="flex items-center gap-3">
         <div className="w-20 h-20 bg-gray-500 rounded-md">
-          {/* <Image alt="Return of the Mack Cover" src="https:/m.media-amazon.com/images/I/71U4T6RxDBS._UF1000,1000_QL80_.jpg" width={334} height={332}/> */}
           <Image alt={song.name + "Image"} src={imageSrc} width={334} height={332} />
         </div>
-          <div className="max-w-52 overflow-hidden">
-            <p className="whitespace-nowrap animate-marquee">{song.name}</p>
-            <p className="text-xs text-gray-400">{song.artist}</p>
-          </div>
+        <div className="w-32 overflow-hidden">
+          <p className={`whitespace-nowrap ${song.name.length > 15 ? 'animate-marquee' : ''}`} title={song.name.length > 15 ? song.name : ''}>{song.name}</p>
+          <p className="text-xs text-gray-400">{song.artist}</p>
+        </div>
         <button className="text-gray-400 hover:text-white transition-colors duration-300">
           {liked ? <CheckCircle /> : <PlusCircle />}
         </button>
