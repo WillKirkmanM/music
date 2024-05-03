@@ -44,8 +44,8 @@ export default async function HomeSelection() {
   }
 
   return (
-    <ScrollArea >
-      <div className="flex flex-row px-5 ">
+    <ScrollArea className="w-full overflow-x-auto overflow-y-auto h-full">
+      <div className="flex flex-row px-5">
         {randomSongs.map((song, index) => (
           <div className="mr-20" key={index}>
             <BigCard
