@@ -5,6 +5,7 @@ mod utils;
 use actix_web::{HttpServer, App};
 use std::env;
 
+use routes::index::home;
 use routes::music::{
     songs_list,
     index_library,
@@ -40,6 +41,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(|| {
         App::new()
+            .service(home)
             .service(songs_list)
             .service(index_library)
             .service(stream_song)
