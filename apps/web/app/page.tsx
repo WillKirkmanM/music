@@ -8,8 +8,6 @@ import { Suspense } from "react";
 import ToggleTheme from "@/components/Themes/ToggleTheme";
 
 export default async function Home() {
-  const session = await getServerSession()
-
   return (
     <div className="flex justify-center items-center h-screen flex-col pt-5">
       <HomeSelection />
