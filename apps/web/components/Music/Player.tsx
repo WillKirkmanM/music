@@ -11,6 +11,8 @@ import ArrowPath from "../Icons/ArrowPath"
 import SpeakerXMark from "../Icons/SpeakerXMark"
 import SpeakerWave from "../Icons/SpeakerWave"
 import { usePlayer } from "./Player/usePlayer"
+import AddToPlaylistDropdown from "./Player/AddToPlaylistDropdown"
+import { SessionProvider } from "next-auth/react"
 
 export default function Player() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -50,9 +52,9 @@ export default function Player() {
           <p className={`whitespace-nowrap ${song.name.length > 15 ? 'animate-marquee' : ''}`} title={song.name.length > 15 ? song.name : ''}>{song.name}</p>
           <p className="text-xs text-gray-400">{song.artist}</p>
         </div>
-        <button className="text-gray-400 hover:text-white transition-colors duration-300">
-          {liked ? <CheckCircle /> : <PlusCircle />}
-        </button>
+        <div className="text-gray-400 hover:text-white transition-colors duration-300">
+          {liked ? <CheckCircle /> : <SessionProvider><AddToPlaylistDropdown><PlusCircle /></AddToPlaylistDropdown></SessionProvider>}
+        </div>
       </section>
       <section className="flex flex-col items-center gap-2 w-full">
         <div className="flex items-center gap-4">
