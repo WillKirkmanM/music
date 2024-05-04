@@ -13,6 +13,7 @@ import SpeakerWave from "../Icons/SpeakerWave"
 import { usePlayer } from "./Player/usePlayer"
 import AddToPlaylistDropdown from "./Player/AddToPlaylistDropdown"
 import { SessionProvider } from "next-auth/react"
+import { Slider, SliderRange, SliderThumb, SliderTrack } from "@music/ui/components/slider"
 
 export default function Player() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -70,14 +71,31 @@ export default function Player() {
         </div>
         <div className="flex items-center gap-2 w-full justify-center">
           <span className="text-xs text-gray-400">{formatTime(currentTime)}</span>
-            <input 
+            {/* <input 
               type="range" 
               className="h-1 w-1/2 slider" 
               min={0} 
               max={duration} 
               value={currentTime} 
               onChange={e => handleTimeChange(e.target.value)}
-            />
+            /> */}
+
+          <Slider
+            min={0}
+            max={duration}
+            value={[currentTime]}
+            onValueChange={([values]) => {
+              handleTimeChange(Number(values))
+            }}
+            className="w-1/2 group"
+          >
+            <SliderTrack className="h-1 bg-black cursor-pointer">
+              <SliderRange />
+            </SliderTrack>
+
+            <SliderThumb className="cursor-pointer bg-white hidden group-hover:block size-4" />
+          </Slider>
+
             <span className="text-xs text-gray-400">{formatTime(duration)}</span>
         </div>
       </section>
