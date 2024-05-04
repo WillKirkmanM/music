@@ -37,8 +37,7 @@ import Bars3Left from "../Icons/Bars3Left";
 import Song from "@/types/Music/Song";
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useTransition } from "react";
-import GetPlaylist from "@/actions/GetPlaylist";
-import getServerSession from "@/lib/Authentication/Sessions/GetServerSession";
+import GetPlaylists from "@/actions/GetPlaylists";
 import AddSongToPlaylist from "@/actions/AddSongToPlaylist";
 
 export default function SongContextMenu({
@@ -56,7 +55,7 @@ export default function SongContextMenu({
   useEffect(() => {
     const getPlaylists = async () => {
       if (session.status != "loading" && session.status == "authenticated") {
-        let playlists = await GetPlaylist(session.data.user.username);
+        let playlists = await GetPlaylists(session.data.user.username);
         setPlaylists(playlists);
       }
     };
