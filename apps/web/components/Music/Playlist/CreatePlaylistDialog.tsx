@@ -28,7 +28,7 @@ export default function CreatePlaylistDialog({ children, username}: CreatePlayli
 
   return (
     <Dialog>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
