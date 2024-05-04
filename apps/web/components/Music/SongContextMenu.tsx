@@ -39,6 +39,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect, useTransition } from "react";
 import GetPlaylists from "@/actions/Playlist/GetPlaylists";
 import AddSongToPlaylist from "@/actions/Playlist/AddSongToPlaylist";
+import { CircleArrowUp, CirclePlus, ExternalLink, ListEnd, Plus, UserRoundSearch } from "lucide-react";
 
 export default function SongContextMenu({
   children,
@@ -67,12 +68,14 @@ export default function SongContextMenu({
   return (
     <Dialog>
       <ContextMenu>
-        <ContextMenuTrigger>{children}</ContextMenuTrigger>
+        <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
 
         <ContextMenuContent className="w-64">
-          <ContextMenuSeparator />
           <ContextMenuSub>
-            <ContextMenuSubTrigger inset>Add to Playlist</ContextMenuSubTrigger>
+            <ContextMenuSubTrigger >
+              <Plus className="size-5"/>
+              <p className="pl-3">Add to Playlist</p>
+            </ContextMenuSubTrigger>
             {playlists && playlists.length !== 0 && (
               <ContextMenuSubContent className="w-48">
                 {playlists?.map((playlist) => (
@@ -85,35 +88,38 @@ export default function SongContextMenu({
           </ContextMenuSub>
 
           <ContextMenuItem>
-            <IconQueue />
-            Add to Queue
+            <ListEnd className="size-5"/>
+            <p className="pl-3">Add to Queue</p>
           </ContextMenuItem>
 
           <ContextMenuItem>
-            <PlusCircle />
-            Add to Liked
+            <CirclePlus className="size-5"/>
+            <p className="pl-3">Add to Liked</p>
           </ContextMenuItem>
 
           <ContextMenuSeparator />
 
           <ContextMenuItem>
-            <IconGoToArtist className="w-6 h-6" />
-            Go to Artist
+            <UserRoundSearch className="size-5"/>
+            <p className="pl-3">Go to Artist</p>
           </ContextMenuItem>
 
           <ContextMenuItem>
-            <ArrowUpCircle />
-            Go to Album
+            <CircleArrowUp className="size-5"/>
+            <p className="pl-3">Go to Album</p>
           </ContextMenuItem>
 
-          <ContextMenuCheckboxItem>
-            <Bars3Left />
-            View Credits
-          </ContextMenuCheckboxItem>
+          <ContextMenuItem>
+            <Bars3Left className="size-5"/>
+            <p className="pl-3">View Credits</p>
+          </ContextMenuItem>
 
           <ContextMenuSeparator />
           <ContextMenuSub>
-            <ContextMenuSubTrigger inset>Share</ContextMenuSubTrigger>
+            <ContextMenuSubTrigger>
+              <ExternalLink className="size-5"/>
+              <p className="pl-3">Share</p>
+            </ContextMenuSubTrigger>
             <ContextMenuSubContent className="w-48">
               <ContextMenuItem>Copy Song Link</ContextMenuItem>
               <ContextMenuItem>Embed track</ContextMenuItem>
@@ -122,8 +128,8 @@ export default function SongContextMenu({
 
           <DialogTrigger asChild>
             <ContextMenuItem>
-              <PlusCircle />
-              View Properties
+              <CirclePlus className="size-5"/>
+              <p className="pl-3">View Properties</p>
             </ContextMenuItem>
           </DialogTrigger>
         </ContextMenuContent>
