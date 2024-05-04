@@ -2,7 +2,7 @@
 
 import prisma from "@/prisma/prisma";
 
-export default async function GetPlaylist(username: string) {
+export default async function GetPlaylists(username: string) {
   const playlists = prisma?.playlist.findMany({
     where: {
       users: {
@@ -10,6 +10,9 @@ export default async function GetPlaylist(username: string) {
           username: username
         }
       }
+    },
+    include: {
+      songs: true
     }
   })
  
