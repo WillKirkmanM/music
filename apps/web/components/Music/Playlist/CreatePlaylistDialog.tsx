@@ -24,10 +24,14 @@ type CreatePlaylistDialog = {
 
 export default function CreatePlaylistDialog({ children, username}: CreatePlaylistDialog) {
   const [playlistName, setPlaylistName] = useState("")
+  const [openDialog, setOpenDialog] = useState(false)
   const [isPending, startTransition] = useTransition()
 
+  const open = () => setOpenDialog(true)
+  const close = () => setOpenDialog(false)
+
   return (
-    <Dialog>
+    <Dialog open={openDialog} onOpenChange={() => setOpenDialog(!openDialog)}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
@@ -53,8 +57,7 @@ export default function CreatePlaylistDialog({ children, username}: CreatePlayli
           </div>
         </div>
         <DialogFooter>
-          
-          <Button type="submit" disabled={isPending} onClick={() => startTransition(() => CreatePlaylist(playlistName, username))}>
+          <Button type="submit" disabled={isPending} onClick={() => startTransition(() => CreatePlaylist(playlistName, username).then(close))}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
             Create Playlist
           </Button>
