@@ -6,7 +6,7 @@ import ToggleTheme from "../Themes/ToggleTheme";
 export default function NavBar() {
   return (
     <>
-      <nav className="fixed w-full top-0 p-4 flex items-center justify-between gap-2 border-b border-gray-300">
+      <nav className="fixed w-full top-0 p-4 flex items-center justify-between gap-2 border-b border-gray-300 box-border h-16">
         <Link href="/">
           <div className="text-2xl text-white font-bold hover:text-gray-300">
             ParsonLabs Music
