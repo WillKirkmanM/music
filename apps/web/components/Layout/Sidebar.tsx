@@ -2,8 +2,8 @@ import getServerSession from "@/lib/Authentication/Sessions/GetServerSession";
 import Link from "next/link";
 import prisma from "@/prisma/prisma";
 import { Button } from "@music/ui/components/button";
-import IconPlus from "../Icons/IconPlus";
 import CreatePlaylistDialog from "../Music/Playlist/CreatePlaylistDialog";
+import { Plus } from "lucide-react";
 
 export async function Sidebar() {
   const user = await getServerSession()
@@ -25,7 +25,7 @@ export async function Sidebar() {
  
       <CreatePlaylistDialog username={user!.user.username}>
         <Button>
-          <IconPlus />
+          <Plus className="mr-2 h-4 w-4" />
           Create Playlist
         </Button>
       </CreatePlaylistDialog>
