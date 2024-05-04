@@ -53,7 +53,7 @@ export default function Player() {
           <p className="text-xs text-gray-400">{song.artist}</p>
         </div>
         <div className="text-gray-400 hover:text-white transition-colors duration-300">
-          {liked ? <CheckCircle /> : <SessionProvider><AddToPlaylistDropdown><PlusCircle /></AddToPlaylistDropdown></SessionProvider>}
+          {song.name && (liked ? <CheckCircle /> : <SessionProvider><AddToPlaylistDropdown><PlusCircle /></AddToPlaylistDropdown></SessionProvider>)}
         </div>
       </section>
       <section className="flex flex-col items-center gap-2 w-full">
