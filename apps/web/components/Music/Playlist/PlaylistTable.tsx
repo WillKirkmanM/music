@@ -14,6 +14,8 @@ import { ScrollArea } from "@music/ui/components/scroll-area"
 import { usePlayer } from "@/components/Music/Player/usePlayer";
 import Song from "@/types/Music/Song";
 import imageToBase64 from "@/actions/ImageToBase64";
+import SongContextMenu from "../SongContextMenu";
+import { SessionProvider } from "next-auth/react";
 
 type PlaylistTableProps = {
   songsWithMetadata: {
@@ -53,20 +55,24 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
           </TableRow>
         </TableHeader>
 
-        {songsWithMetadata.map((song, index) => (
-          <TableBody key={song.song.id}>
-            <TableRow onClick={() => handlePlay(song.coverURL, song.song, `http://localhost:3001/stream/${encodeURIComponent(song.path)}`)}>
-              <TableCell className="font-medium">{index + 1}</TableCell>
-              <TableCell>
-                <div className="w-[300px] overflow-hidden whitespace-nowrap text-overflow">
-                  <PlaylistCard song={song.song} coverURL={song.coverURL} />
-                </div>
-              </TableCell>
-              <TableCell>{song.albumName}</TableCell>
-              <TableCell className="text-right">{song.artistName}</TableCell>
-            </TableRow>
-          </TableBody>
-        ))}
+        <SessionProvider>
+          {songsWithMetadata.map((song, index) => (
+            <SongContextMenu song={song.song} key={song.song.id}>
+              <TableBody key={song.song.id}>
+                <TableRow onClick={() => handlePlay(song.coverURL, song.song, `http://localhost:3001/stream/${encodeURIComponent(song.path)}`)}>
+                  <TableCell className="font-medium">{index + 1}</TableCell>
+                  <TableCell>
+                    <div className="w-[300px] overflow-hidden whitespace-nowrap text-overflow">
+                      <PlaylistCard song={song.song} coverURL={song.coverURL} />
+                    </div>
+                  </TableCell>
+                  <TableCell>{song.albumName}</TableCell>
+                  <TableCell className="text-right">{song.artistName}</TableCell>
+                </TableRow>
+              </TableBody>
+            </SongContextMenu>
+          ))}
+        </SessionProvider>
       </Table>
     </div>
   )
