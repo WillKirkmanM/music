@@ -37,8 +37,8 @@ import Bars3Left from "../Icons/Bars3Left";
 import Song from "@/types/Music/Song";
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useTransition } from "react";
-import GetPlaylists from "@/actions/GetPlaylists";
-import AddSongToPlaylist from "@/actions/AddSongToPlaylist";
+import GetPlaylists from "@/actions/Playlist/GetPlaylists";
+import AddSongToPlaylist from "@/actions/Playlist/AddSongToPlaylist";
 
 export default function SongContextMenu({
   children,
