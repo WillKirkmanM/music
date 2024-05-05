@@ -18,7 +18,7 @@ use rayon::prelude::*;
 use tokio::time::{sleep, Duration};
 
 use crate::structures::structures::{Album, Artist, Song};
-use crate::utils::{ format::format_contributing_artists, hash::{hash_album, hash_song} };
+use crate::utils::{ format::format_contributing_artists, hash::{hash_artist, hash_album, hash_song} };
 
 #[get("/songs/list")]
 async fn songs_list() -> impl Responder {
@@ -94,7 +94,7 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
         let artist = if let Some(artist_position) = artist_position {
             &mut library[artist_position]
         } else {
-            let new_artist = Artist { name: artist_name.clone(), albums: Vec::new() };
+            let new_artist = Artist { id: hash_artist(&artist_name), name: artist_name.clone(), albums: Vec::new() };
             library.push(new_artist);
             library.last_mut().unwrap()
         };
@@ -234,6 +234,78 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
                                         } else {
                                             warn!("Error when trying to fetch cover art for album: {}. Error: {}", album.name, e);
                                         }
+                                    }
+                                }
+                            }
+                        }
+                        if album.cover_url.is_empty() {
+                            sleep(Duration::from_millis(500)).await;
+                            info!("Could not find cover art for album {}, searching for any cover art", album.name);
+
+                            let url = format!("https://musicbrainz.org/ws/2/release/?query=artist:\"{}\" AND release:\"{}\"&fmt=json", artist.name, album.name);
+                            let response = client.get(&url).send().await;
+
+                            match response {
+                                Ok(response) => {
+                                    let body = response.text().await.unwrap();
+
+                                    let v: serde_json::Value = serde_json::from_str(&body).unwrap_or("[]".into());
+
+                                    if let Some(albums) = v["releases"].as_array() {
+                                        for first_album in albums {
+                                            let album_id = first_album["id"].as_str().unwrap();
+
+                                            let cover_art_url = format!("http://coverartarchive.org/release/{}", album_id);
+                                            let cover_art_response = client.get(&cover_art_url).send().await;
+
+                                            match cover_art_response {
+                                                Ok(cover_art_response) => {
+                                                    if cover_art_response.status().is_success() {
+                                                        let cover_art_body = cover_art_response.text().await.unwrap();
+                                                        let cover_art: serde_json::Value = serde_json::from_str(&cover_art_body).unwrap();
+
+                                                        if let Some(images) = cover_art["images"].as_array() {
+                                                            if let Some(first_image) = images.get(0) {
+                                                                if let Some(image_url) = first_image["image"].as_str() {
+                                                                    album.cover_url = image_url.to_string();
+                                                                    info!("Cover art found online for Album: {}", album.name);
+
+                                                                    let image_response = client.get(image_url).send().await.unwrap();
+                                                                    let image_bytes = image_response.bytes().await.unwrap();
+
+                                                                    fs::create_dir_all("missing_cover_art").await.unwrap();
+                                                                    let cover_url_file_path = format!("missing_cover_art/{}.jpg", album.id);
+                                                                    fs::write(&cover_url_file_path, image_bytes).await.unwrap();
+
+                                                                    let absolute_path = fs::canonicalize(&cover_url_file_path).await.unwrap();
+                                                                    let absolute_path_str = absolute_path.to_str().unwrap().to_string();
+                                                                    let clean_path = absolute_path_str.trim_start_matches("\\\\?\\");
+                                                                    album.cover_url = clean_path.to_string();
+
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                    } else {
+                                                        warn!("Cover art for album {} could not be found initially, alternative art will be searched.", album.name);
+                                                    }
+                                                },
+                                                Err(e) => {
+                                                    if e.status() == Some(StatusCode::SERVICE_UNAVAILABLE) {
+                                                        warn!("Service unavailable (503) when trying to fetch cover art for album: {}", album.name);
+                                                    } else {
+                                                        warn!("Error when trying to fetch cover art for album: {}. Error: {}", album.name, e);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                Err(e) => {
+                                    if e.status() == Some(StatusCode::SERVICE_UNAVAILABLE) {
+                                        warn!("Service unavailable (503) when trying to fetch data for artist: {} and album: {}", artist.name, album.name);
+                                    } else {
+                                        warn!("Error when trying to fetch data for artist: {} and album: {}. Error: {}", artist.name, album.name, e);
                                     }
                                 }
                             }
