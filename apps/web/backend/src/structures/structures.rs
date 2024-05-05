@@ -2,6 +2,7 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Artist {
+    pub id: u64,
     pub name: String,
     pub albums: Vec<Album>,
 }

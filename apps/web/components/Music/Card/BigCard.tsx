@@ -5,18 +5,20 @@ import { usePlayer } from "../Player/usePlayer"
 import SongContextMenu from "../SongContextMenu"
 import Song from "@/types/Music/Song"
 import { SessionProvider } from "next-auth/react"
+import Link from "next/link"
+import Artist from "@/types/Music/Artist"
 
 type BigCardProps = {
   imageSrc: string,
   title: string,
-  artistName: string,
+  artist: Artist
   songURL: string,
   albumURL: string
   type: string
   song: Song
 }
 
-export default function BigCard({ imageSrc, title, artistName, songURL, albumURL, type, song }: BigCardProps) {
+export default function BigCard({ imageSrc, title, artist, songURL, albumURL, type, song }: BigCardProps) {
   const {
     setImageSrc,
     setAudioSource,
@@ -38,7 +40,7 @@ export default function BigCard({ imageSrc, title, artistName, songURL, albumURL
 
       <div className="flex flex-col text-left mt-3">
         <p className="font-bold text-white overflow-hidden overflow-ellipsis whitespace-nowrap" title={title}>{title}</p>
-        <p className="text-gray-400">{type} • {artistName}</p>
+        <p className="text-gray-400">{type} • <Link href={`/artist/${artist.id ?? "0"}`}>{artist.name}</Link></p>
       </div>
     </div>
     </SessionProvider>
