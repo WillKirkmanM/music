@@ -13,7 +13,7 @@ export async function populateSearch() {
   const flattenedLibrary = library.flatMap((artist: Artist) =>
     artist.albums.flatMap((album: Album) =>
       album.songs.map((song: Song) => ({
-        artistName: artist.name,
+        artist: artist,
         coverURL: album.cover_url,
         albumName: album.name,
         songName: song.name,
@@ -26,8 +26,8 @@ export async function populateSearch() {
   );
 
   const miniSearch = new MiniSearch({ 
-    fields: ["artistName", "albumName", "songName", "contributingArtists", "trackNumber", "path", "coverURL", "song"],
-    storeFields: ["artistName", "albumName", "songName", "coverURL", "song"],
+    fields: ["artist", "albumName", "songName", "contributingArtists", "trackNumber", "path", "coverURL", "song"],
+    storeFields: ["artist", "albumName", "songName", "coverURL", "song"],
     idField: "path",
   });
 
