@@ -4,6 +4,7 @@ import { miniSearch } from "@/lib/Search/search";
 import Song from "@/types/Music/Song";
 import { useEffect, useState } from "react";
 import Loading from "./loading";
+import Artist from "@/types/Music/Artist";
 
 type SearchParamsProps = {
   searchParams: {
@@ -43,7 +44,7 @@ export default async function SearchPage({ searchParams }: SearchParamsProps) {
       {results?.map((result) => (
         <div key={result.id} className="flex flex-col items-center p-14">
           <BigCard
-            artistName={result.artistName}
+            artist={result.artist}
             songURL={`http://localhost:3001/stream/${encodeURIComponent(result.id)}`}
             title={result.songName}
             type="Song"
