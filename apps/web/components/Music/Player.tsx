@@ -89,7 +89,7 @@ export default function Player() {
             }}
             className="w-1/2 group"
           >
-            <SliderTrack className="h-1 bg-black cursor-pointer">
+            <SliderTrack className="h-1 bg-gray-400 cursor-pointer">
               <SliderRange />
             </SliderTrack>
 
