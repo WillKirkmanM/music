@@ -24,12 +24,14 @@ export async function Sidebar() {
         )
       })}
  
-      <CreatePlaylistDialog username={user!.user.username}>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Playlist
-        </Button>
-      </CreatePlaylistDialog>
+      {user && (
+        <CreatePlaylistDialog username={user.user.username}>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Playlist
+          </Button>
+        </CreatePlaylistDialog>
+      )}
 
     </aside>
   );

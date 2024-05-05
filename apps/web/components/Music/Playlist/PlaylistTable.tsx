@@ -38,7 +38,8 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
     if (coverURL.length > 0) {
       base64Image = await imageToBase64(coverURL)
     }
-    setImageSrc(`data:image/jpg:base64,${base64Image}`)
+
+    setImageSrc(`data:image/jpg;base64,${base64Image}`)
     setSong(song)
     setAudioSource(songURL)
   }
