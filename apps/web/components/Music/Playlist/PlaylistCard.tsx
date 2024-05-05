@@ -1,7 +1,7 @@
 import imageToBase64 from "@/actions/ImageToBase64"
 import Song from "@/types/Music/Song"
 import Image from "next/image"
-import { useEffect, useState } from "react"
+import { useEffect, useState, startTransition } from "react"
 
 type PlaylistCardProps = {
   song: Song,
@@ -9,8 +9,6 @@ type PlaylistCardProps = {
 }
 
 export default function PlaylistCard({ song, coverURL }: PlaylistCardProps) {
-  // let imageSrc = coverURL.length === 0 ? "/snf.png" : `data:image/jpg;base64,${imageToBase64(coverURL)}`
-
   const [imageSrc, setImageSrc] = useState("")
 
   useEffect(() => {
