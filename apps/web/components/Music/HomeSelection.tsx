@@ -20,7 +20,7 @@ export default async function HomeSelection() {
     artist.albums.flatMap((album) =>
       (album.songs.filter(Boolean) as any[]).map((song) => ({
         ...song,
-        artist: artist.name,
+        artist,
         album: album.name,
         image: album.cover_url,
       }))
@@ -50,7 +50,7 @@ export default async function HomeSelection() {
           <div className="mr-20" key={index}>
             <BigCard
               title={song.name}
-              artistName={song.artist}
+              artist={song.artist}
               imageSrc={
                 song.image.length === 0
                   ? "/snf.png"
