@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, useCallback, useContext } from "react";
 import { createContext } from "react";
 
 import type Song from "@/types/Music/Song";
+import Artist from "@/types/Music/Artist";
+import Album from "@/types/Music/Album";
 
 const isBrowser = typeof window !== "undefined"
 const audioElement = isBrowser ? new Audio() : null
@@ -24,9 +26,13 @@ type PlayerContextType = {
   toggleMute: Function;
   setAudioSource: Function;
   setSong: Function;
+  setArtist: Function;
+  setAlbum: Function;
   setImageSrc: Function;
   imageSrc: string;
-  song: Song
+  song: Song;
+  artist: Artist;
+  album: Album
 };
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -42,6 +48,8 @@ export function PlayerProvider({ children }: PlayerProviderProps){
   const [imageSrc, setImageSrc] = useState("")
   const [audioSource, setAudioSource] = useState("")
   const [song, setSong] = useState<Song>({ artist: "", contributing_artists: [], name: "", path: "", track_number: 0, id: 0 })
+  const [artist, setArtist] = useState<Artist>({ albums: [], id: 0, name: "" })
+  const [album, setAlbum] = useState<Album>({ cover_url: "", id: 0, name: "", songs: []})
   const [isPlaying, setIsPlaying] = useState(false);
   const [onLoop, setOnLoop] = useState(false);
   const [muted, setMuted] = useState(false)
@@ -211,6 +219,10 @@ export function PlayerProvider({ children }: PlayerProviderProps){
       setAudioSource,
       setSong,
       song,
+      setArtist,
+      artist,
+      setAlbum,
+      album,
       setImageSrc,
       imageSrc,
     }}>
