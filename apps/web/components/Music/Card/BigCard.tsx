@@ -38,7 +38,7 @@ export default function BigCard({ imageSrc, title, artist, songURL, albumURL, ty
 
   return (
     <div className="w-36 h-36">
-      <SongContextMenu song={song}>
+      <SongContextMenu song={song} album={album} artist={artist}>
         <Image src={imageSrc} alt={title + " Image"} height={256} width={256} className="rounded cursor-pointer transition-filter duration-300 hover:brightness-50" onClick={handlePlay}/>
       </SongContextMenu>
 
