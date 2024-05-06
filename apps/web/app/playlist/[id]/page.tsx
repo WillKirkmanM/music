@@ -37,15 +37,15 @@ export default async function PlaylistPage({ params }: PlaylistPageParams) {
         trackNumber: song.track_number,
         path: song.path,
         song: song,
+        album: album,
+        artist: artist
       }))
     )
   );
 
   let songIds = playlist.songs.map((song) => song.id);
 
-  let songsWithMetadata = flattenedLibrary.filter((librarySong) =>
-    songIds.includes(librarySong.song.id.toString())
-  );
+  let songsWithMetadata = flattenedLibrary.filter((librarySong) => songIds.includes(librarySong.song.id.toString()))
 
   return (
     <>
