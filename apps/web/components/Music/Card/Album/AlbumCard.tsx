@@ -12,7 +12,7 @@ type AlbumCardProps = {
 
 export default async function AlbumCard({ artist, album }: AlbumCardProps) {
   const base64Image = await imageToBase64(album.cover_url)
-  const albumCoverURL = album.cover_url.length === 0 ? "/snf.png" : `data:image/jpg;base64,${base64Image}`
+  const albumCoverURL = (!album.cover_url || album.cover_url.length === 0) ? "/snf.png" : `data:image/jpg;base64,${base64Image}`
 
   return (
     <div className="w-36 h-36">
