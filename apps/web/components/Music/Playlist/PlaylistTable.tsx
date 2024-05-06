@@ -17,6 +17,7 @@ import imageToBase64 from "@/actions/ImageToBase64";
 import SongContextMenu from "../SongContextMenu";
 import Artist from "@/types/Music/Artist";
 import Album from "@/types/Music/Album";
+import Link from "next/link";
 
 type PlaylistTableProps = {
   songsWithMetadata: {
@@ -62,7 +63,7 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
         </TableHeader>
 
         {songsWithMetadata.map((song, index) => (
-          <SongContextMenu song={song.song} key={song.song.id}>
+          <SongContextMenu song={song.song} album={song.album} artist={song.artist} key={song.song.id}>
             <TableBody key={song.song.id}>
               <TableRow onClick={() => handlePlay(song.coverURL, song.song, `http://localhost:3001/stream/${encodeURIComponent(song.path)}`, song.artist, song.album)}>
                 <TableCell className="font-medium">{index + 1}</TableCell>
@@ -71,8 +72,8 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
                     <PlaylistCard song={song.song} coverURL={song.coverURL} />
                   </div>
                 </TableCell>
-                <TableCell>{song.albumName}</TableCell>
-                <TableCell className="text-right">{song.artistName}</TableCell>
+                <TableCell><Link href={`/album/${song.album.id}`}>{song.album.name}</Link></TableCell>
+                <TableCell className="text-right"><Link href={`/artist/${song.artist.id}`}>{song.artist.name}</Link></TableCell>
               </TableRow>
             </TableBody>
           </SongContextMenu>
