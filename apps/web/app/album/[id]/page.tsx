@@ -52,7 +52,7 @@ export default async function AlbumPage({ params }: ArtistPage) {
           </Link>
         </div>
       </div>
-      <AlbumTable album={album} songs={album.songs} key={album.id} />
+      <AlbumTable album={album} songs={album.songs} artist={artist} key={album.id} />
     </>
     : redirect("/404")
   )
