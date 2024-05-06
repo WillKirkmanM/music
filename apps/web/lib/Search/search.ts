@@ -29,6 +29,9 @@ export async function populateSearch() {
     fields: ["artist", "albumName", "songName", "contributingArtists", "trackNumber", "path", "coverURL", "song"],
     storeFields: ["artist", "albumName", "songName", "coverURL", "song"],
     idField: "path",
+    searchOptions: {
+      fuzzy: 0.3
+    }
   });
 
   await miniSearch.addAllAsync(flattenedLibrary);

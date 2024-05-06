@@ -12,8 +12,8 @@ import SpeakerXMark from "../Icons/SpeakerXMark"
 import SpeakerWave from "../Icons/SpeakerWave"
 import { usePlayer } from "./Player/usePlayer"
 import AddToPlaylistDropdown from "./Player/AddToPlaylistDropdown"
-import { SessionProvider } from "next-auth/react"
 import { Slider, SliderRange, SliderThumb, SliderTrack } from "@music/ui/components/slider"
+import Link from "next/link"
 
 export default function Player() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -34,7 +34,9 @@ export default function Player() {
     handleTimeUpdate,
     toggleMute,
     imageSrc,
-    song
+    song,
+    artist,
+    album
   } = usePlayer()
 
   const formatTime = (time: number) => {
@@ -50,11 +52,11 @@ export default function Player() {
           <Image alt={song.name + "Image"} src={imageSrc} width={334} height={332} />
         </div>
         <div className="w-32 overflow-hidden">
-          <p className={`whitespace-nowrap ${song.name.length > 15 ? 'animate-marquee' : ''}`} title={song.name.length > 15 ? song.name : ''}>{song.name}</p>
-          <p className="text-xs text-gray-400">{song.artist}</p>
+          <p className={`whitespace-nowrap ${song.name.length > 15 ? 'animate-marquee' : ''}`} title={song.name.length > 15 ? song.name : ''}><Link href={`/album/${album.id}`}>{song.name}</Link></p>
+          <p className="text-xs text-gray-400"><Link href={`/artist/${artist.id}`}>{artist.name}</Link></p>
         </div>
         <div className="text-gray-400 hover:text-white transition-colors duration-300">
-          {song.name && (liked ? <CheckCircle /> : <SessionProvider><AddToPlaylistDropdown><PlusCircle /></AddToPlaylistDropdown></SessionProvider>)}
+          {song.name && (liked ? <CheckCircle /> : <AddToPlaylistDropdown><PlusCircle /></AddToPlaylistDropdown>)}
         </div>
       </section>
       <section className="flex flex-col items-center gap-2 w-full">

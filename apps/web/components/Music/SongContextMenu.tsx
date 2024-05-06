@@ -40,13 +40,20 @@ import { useState, useEffect, useTransition } from "react";
 import GetPlaylists from "@/actions/Playlist/GetPlaylists";
 import AddSongToPlaylist from "@/actions/Playlist/AddSongToPlaylist";
 import { CircleArrowUp, CirclePlus, ExternalLink, ListEnd, Plus, UserRoundSearch } from "lucide-react";
+import { usePlayer } from "./Player/usePlayer";
+import Artist from "@/types/Music/Artist";
+import Album from "@/types/Music/Album";
 
 export default function SongContextMenu({
   children,
   song,
+  artist,
+  album,
 }: {
   children: React.ReactNode;
   song: Song;
+  artist: Artist;
+  album: Album;
 }) {
   const [playlists, setPlaylists] = useState<
     { id: string; name: string; createdAt: Date; updatedAt: Date }[] | undefined
@@ -64,6 +71,8 @@ export default function SongContextMenu({
   }, [session]);
 
   const [isPending, startTransition] = useTransition()
+
+  const { addToQueue } = usePlayer()
 
   return (
     <Dialog>
@@ -87,7 +96,7 @@ export default function SongContextMenu({
             )}
           </ContextMenuSub>
 
-          <ContextMenuItem>
+          <ContextMenuItem onClick={() => addToQueue(song, album, artist)}>
             <ListEnd className="size-5"/>
             <p className="pl-3">Add to Queue</p>
           </ContextMenuItem>
