@@ -1,7 +1,5 @@
 import untypedLibrary from "@/public/music_with_cover_art.json";
 import type { Library } from "@/types/Music/Library";
-import type Album from "@/types/Music/Album";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import AlbumCard from "@/components/Music/Card/Album/AlbumCard";
 
@@ -10,6 +8,20 @@ type ArtistPage = {
     id: number;
   };
 };
+
+export const dynamicParams = true
+
+export async function generateStaticParams() {
+  let library: Library = untypedLibrary
+
+  let params = []
+
+  for (const artist of library) {
+    params.push({ id: String(artist.id) });
+  }
+
+  return params
+}
 
 export default function ArtistPage({ params }: ArtistPage) {
   const id = params.id;
