@@ -5,6 +5,7 @@ import Song from "@/types/Music/Song";
 import { useEffect, useState } from "react";
 import Loading from "./loading";
 import Artist from "@/types/Music/Artist";
+import Link from "next/link";
 
 type SearchParamsProps = {
   searchParams: {
@@ -38,26 +39,36 @@ export default async function SearchPage({ searchParams }: SearchParamsProps) {
   const query = searchParams.q;
 
   const results = minisearch.search(query).slice(0, 20);
+  const suggestion = minisearch.autoSuggest(query, { fields: ["artist", "songName", "albumName"] })[0]
 
   return (
-    <div className="grid grid-cols-5 gap-4 pt-20 pb-36">
-      {results?.map((result) => (
-        <div key={result.id} className="flex flex-col items-center p-14">
-          <BigCard
-            artist={result.artist}
-            songURL={`http://localhost:3001/stream/${encodeURIComponent(result.id)}`}
-            title={result.songName}
-            type="Song"
-            imageSrc={
-              result.coverURL.length == 0
+    <>
+      {suggestion && (suggestion.suggestion != query) && 
+        <p className="text-sm text-white mt-6">
+          Did you mean:{" "}
+          <Link href={`/search?q=${suggestion.suggestion}`} className="text-gray-200 hover:underline">{suggestion.suggestion}</Link>
+        </p>
+      }
+      <div className="grid grid-cols-5 gap-4 pb-36">
+        {results?.map((result) => (
+          <div key={result.id} className="flex flex-col items-center p-14">
+            <BigCard
+              artist={result.artist}
+              album={result.album}
+              songURL={`http://localhost:3001/stream/${encodeURIComponent(result.id)}`}
+              title={result.songName}
+              type="Song"
+              imageSrc={
+                result.coverURL.length == 0
                 ? "/snf.png"
                 : `data:image/jpg;base64,${imageToBase64(result.coverURL)}`
-            }
-            albumURL=""
-            song={result.song}
-          />
-        </div>
-      ))}
-    </div>
+              }
+              albumURL=""
+              song={result.song}
+              />
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
