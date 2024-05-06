@@ -13,7 +13,23 @@ type ArtistPage = {
   };
 };
 
-export default async function ArtistPage({ params }: ArtistPage) {
+export const dynamicParams = true
+
+export async function generateStaticParams() {
+  let library: Library = untypedLibrary
+
+  let params = []
+
+  for (const artist of library) {
+    for (const album of artist.albums) {
+      params.push({ id: String(album.id) });
+    }
+  }
+
+  return params
+}
+
+export default async function AlbumPage({ params }: ArtistPage) {
   const id = params.id;
   const library = untypedLibrary as Library;
 
