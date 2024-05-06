@@ -2,17 +2,12 @@
 
 import { Button } from "@music/ui/components/button"
 import { useSession } from "next-auth/react"
-import { SessionProvider } from "next-auth/react"
 import { signIn, signOut } from "next-auth/react"
 import Link from "next/link"
 
 export default function ClientAuth() {
   return (
-    <>
-      <SessionProvider>
-        <AuthButtons />
-      </SessionProvider>
-    </>
+    <AuthButtons />
   )
 }
 
