@@ -15,7 +15,8 @@ import { usePlayer } from "@/components/Music/Player/usePlayer";
 import Song from "@/types/Music/Song";
 import imageToBase64 from "@/actions/ImageToBase64";
 import SongContextMenu from "../SongContextMenu";
-import { SessionProvider } from "next-auth/react";
+import Artist from "@/types/Music/Artist";
+import Album from "@/types/Music/Album";
 
 type PlaylistTableProps = {
   songsWithMetadata: {
@@ -27,19 +28,23 @@ type PlaylistTableProps = {
     trackNumber: number;
     path: string;
     song: Song;
+    artist: Artist;
+    album: Album
   }[]
 }
 
 export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps) {
-  const { setImageSrc, setSong, setAudioSource } = usePlayer()
+  const { setImageSrc, setSong, setArtist, setAudioSource, setAlbum } = usePlayer()
 
-  const handlePlay = async (coverURL: string, song: Song, songURL: string) => {
+  const handlePlay = async (coverURL: string, song: Song, songURL: string, artist: Artist, album: Album) => {
     let base64Image = coverURL
     if (coverURL.length > 0) {
       base64Image = await imageToBase64(coverURL)
     }
 
     setImageSrc(`data:image/jpg;base64,${base64Image}`)
+    setArtist(artist)
+    setAlbum(album)
     setSong(song)
     setAudioSource(songURL)
   }
@@ -56,24 +61,22 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
           </TableRow>
         </TableHeader>
 
-        <SessionProvider>
-          {songsWithMetadata.map((song, index) => (
-            <SongContextMenu song={song.song} key={song.song.id}>
-              <TableBody key={song.song.id}>
-                <TableRow onClick={() => handlePlay(song.coverURL, song.song, `http://localhost:3001/stream/${encodeURIComponent(song.path)}`)}>
-                  <TableCell className="font-medium">{index + 1}</TableCell>
-                  <TableCell>
-                    <div className="w-[300px] overflow-hidden whitespace-nowrap text-overflow">
-                      <PlaylistCard song={song.song} coverURL={song.coverURL} />
-                    </div>
-                  </TableCell>
-                  <TableCell>{song.albumName}</TableCell>
-                  <TableCell className="text-right">{song.artistName}</TableCell>
-                </TableRow>
-              </TableBody>
-            </SongContextMenu>
-          ))}
-        </SessionProvider>
+        {songsWithMetadata.map((song, index) => (
+          <SongContextMenu song={song.song} key={song.song.id}>
+            <TableBody key={song.song.id}>
+              <TableRow onClick={() => handlePlay(song.coverURL, song.song, `http://localhost:3001/stream/${encodeURIComponent(song.path)}`, song.artist, song.album)}>
+                <TableCell className="font-medium">{index + 1}</TableCell>
+                <TableCell>
+                  <div className="w-[300px] overflow-hidden whitespace-nowrap text-overflow">
+                    <PlaylistCard song={song.song} coverURL={song.coverURL} />
+                  </div>
+                </TableCell>
+                <TableCell>{song.albumName}</TableCell>
+                <TableCell className="text-right">{song.artistName}</TableCell>
+              </TableRow>
+            </TableBody>
+          </SongContextMenu>
+        ))}
       </Table>
     </div>
   )
