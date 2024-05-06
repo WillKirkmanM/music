@@ -20,7 +20,8 @@ export default async function HomeSelection() {
     artist.albums.flatMap((album) =>
       (album.songs.filter(Boolean) as any[]).map((song) => ({
         ...song,
-        artist,
+        artistObject: artist,
+        albumObject: album,
         album: album.name,
         image: album.cover_url,
       }))
@@ -34,8 +35,6 @@ export default async function HomeSelection() {
   }
 
   const randomSongs = allSongs.slice(0, 10);
-  // randomSongs.forEach(song => console.log(`http://localhost:3001/stream/${encodeURIComponent(song.path)}`))
-  // randomSongs.forEach(song => console.log(song.image))
 
   function imageToBase64(src: string) {
     const image = fs.readFileSync(src);
@@ -50,7 +49,8 @@ export default async function HomeSelection() {
           <div className="mr-20" key={index}>
             <BigCard
               title={song.name}
-              artist={song.artist}
+              album={song.albumObject}
+              artist={song.artistObject}
               imageSrc={
                 song.image.length === 0
                   ? "/snf.png"
