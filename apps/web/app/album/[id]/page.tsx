@@ -1,11 +1,11 @@
 import untypedLibrary from "@/public/music_with_cover_art.json";
 import type { Library } from "@/types/Music/Library";
-import type Album from "@/types/Music/Album";
 import { redirect } from "next/navigation";
 import AlbumTable from "@/components/Music/Album/AlbumTable";
 import Image from "next/image";
 import imageToBase64 from "@/actions/ImageToBase64";
 import Link from "next/link";
+import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
 
 type ArtistPage = {
   params: {
@@ -33,7 +33,6 @@ export default async function AlbumPage({ params }: ArtistPage) {
   const id = params.id;
   const library = untypedLibrary as Library;
 
-  // const album = library.flatMap(artist => artist.albums).find(album => String(album.id) === String(id));
   const { artist, album } = library.flatMap(artist => artist.albums.map(album => ({ artist, album }))).find(({ album }) => String(album.id) === String(id)) || {};
 
   if (!artist || !album) redirect("/404")
@@ -42,7 +41,7 @@ export default async function AlbumPage({ params }: ArtistPage) {
   const albumCoverURL = album.cover_url.length === 0 ? "/snf.png" : `data:image/jpg;base64,${base64Image}`
     
   return ( album ?
-    <>
+    <ScrollArea className="h-full overflow-x-hidden overflow-y-auto">
       <div className="flex items-center my-8">
         <Image src={albumCoverURL} alt={album.name + " Image"} height={256} width={256} className="rounded mr-4" />
         <div>
@@ -53,7 +52,8 @@ export default async function AlbumPage({ params }: ArtistPage) {
         </div>
       </div>
       <AlbumTable album={album} songs={album.songs} artist={artist} key={album.id} />
-    </>
+      <ScrollBar />
+    </ScrollArea>
     : redirect("/404")
   )
 }
