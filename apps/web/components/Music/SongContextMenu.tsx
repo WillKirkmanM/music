@@ -43,6 +43,7 @@ import { CircleArrowUp, CirclePlus, ExternalLink, ListEnd, Plus, UserRoundSearch
 import { usePlayer } from "./Player/usePlayer";
 import Artist from "@/types/Music/Artist";
 import Album from "@/types/Music/Album";
+import Link from "next/link";
 
 export default function SongContextMenu({
   children,
@@ -108,10 +109,12 @@ export default function SongContextMenu({
 
           <ContextMenuSeparator />
 
-          <ContextMenuItem>
-            <UserRoundSearch className="size-5"/>
-            <p className="pl-3">Go to Artist</p>
-          </ContextMenuItem>
+          <Link href={`/artist/${artist.id}`}>
+            <ContextMenuItem>
+              <UserRoundSearch className="size-5"/>
+              <p className="pl-3">Go to Artist</p>
+            </ContextMenuItem>
+          </Link>
 
           <ContextMenuItem>
             <CircleArrowUp className="size-5"/>
