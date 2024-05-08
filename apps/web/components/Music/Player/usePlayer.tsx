@@ -143,13 +143,19 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }
     setCurrentSongIndex(nextSongIndex);
     const next = queueRef.current[nextSongIndex];
-    const nextSong = next!.song;
-    const nextArtist = next!.artist;
-    const nextAlbum = next!.album;
+    if (!next) {
+      
 
-    if (nextSong) {
-      setSongCallback(nextSong, nextArtist, nextAlbum);
-      playAudioSource();
+    }
+    if (next) {
+      const nextSong = next!.song;
+      const nextArtist = next!.artist;
+      const nextAlbum = next!.album;
+      
+      if (nextSong) {
+        setSongCallback(nextSong, nextArtist, nextAlbum);
+        playAudioSource();
+      }
     }
   }, [currentSongIndex, setSongCallback, playAudioSource]);
 
