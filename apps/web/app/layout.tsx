@@ -8,6 +8,7 @@ import NavBar from "@/components/Layout/Navbar"
 import Player from "@/components/Music/Player"
 import Providers from "@/components/Providers/Providers"
 import { Sidebar } from "@/components/Layout/Sidebar"
+import QueuePanel from "@/components/Music/Queue/QueuePanel"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -40,7 +41,9 @@ export default async function RootLayout({ children }: any) {
               <Sidebar />
             </div>
             <div className="col-start-2 col-span-5 overflow-auto">
-              {children}
+              <QueuePanel>
+                {children}
+              </QueuePanel>
             </div>
           </div>
           <Player />
