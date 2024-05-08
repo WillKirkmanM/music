@@ -58,7 +58,7 @@ export default function AlbumTable({ songs, album, artist }: PlaylistTableProps)
                 <TableCell className="font-medium">{song.track_number}</TableCell>
                 <TableCell>
                   <div className="w-[300px] overflow-hidden whitespace-nowrap text-overflow">
-                    <PlaylistCard song={song} coverURL={album.cover_url} />
+                    <PlaylistCard song={song} coverURL={album.cover_url} artist={artist} album={album} />
                   </div>
                 </TableCell>
                 <TableCell><Link href={`/album/${album.id}`}>{album.name}</Link></TableCell>
