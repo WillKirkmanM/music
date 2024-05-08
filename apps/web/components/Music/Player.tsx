@@ -2,7 +2,8 @@
 
 import Image from "next/image"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useContext } from "react"
+import { PanelContext } from "./Queue/QueuePanelContext"
 import IconPause from "../Icons/Pause"
 import IconPlay from "../Icons/Play"
 import PlusCircle from "../Icons/PlusCircle"
@@ -10,6 +11,7 @@ import CheckCircle from "../Icons/CheckCircle"
 import ArrowPath from "../Icons/ArrowPath"
 import SpeakerXMark from "../Icons/SpeakerXMark"
 import SpeakerWave from "../Icons/SpeakerWave"
+import IconQueue from "../Icons/IconQueue"
 import { usePlayer } from "./Player/usePlayer"
 import AddToPlaylistDropdown from "./Player/AddToPlaylistDropdown"
 import { Slider, SliderRange, SliderThumb, SliderTrack } from "@music/ui/components/slider"
@@ -19,6 +21,8 @@ export default function Player() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const [liked, setLiked] = useState(false)
+
+  const { togglePanel } = useContext(PanelContext)
 
   const {
     isPlaying,
@@ -73,14 +77,6 @@ export default function Player() {
         </div>
         <div className="flex items-center gap-2 w-full justify-center">
           <span className="text-xs text-gray-400">{formatTime(currentTime)}</span>
-            {/* <input 
-              type="range" 
-              className="h-1 w-1/2 slider" 
-              min={0} 
-              max={duration} 
-              value={currentTime} 
-              onChange={e => handleTimeChange(e.target.value)}
-            /> */}
 
           <Slider
             min={0}
@@ -92,7 +88,7 @@ export default function Player() {
             className="w-1/2 group"
           >
             <SliderTrack className="h-1 bg-gray-400 cursor-pointer">
-              <SliderRange />
+              <SliderRange className="bg-black" />
             </SliderTrack>
 
             <SliderThumb className="cursor-pointer bg-white hidden group-hover:block size-4" />
@@ -104,11 +100,28 @@ export default function Player() {
       <section className="flex items-center gap-2 w-1/3">
         <button>List</button>
         <button>Devices</button>
+        <button onClick={togglePanel}><IconQueue /></button>
         <div className="flex items-center gap-1 flex-grow">
           <button onClick={() => toggleMute()}>
             {muted || !volume ? <SpeakerXMark /> : <SpeakerWave />}
           </button>
-          <input type="range" className="h-0.1 w-full" value={volume * 100} min={0} max={100} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAudioVolume(e.target.value)} />
+
+          <Slider
+            min={0}
+            max={100}
+            value={[volume * 100]}
+            onValueChange={([values]: number[]) => {
+              setAudioVolume(Number(values))
+            }}
+            className="group"
+          >
+            <SliderTrack className="h-1 bg-gray-400 cursor-pointer">
+              <SliderRange className="bg-black" />
+            </SliderTrack>
+
+            <SliderThumb className="cursor-pointer bg-white hidden group-hover:block size-4" />
+          </Slider>
+
         </div>
         <button>Fullscreen</button>
       </section>
