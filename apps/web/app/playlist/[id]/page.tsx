@@ -7,6 +7,7 @@ import Album from "@/types/Music/Album";
 import PlaylistTable from "@/components/Music/Playlist/PlaylistTable";
 import { Avatar, AvatarFallback } from "@music/ui/components/avatar";
 import DeletePlaylistButton from "@/components/Music/Playlist/DeletePlaylistButton";
+import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area";
 
 type PlaylistPageParams = {
   params: {
@@ -48,7 +49,7 @@ export default async function PlaylistPage({ params }: PlaylistPageParams) {
   let songsWithMetadata = flattenedLibrary.filter((librarySong) => songIds.includes(librarySong.song.id.toString()))
 
   return (
-    <>
+    <ScrollArea className="h-full overflow-x-hidden overflow-y-auto">
       <div className="flex flex-row items-start justify-between space-x-5 m-10">
         <div className="flex items-center justify-center space-x-5 flex-grow">
           <div>
@@ -68,6 +69,7 @@ export default async function PlaylistPage({ params }: PlaylistPageParams) {
         </div>
       </div>
       <PlaylistTable songsWithMetadata={songsWithMetadata} />
-    </>
+      <ScrollBar />
+    </ScrollArea>
   );
 }
