@@ -69,7 +69,7 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
                 <TableCell className="font-medium">{index + 1}</TableCell>
                 <TableCell>
                   <div className="w-[300px] overflow-hidden whitespace-nowrap text-overflow">
-                    <PlaylistCard song={song.song} coverURL={song.coverURL} />
+                    <PlaylistCard song={song.song} coverURL={song.coverURL} artist={song.artist} album={song.album} />
                   </div>
                 </TableCell>
                 <TableCell><Link href={`/album/${song.album.id}`}>{song.album.name}</Link></TableCell>
