@@ -35,9 +35,9 @@ export default function ArtistPage({ params }: ArtistPage) {
   return artist ? (
     <>
       <h1 className="text-4xl text-center mb-8">{artist.name}</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 space-y-16 justify-items-center">
+      <div className="flex flex-wrap justify-center items-start pb-48">
         {albums.map((album, index) => (
-          <div key={index}>
+          <div key={index} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 p-8">
             <AlbumCard artist={artist} album={album} />
           </div>
         ))}
