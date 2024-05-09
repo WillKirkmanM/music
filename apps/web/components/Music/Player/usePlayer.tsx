@@ -179,6 +179,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     };
   }, [audioSource, audio, song, playNextSong]);
 
+  const removeFromQueue = useCallback((index: number) => {
+    const newQueue = [...queueRef.current];
+    newQueue.splice(index, 1);
+    queueRef.current = newQueue;
+    setQueueState(newQueue);
+  }, []);
+
   const addToQueue = useCallback((song: Song, album: Album, artist: Artist) => {
     const newQueue = [...queueRef.current, { song, album, artist }];
     queueRef.current = newQueue;
