@@ -2,9 +2,7 @@
 .editorconfig
 .npmrc
 .nvmrc
-.env
 
-node_modules
 .github
 docs
 
@@ -12,4 +10,48 @@ docs
 **/dist
 **.md
 
+# Dependencies
+.pnp
+.pnp.js
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage
+
+# Turbo
+.turbo
+
+# Vercel
+.vercel
+
+# Build Outputs
+.next/
+out/
+/build
+**/dist
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+yarn.lock
+
+# Misc
+.DS_Store
+*.pem
+
+# Cargo
 /target
+
+**/target
+**/*.log
+.git
+.gitignore
+
+/missing_cover_art
