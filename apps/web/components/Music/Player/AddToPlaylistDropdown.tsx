@@ -1,4 +1,3 @@
-
 "use client"
 
 import AddSongToPlaylist from "@/actions/Playlist/AddSongToPlaylist"
@@ -11,6 +10,7 @@ import { useSession } from "next-auth/react"
 import { startTransition, useEffect, useState } from "react"
 import { usePlayer } from "./usePlayer"
 import CheckCircle from "@/components/Icons/CheckCircle"
+import { CircleDashed } from "lucide-react"
 import Song from "@/types/Music/Song"
 import { Playlist } from "@prisma/client"
 
@@ -23,6 +23,7 @@ export default function AddToPlaylistDropdown({ children }: AddToPlaylistDropdow
   const { song, isPlaying } = usePlayer()
 
   const [playlists, setPlaylists] = useState<(Playlist & { songs: Song[] })[]>([]);
+  const [playlistAddedNow, setPlaylistAddedNow] = useState("")
 
   useEffect(() => {
     const getPlaylists = async () => {
@@ -48,11 +49,14 @@ export default function AddToPlaylistDropdown({ children }: AddToPlaylistDropdow
         <DropdownMenuSeparator />
         <ScrollArea>
           {playlists && playlists.map(playlist => (
-            <DropdownMenuItem key={playlist.id} onClick={() => startTransition(() => AddSongToPlaylist(String(song.id), playlist.id))}>
+            <DropdownMenuItem key={playlist.id} onClick={() => {
+              startTransition(() => AddSongToPlaylist(String(song.id), playlist.id))
+              setPlaylistAddedNow(playlist.id)
+            }}>
               {playlist.name}
               <DropdownMenuShortcut>
                 {/* Converting to Strings due to JS' precision limits for numbers. Numbers between -(2^53 - 1) and 2^53 - 1; Any number outside this range can lose precision. The Song ID's are larger than 2^53 -1 (9e15)*/}
-                {playlist.songs.some(playlistSong => String(playlistSong.id) === String(song.id)) ? <CheckCircle className="m-4"/> : "empty circle"}
+                {playlist.songs.some(playlistSong => String(playlistSong.id) === String(song.id)) || playlist.id === playlistAddedNow ? <CheckCircle className="m-4"/> : <CircleDashed />}
               </DropdownMenuShortcut>
             </DropdownMenuItem>
           ))}
