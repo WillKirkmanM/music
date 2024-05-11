@@ -3,6 +3,7 @@ import { ThemeProvider } from './ThemeProvider';
 import { PlayerProvider } from '../Music/Player/usePlayer';
 import NextAuthSessionProvider from '@/lib/Authentication/Sessions/SessionProvider';
 import PanelProvider from '../Music/Queue/QueuePanelContext';
+import LyricsOverlayProvider from '../Lyrics/LyricsOverlayContext';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -14,7 +15,9 @@ export default function Providers({ children }: ProvidersProps) {
       <NextAuthSessionProvider>
         <PlayerProvider>
           <PanelProvider>
-            {children}
+            <LyricsOverlayProvider>
+              {children}
+            </LyricsOverlayProvider>
           </PanelProvider>
         </PlayerProvider>
       </NextAuthSessionProvider>

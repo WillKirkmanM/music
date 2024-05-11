@@ -11,11 +11,13 @@ import CheckCircle from "../Icons/CheckCircle"
 import ArrowPath from "../Icons/ArrowPath"
 import SpeakerXMark from "../Icons/SpeakerXMark"
 import SpeakerWave from "../Icons/SpeakerWave"
+import { MicVocal } from "lucide-react"
 import IconQueue from "../Icons/IconQueue"
 import { usePlayer } from "./Player/usePlayer"
 import AddToPlaylistDropdown from "./Player/AddToPlaylistDropdown"
 import { Slider, SliderRange, SliderThumb, SliderTrack } from "@music/ui/components/slider"
 import Link from "next/link"
+import { LyricsContext } from "../Lyrics/LyricsOverlayContext"
 
 export default function Player() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -23,6 +25,7 @@ export default function Player() {
   const [liked, setLiked] = useState(false)
 
   const { togglePanel } = useContext(PanelContext)
+  const { toggleLyrics } = useContext(LyricsContext)
 
   const {
     isPlaying,
@@ -100,6 +103,7 @@ export default function Player() {
       <section className="flex items-center gap-2 w-1/3">
         <button>List</button>
         <button>Devices</button>
+        <button onClick={toggleLyrics}><MicVocal /></button>
         <button onClick={togglePanel}><IconQueue /></button>
         <div className="flex items-center gap-1 flex-grow">
           <button onClick={() => toggleMute()}>
