@@ -1,4 +1,3 @@
-import library from "@/public/music_with_cover_art.json"
 import Image from "next/image"
 import imageToBase64 from "@/actions/ImageToBase64"
 import type Artist from "@/types/Music/Artist"
@@ -18,7 +17,8 @@ export default async function AlbumCard({ artist, album }: AlbumCardProps) {
     <div className="w-36 h-36">
       <Link href={`/album/${album.id}`}>
         <Image src={albumCoverURL} alt={album.name + " Image"} height={256} width={256} className="rounded cursor-pointer transition-filter duration-300 hover:brightness-50" />
-        <p className="font-bold text-white overflow-hidden overflow-ellipsis whitespace-nowrap" title={album.name}>Album • {album.name}</p>
+        <p className="font-bold text-white overflow-hidden overflow-ellipsis whitespace-nowrap" title={album.name}>{album.name}</p>
+        <p className="font-bold text-white overflow-hidden overflow-ellipsis whitespace-nowrap" title={album.name}>Album</p>
       </Link>
     </div>
   )
