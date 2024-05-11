@@ -39,7 +39,7 @@ export default async function AlbumPage({ params }: ArtistPage) {
 
   const base64Image = await imageToBase64(album.cover_url)
   const albumCoverURL = album.cover_url.length === 0 ? "/snf.png" : `data:image/jpg;base64,${base64Image}`
-    
+
   return ( album ?
     <ScrollArea className="h-full overflow-x-hidden overflow-y-auto">
       <div className="flex items-center my-8">
