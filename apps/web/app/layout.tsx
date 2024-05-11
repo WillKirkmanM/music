@@ -9,6 +9,7 @@ import Player from "@/components/Music/Player"
 import Providers from "@/components/Providers/Providers"
 import { Sidebar } from "@/components/Layout/Sidebar"
 import QueuePanel from "@/components/Music/Queue/QueuePanel"
+import LyricsOverlay from "@/components/Lyrics/LyricsOverlay"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -42,7 +43,9 @@ export default async function RootLayout({ children }: any) {
             </div>
             <div className="col-start-2 col-span-5 overflow-auto">
               <QueuePanel>
-                {children}
+                <LyricsOverlay>
+                  {children}
+                </LyricsOverlay>
               </QueuePanel>
             </div>
           </div>
