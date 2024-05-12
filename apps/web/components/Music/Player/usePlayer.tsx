@@ -6,7 +6,6 @@ import {
   useEffect,
   useCallback,
   useContext,
-  startTransition,
 } from "react";
 import { createContext } from "react";
 
@@ -40,6 +39,8 @@ type PlayerContextType = {
   setImageSrc: Function;
   setQueue: Function;
   addToQueue: Function;
+  setBufferedTime: Function;
+  bufferedTime: number;
   imageSrc: string;
   song: Song;
   artist: Artist;
@@ -92,6 +93,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [base64Image, setBase64Image] = useState("")
+  const [bufferedTime, setBufferedTime] = useState(0)
   
   const playAudioSource = useCallback(() => {
     if (audio) {
@@ -240,6 +242,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (audio) {
       setCurrentTime(audio.currentTime);
       setDuration(audio.duration);
+      const buffer = audio.buffered
+      if (buffer && buffer.length > 0) {
+        setBufferedTime(buffer.end(buffer.length - 1))
+      }
     }
   }, []);
 
@@ -340,6 +346,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         imageSrc,
         setSongCallback,
         addToQueue,
+        bufferedTime,
+        setBufferedTime,
         queue,
         setQueue,
       }}
