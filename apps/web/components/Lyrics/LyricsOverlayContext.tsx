@@ -1,6 +1,7 @@
 "use client"
 
-import { createContext, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation'
 
 export const LyricsContext = createContext({
   areLyricsVisible: false,
@@ -14,6 +15,13 @@ type PanelProviderProps = {
 
 export default function LyricsOverlayProvider({ children }: PanelProviderProps) {
   const [areLyricsVisible, setLyricsVisible] = useState(false);
+
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+ 
+  useEffect(() => {
+    setLyricsVisible(false)
+  }, [pathname, searchParams])
 
   const toggleLyrics = () => {
     setLyricsVisible(prev => !prev);
