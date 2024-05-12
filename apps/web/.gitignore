@@ -41,3 +41,7 @@ next-env.d.ts
 # prisma
 /prisma/migrations
 /prisma/music.db
+
+# PWA
+/public/sw.js
+/public/workbox-*.js
