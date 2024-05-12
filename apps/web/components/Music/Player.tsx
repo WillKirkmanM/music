@@ -42,6 +42,7 @@ export default function Player() {
     toggleMute,
     imageSrc,
     song,
+    bufferedTime,
     artist,
     album
   } = usePlayer()
@@ -81,21 +82,22 @@ export default function Player() {
         <div className="flex items-center gap-2 w-full justify-center">
           <span className="text-xs text-gray-400">{formatTime(currentTime)}</span>
 
-          <Slider
-            min={0}
-            max={duration}
-            value={[currentTime]}
-            onValueChange={([values]) => {
-              handleTimeChange(Number(values))
-            }}
-            className="w-1/2 group"
-          >
-            <SliderTrack className="h-1 bg-gray-400 cursor-pointer">
-              <SliderRange className="bg-black" />
-            </SliderTrack>
+<Slider
+  min={0}
+  max={duration}
+  value={[currentTime]}
+  onValueChange={([values]) => {
+    handleTimeChange(Number(values))
+  }}
+  className="w-1/2 group"
+>
+  <SliderTrack className="h-1 bg-gray-400 cursor-pointer">
+    <SliderRange className="bg-gray-500" style={{ width: `${(bufferedTime / duration) * 100}%` }} />
+    <SliderRange className="bg-black" />
+  </SliderTrack>
 
-            <SliderThumb className="cursor-pointer bg-white hidden group-hover:block size-4" />
-          </Slider>
+  <SliderThumb className="cursor-pointer bg-white hidden group-hover:block size-4" />
+</Slider>
 
             <span className="text-xs text-gray-400">{formatTime(duration)}</span>
         </div>
