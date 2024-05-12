@@ -40,4 +40,5 @@ yarn.lock
 # Cargo
 /target
 
+# Music
 /missing_cover_art
