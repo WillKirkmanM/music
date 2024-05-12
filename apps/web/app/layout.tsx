@@ -3,7 +3,7 @@ import { Inter as FontSans } from "next/font/google"
 
 import { cn } from "@music/ui/lib/utils"
 import { Toaster } from "sonner"
-import { Metadata } from "next"
+import { Metadata, Viewport } from "next"
 import NavBar from "@/components/Layout/Navbar"
 import Player from "@/components/Music/Player"
 import Providers from "@/components/Providers/Providers"
@@ -17,11 +17,34 @@ const fontSans = FontSans({
 })
 
 export const metadata: Metadata = {
+  applicationName: "ParsonLabs Music",
   title: {
     default: "ParsonLabs Music",
     template: "%s | ParsonLabs Music"
+  },
+  description: "Own your music.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ParsonLabs Music",
+  },
+  formatDetection: {
+    telephone: false
+  },
+  openGraph: {
+    type: "website",
+    title: {
+      default: "ParsonLabs Music",
+      template: "%s | ParsonLabs Music"
+    },
+    description: "Own your music."
   }
 }
+
+export const viewport: Viewport = {
+  themeColor: "#FFFFFF",
+};
 
 export default async function RootLayout({ children }: any) {
   return (
