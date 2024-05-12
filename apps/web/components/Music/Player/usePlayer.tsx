@@ -95,7 +95,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   
   const playAudioSource = useCallback(() => {
     if (audio) {
-      console.log("audioSource:", audioSource);
       audio.pause();
       audio.currentTime = 0;
       audio.src = audioSource;
