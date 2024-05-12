@@ -1,5 +1,5 @@
 use actix_web::http::header;
-use actix_web::{ HttpResponse, get, Responder, web };
+use actix_web::{ get, web, HttpRequest, HttpResponse, Responder };
 use lofty::{AudioFile, Probe};
 use regex::Regex;
 use reqwest::StatusCode;
@@ -9,7 +9,7 @@ use std::path::Path;
 use std::time::Instant;
 use std::sync::{ Arc, Mutex };
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Seek, SeekFrom};
 
 use walkdir::WalkDir;
 use audiotags::Tag;
@@ -371,7 +371,7 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
 
 
 #[get("/stream/{song}")]
-async fn stream_song(path: web::Path<String>) -> impl Responder {
+async fn stream_song(req: HttpRequest, path: web::Path<String>) -> impl Responder {
     let song = path.into_inner();
 
     let file = fs::metadata(&song).await.unwrap();
@@ -388,9 +388,22 @@ async fn stream_song(path: web::Path<String>) -> impl Responder {
         .read()
         .expect("ERROR: Failed to read file!");
 
+    let range = req.headers().get("Range").and_then(|v| v.to_str().ok());
+    let (start, end) = match range {
+        Some(range) => {
+            let bytes = range.trim_start_matches("bytes=");
+            let range_parts: Vec<&str> = bytes.split('-').collect();
+            let start = range_parts[0].parse::<u64>().unwrap_or(0);
+            let end = range_parts.get(1).and_then(|s| s.parse::<u64>().ok()).unwrap_or(song_file_size - 1);
+            (start, end)
+        },
+        None => (0, song_file_size - 1),
+    };
+
     let mut file = File::open(&song).unwrap();
-    let mut buffer = Vec::new();
-    file.read_to_end(&mut buffer).unwrap();
+    let mut buffer = vec![0; (end - start + 1) as usize];
+    file.seek(SeekFrom::Start(start)).unwrap();
+    file.read_exact(&mut buffer).unwrap();
 
     let extension = path.extension().and_then(OsStr::to_str);
     let mime_type = match extension {
@@ -402,9 +415,13 @@ async fn stream_song(path: web::Path<String>) -> impl Responder {
         _ => "application/octet-stream",
     };
 
-    HttpResponse::Ok()
+    let content_range = format!("bytes {}-{}/{}", start, end, song_file_size);
+    let content_length = (end - start + 1).to_string();
+
+    HttpResponse::PartialContent()
         .append_header((header::CONTENT_TYPE, mime_type))
-        .append_header((header::CONTENT_LENGTH, song_file_size.to_string()))
+        .append_header((header::CONTENT_RANGE, content_range))
+        .append_header((header::CONTENT_LENGTH, content_length))
         .body(buffer)
 }
 
