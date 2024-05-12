@@ -48,6 +48,7 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
   const { song, currentTime, handleTimeChange } = usePlayer()
   const [lyrics, setLyrics] = useState<{ time: number; text: string }[]>([]);
   const [currentLyric, setCurrentLyric] = useState('');
+  const [isSyncedLyrics, setIsSyncedLyrics] = useState(false)
   const [currentLyricIndex, setCurrentLyricIndex] = useState(-1)
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const lyricsRef = useRef<HTMLDivElement>(null)
@@ -82,14 +83,17 @@ useEffect(() => {
   setCurrentLyric("")
   setCurrentLyricIndex(-1)
   setIsUserScrolling(false)
+  setIsSyncedLyrics(false)
 
   const fetchLyrics = async () => {
     const response = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(`${song.name} ${song.artist}`)}`);
     const data: LyricsObjectResponse[] = await response.json();
     if (data[0]?.syncedLyrics) {
       setLyrics(parseLyrics(data[0].syncedLyrics));
+      setIsSyncedLyrics(true)
     } else if (data[0]?.plainLyrics) {
       setLyrics(parseLyrics(data[0].plainLyrics));
+      setIsSyncedLyrics(false)
     }
   }
 
@@ -122,7 +126,11 @@ useEffect(() => {
     <div onScroll={handleScroll} ref={lyricsRef} className="mb-32">
       <p className="text-center">{song.name} Lyrics</p>
       {lyrics.map((line, index) => (
-        <p key={index} className={`cursor-pointer text-3xl text-center transition-opacity duration-2000 ${index === currentLyricIndex ? 'opacity-100' : 'opacity-50'} ${index === currentLyricIndex ? 'font-bold' : 'font-normal'}`} onClick={() => handleTimeChange(line.time)}>
+        <p 
+          key={index} 
+          className={`text-3xl text-center transition-opacity duration-2000 ${index === currentLyricIndex ? 'opacity-100' : 'opacity-50'} ${index === currentLyricIndex ? 'font-bold' : 'font-normal'} ${isSyncedLyrics ? 'cursor-pointer' : ''}`} 
+          onClick={isSyncedLyrics ? () => handleTimeChange(line.time) : undefined}
+        >
           {line.text}
         </p>
       ))}
