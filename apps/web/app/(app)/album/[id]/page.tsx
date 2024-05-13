@@ -6,6 +6,8 @@ import Image from "next/image";
 import imageToBase64 from "@/actions/ImageToBase64";
 import Link from "next/link";
 import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
+import fs from "fs"
+import path from "path"
 
 type ArtistPage = {
   params: {
@@ -22,6 +24,7 @@ export async function generateStaticParams() {
 
   for (const artist of library) {
     for (const album of artist.albums) {
+      if (album.cover_url && fs.existsSync(path.join(album.cover_url)))
       params.push({ id: String(album.id) });
     }
   }
