@@ -3,7 +3,7 @@
 import { LyricsContext } from "./LyricsOverlayContext"
 import { useState, useEffect, useContext, useRef } from 'react';
 import { usePlayer } from "../Music/Player/usePlayer";
-import { FastAverageColor, FastAverageColorRgb } from "fast-average-color"
+import { FastAverageColor } from "fast-average-color"
 
 type QueuePanelProps = {
   children: React.ReactNode
@@ -142,9 +142,9 @@ useEffect(() => {
       <p className="text-center">{song.name} Lyrics</p>
       {lyrics.map((line, index) => (
         <p 
-          key={index} 
-          className={`text-3xl text-center transition-opacity duration-2000 ${index === currentLyricIndex ? 'opacity-100' : 'opacity-50'} ${index === currentLyricIndex ? 'font-bold' : 'font-normal'} ${isSyncedLyrics ? 'cursor-pointer' : ''}`} 
-          onClick={isSyncedLyrics ? () => handleTimeChange(line.time) : undefined}
+        key={index} 
+        className={`text-3xl text-center transition-opacity duration-2000 ${index === currentLyricIndex ? 'opacity-100' : 'opacity-50'} ${index === currentLyricIndex ? 'font-bold' : 'font-normal'} ${isSyncedLyrics ? 'cursor-pointer' : ''}`} 
+        onClick={isSyncedLyrics ? () => handleTimeChange(line.time) : undefined}
         >
           {line.text}
         </p>
