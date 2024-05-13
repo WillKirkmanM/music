@@ -3,6 +3,7 @@
 import { LyricsContext } from "./LyricsOverlayContext"
 import { useState, useEffect, useContext, useRef } from 'react';
 import { usePlayer } from "../Music/Player/usePlayer";
+import { FastAverageColor, FastAverageColorRgb } from "fast-average-color"
 
 type QueuePanelProps = {
   children: React.ReactNode
@@ -45,7 +46,7 @@ const parseLyrics = (lyrics: string) => {
 
 export default function LyricsOverlay({ children }: QueuePanelProps) {
   const { areLyricsVisible, setLyricsVisible } = useContext(LyricsContext);
-  const { song, currentTime, handleTimeChange } = usePlayer()
+  const { song, currentTime, handleTimeChange, imageSrc } = usePlayer()
   const [lyrics, setLyrics] = useState<{ time: number; text: string }[]>([]);
   const [currentLyric, setCurrentLyric] = useState('');
   const [isSyncedLyrics, setIsSyncedLyrics] = useState(false)
@@ -53,6 +54,19 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
   const [isUserScrolling, setIsUserScrolling] = useState(false)
   const lyricsRef = useRef<HTMLDivElement>(null)
   const [scrollTimeoutID, setScrollTimeoutID] = useState<NodeJS.Timeout | null>(null)
+  const [backgroundColour, setBackgroundColour] = useState("")
+
+  useEffect(() => {
+    if(imageSrc) {
+      const fac = new FastAverageColor();
+      const getColor = async () => {
+        const color = await fac.getColorAsync(imageSrc);
+        console.log(color)
+        setBackgroundColour(color.hex);
+      };
+      getColor();
+    }
+  }, [imageSrc]);
 
   useEffect(() => {
     if (!isUserScrolling && lyricsRef.current) {
@@ -84,6 +98,7 @@ useEffect(() => {
   setCurrentLyricIndex(-1)
   setIsUserScrolling(false)
   setIsSyncedLyrics(false)
+  setBackgroundColour("")
 
   const fetchLyrics = async () => {
     const response = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(`${song.name} ${song.artist}`)}`);
@@ -123,7 +138,7 @@ useEffect(() => {
   }, [lyrics, currentTime]);
 
   return areLyricsVisible ? (
-    <div onScroll={handleScroll} ref={lyricsRef} className="mb-32">
+    <div onScroll={handleScroll} ref={lyricsRef} className="mb-32" style={{ background: `linear-gradient(90deg, #4b5563, ${backgroundColour}, #4b5563)`, backgroundSize: '150% 200%', backgroundPosition: "center" }}>
       <p className="text-center">{song.name} Lyrics</p>
       {lyrics.map((line, index) => (
         <p 
