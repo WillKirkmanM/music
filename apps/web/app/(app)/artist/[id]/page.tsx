@@ -3,6 +3,8 @@ import type { Library } from "@/types/Music/Library";
 import { redirect } from "next/navigation";
 import AlbumCard from "@/components/Music/Card/Album/AlbumCard";
 
+import fs from "fs"
+
 type ArtistPage = {
   params: {
     id: number;
@@ -17,7 +19,12 @@ export async function generateStaticParams() {
   let params = []
 
   for (const artist of library) {
-    params.push({ id: String(artist.id) });
+    for (const album of artist.albums) {
+      if (album.cover_url && fs.existsSync(album.cover_url)) {
+        params.push({ id: String(artist.id) });
+        break
+      }
+    }
   }
 
   return params
