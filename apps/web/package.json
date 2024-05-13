@@ -37,6 +37,7 @@
     "next": "14.1.4",
     "@ducanh2912/next-pwa": "^10.2.7",
     "next-auth": "^4.24.7",
+    "fast-average-color": "^9.4.0",
     "next-themes": "^0.3.0",
     "react": "^18",
     "react-dom": "^18",
