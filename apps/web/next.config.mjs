@@ -6,16 +6,14 @@ const withPWA = withPWAInit({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = withPWA({
-  output: "standalone",
-  /*
-  typescript: {
-    ignoreBuildErrors: true
-  },
+  // output: "standalone",
+  // typescript: {
+  //   ignoreBuildErrors: true
+  // },
 
-  eslint: {
-    ignoreDuringBuilds: true
-  }
-  */
+  // eslint: {
+  //   ignoreDuringBuilds: true
+  // }
 });
 
 export default nextConfig;
