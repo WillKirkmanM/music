@@ -6,7 +6,6 @@ WORKDIR /usr/src
 COPY ./apps/web/backend /usr/src/backend
 WORKDIR /usr/src/backend
 
-# RUN apt-get update && apt-get install -y libssl-dev
 RUN apk add --no-cache libressl-dev musl-dev
 
 # Build the application
