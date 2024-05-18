@@ -1,6 +1,5 @@
 import prisma from "@/prisma/prisma";
 import { Playlist, Song as SSong, User } from "@prisma/client";
-import art from "@/public/music_with_cover_art.json";
 import Artist from "@/types/Music/Artist";
 import Song from "@/types/Music/Song";
 import Album from "@/types/Music/Album";
@@ -8,6 +7,10 @@ import PlaylistTable from "@/components/Music/Playlist/PlaylistTable";
 import { Avatar, AvatarFallback } from "@music/ui/components/avatar";
 import DeletePlaylistButton from "@/components/Music/Playlist/DeletePlaylistButton";
 import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area";
+import path from "path"
+import fs from "fs"
+import { Library } from "@/types/Music/Library";
+import getConfig from "@/actions/Config/getConfig";
 
 type PlaylistPageParams = {
   params: {
@@ -25,6 +28,16 @@ export default async function PlaylistPage({ params }: PlaylistPageParams) {
       users: true
     },
   })) as Playlist & { songs: SSong[], users: User[] };
+
+  const config = await getConfig()
+  if (!config) return <p>No Library</p>;
+  const art: Library = JSON.parse(config);
+
+  if (Object.keys(art).length === 0) {
+    return (
+      <p>No Data Available</p>
+    )
+  }
 
   // Flatten the library
   const flattenedLibrary = art.flatMap((artist: Artist) =>
