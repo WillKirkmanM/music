@@ -55,7 +55,7 @@ export default function Player() {
 
   return (
     <footer className="fixed bottom-0 bg-gray-600 border-t border-gray-700 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 w-full">
-      <section className="flex items-center gap-3">
+      <section className="flex items-center gap-3 w-1/4">
         <div className="w-20 h-20 bg-gray-500 rounded-md">
           <Image alt={song.name + "Image"} src={imageSrc} width={334} height={332} />
         </div>
@@ -82,32 +82,31 @@ export default function Player() {
         <div className="flex items-center gap-2 w-full justify-center">
           <span className="text-xs text-gray-400">{formatTime(currentTime)}</span>
 
-<Slider
-  min={0}
-  max={duration}
-  value={[currentTime]}
-  onValueChange={([values]) => {
-    handleTimeChange(Number(values))
-  }}
-  className="w-1/2 group"
->
-  <SliderTrack className="h-1 bg-gray-400 cursor-pointer">
-    <SliderRange className="bg-gray-500" style={{ width: `${(bufferedTime / duration) * 100}%` }} />
-    <SliderRange className="bg-black" />
-  </SliderTrack>
+        <Slider
+          min={0}
+          max={duration}
+          value={[currentTime]}
+          onValueChange={([values]) => {
+            handleTimeChange(Number(values))
+          }}
+          className="w-1/2 group"
+        >
+          <SliderTrack className="h-1 bg-gray-400 cursor-pointer">
+            <SliderRange className="bg-gray-500" style={{ width: `${(bufferedTime / duration) * 100}%` }} />
+            <SliderRange className="bg-black" />
+          </SliderTrack>
 
-  <SliderThumb className="cursor-pointer bg-white hidden group-hover:block size-4" />
-</Slider>
-
+          <SliderThumb className="cursor-pointer bg-white hidden group-hover:block size-4" />
+        </Slider>
             <span className="text-xs text-gray-400">{formatTime(duration)}</span>
         </div>
       </section>
-      <section className="flex items-center gap-2 w-1/3">
+      <section className="flex items-center gap-2">
         <button>List</button>
         <button>Devices</button>
         <button onClick={toggleLyrics}><MicVocal /></button>
         <button onClick={togglePanel}><IconQueue /></button>
-        <div className="flex items-center gap-1 flex-grow">
+        <div className="flex items-center gap-1">
           <button onClick={() => toggleMute()}>
             {muted || !volume ? <SpeakerXMark /> : <SpeakerWave />}
           </button>
@@ -121,7 +120,7 @@ export default function Player() {
             }}
             className="group"
           >
-            <SliderTrack className="h-1 bg-gray-400 cursor-pointer">
+            <SliderTrack className="h-1 w-20 bg-gray-400 cursor-pointer">
               <SliderRange className="bg-black" />
             </SliderTrack>
 

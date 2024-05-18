@@ -10,7 +10,8 @@ use routes::music::{
     songs_list,
     index_library,
     stream_song,
-    format_contributing_artists_route
+    format_contributing_artists_route,
+    index_library_no_cover_url
 };
 
 use tracing::{info, Level};
@@ -46,6 +47,7 @@ async fn main() -> std::io::Result<()> {
             .service(index_library)
             .service(stream_song)
             .service(format_contributing_artists_route)
+            .service(index_library_no_cover_url)
     })
     .bind(("0.0.0.0", port))?
     .run()

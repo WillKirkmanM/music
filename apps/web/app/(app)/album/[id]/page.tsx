@@ -1,4 +1,3 @@
-import untypedLibrary from "@/public/music_with_cover_art.json";
 import type { Library } from "@/types/Music/Library";
 import { redirect } from "next/navigation";
 import AlbumTable from "@/components/Music/Album/AlbumTable";
@@ -6,6 +5,7 @@ import Image from "next/image";
 import imageToBase64 from "@/actions/ImageToBase64";
 import Link from "next/link";
 import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
+import getConfig from "@/actions/Config/getConfig";
 import fs from "fs"
 import path from "path"
 
@@ -16,25 +16,39 @@ type ArtistPage = {
 };
 
 export const dynamicParams = true
+export const dynamic = "force-dynamic"
 
 export async function generateStaticParams() {
-  let library: Library = untypedLibrary
+  const config = await getConfig()
+  if (!config) return []
+
+  const library: Library = JSON.parse(config);
 
   let params = []
 
-  for (const artist of library) {
-    for (const album of artist.albums) {
-      if (album.cover_url && fs.existsSync(path.join(album.cover_url)))
-      params.push({ id: String(album.id) });
+  if (Object.keys(library).length !== 0) {
+    for (const artist of library) {
+      for (const album of artist.albums) {
+        params.push({ id: String(album.id) });
+      }
     }
   }
-
+    
   return params
 }
 
 export default async function AlbumPage({ params }: ArtistPage) {
   const id = params.id;
-  const library = untypedLibrary as Library;
+
+  const config = await getConfig()
+  if (!config) return <p>No Library File</p>;
+  const library: Library = JSON.parse(config);
+
+  if (Object.keys(library).length === 0) {
+    return (
+      <p>No Results</p>
+    )
+  }
 
   const { artist, album } = library.flatMap(artist => artist.albums.map(album => ({ artist, album }))).find(({ album }) => String(album.id) === String(id)) || {};
 

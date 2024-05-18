@@ -41,15 +41,15 @@ async fn songs_list() -> impl Responder {
     HttpResponse::Ok().body(message)
 }
 
-#[get("/library/index/{path}")]
-async fn index_library(path: web::Path<String>) -> impl Responder {
+#[get("/library/index/{pathToLibrary}")]
+async fn index_library(path_to_library: web::Path<String>, ) -> impl Responder {
     info!("Indexing library...");
 
     let now = Instant::now();
 
     let library = Arc::new(Mutex::new(Vec::<Artist>::new()));
 
-    let files: Vec<_> = WalkDir::new(&*path)
+    let files: Vec<_> = WalkDir::new(&*path_to_library)
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| {
@@ -366,6 +366,7 @@ async fn index_library(path: web::Path<String>) -> impl Responder {
     info!("Finished Indexing Library in {} seconds", elapsed);
 
     let json = serde_json::to_string(&*library).unwrap();
+    fs::write("Config/music_with_cover_art.json", &json).await.expect("Unable to write file");
     HttpResponse::Ok().body(json)
 }
 
@@ -430,5 +431,76 @@ async fn format_contributing_artists_route(artist: web::Path<String>) -> impl Re
     let artists = vec![artist.to_string()];
     let formatted_artists = format_contributing_artists(artists);
     let json = serde_json::to_string(&formatted_artists).unwrap();
+    HttpResponse::Ok().body(json)
+}
+
+#[get("/library/index/without_cover_url/{path}")]
+async fn index_library_no_cover_url(path: web::Path<String>) -> impl Responder {
+    let files: Vec<_> = WalkDir::new(&*path)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            e.file_type().is_file() &&
+            matches!(e.path().extension().and_then(|s| s.to_str()), Some("mp3") | Some("flac") | Some("ogg") | Some("m4a"))
+        })
+        .collect();
+
+    let library = Arc::new(Mutex::new(Vec::<Artist>::new()));
+
+    files.par_iter().for_each(|entry| {
+        let path = entry.path();
+        let tag = Tag::new().read_from_path(&path).unwrap();
+
+        let artists = tag.artists().unwrap_or_default().iter().map(|&s| s.to_string()).collect::<Vec<String>>();
+        let formatted_artists = format_contributing_artists(artists);
+
+        let song_name = tag.title().unwrap_or_default().to_string();
+        let artist_name = formatted_artists[0].0.clone();
+        let contributing_artists = formatted_artists[0].1.clone();
+
+        let album_name = tag.album_title().unwrap_or_default().to_string();
+        let re = Regex::new(r"\(.*\)").unwrap();
+        let album_name_without_cd = re.replace_all(&album_name, "").trim().to_string();
+        let track_number = tag.track_number().unwrap_or_default();
+
+        let id = hash_song(&song_name, &artist_name, &album_name, track_number);
+
+        let song = Song {
+            name: song_name,
+            id,
+            artist: artist_name.clone(),
+            contributing_artists,
+            track_number,
+            path: path.to_str().unwrap_or_default().to_string(),
+        };
+
+        let mut library = library.lock().unwrap();
+
+        let artist_name_lowercase = artist_name.to_lowercase();
+        let artist_position = library.iter().position(|a| a.name.to_lowercase() == artist_name_lowercase);
+
+        let artist = if let Some(artist_position) = artist_position {
+            &mut library[artist_position]
+        } else {
+            let new_artist = Artist { id: hash_artist(&artist_name), name: artist_name.clone(), albums: Vec::new() };
+            library.push(new_artist);
+            library.last_mut().unwrap()
+        };
+
+        let album_position = artist.albums.iter().position(|a| a.name == album_name_without_cd);
+
+        let album = if let Some(album_position) = album_position {
+            &mut artist.albums[album_position]
+        } else {
+            let new_album = Album { id: hash_album(&album_name_without_cd.clone(), &artist_name), name: album_name_without_cd.clone(), songs: Vec::new(), cover_url: String::new() };
+            artist.albums.push(new_album);
+            artist.albums.last_mut().unwrap()
+        };
+
+        album.songs.push(song);
+        album.songs.sort_by(|a, b| a.track_number.cmp(&b.track_number));
+    });
+
+    let json = serde_json::to_string(&*library.lock().unwrap()).unwrap();
     HttpResponse::Ok().body(json)
 }

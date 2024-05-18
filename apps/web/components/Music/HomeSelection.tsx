@@ -1,5 +1,6 @@
 import BigCard from "./Card/BigCard";
-import library from "@/public/music_with_cover_art.json";
+import getConfig from "@/actions/Config/getConfig";
+import path from "path"
 import fs from "fs";
 import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
 import type { Library } from "@/types/Music/Library";
@@ -15,7 +16,19 @@ export default async function HomeSelection() {
   //   </div>
   // ));
 
-  let typedLibrary: Library = library;
+  const config = await getConfig()
+  if (!config) return []
+
+  const typedLibrary: Library = JSON.parse(config);
+
+  if (Object.keys(typedLibrary).length === 0) {
+  return (
+    <div>
+      <h2>No data available</h2>
+    </div>
+  );
+}
+
   const allSongs = typedLibrary.flatMap((artist) =>
     artist.albums.flatMap((album) =>
       (album.songs.filter(Boolean) as any[]).map((song) => ({

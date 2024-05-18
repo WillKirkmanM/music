@@ -1,6 +1,7 @@
 {
   "extends": "@music/typescript-config/nextjs.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "plugins": [
       {
         "name": "next"

@@ -3,21 +3,26 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile.frontend
+      dockerfile: ./docker/production/Dockerfile.frontend
     ports:
       - "3000:3000"
-    develop:
-      watch:
-        - action: sync
-          path: ./src
-          target: /app/src
-          ignore: 
-            - node_modules/
-        - action: rebuild
-          path: package.json
+    volumes:
+      - MEDIA_PATH:/Music
+      - MISSING_COVER_ART_PATH:/missing_cover_art
+      - CONFIG_PATH:/Config
+    environment:
+      - BACKEND_PORT=3001
+      - NEXTAUTH_SECRET=SALKDNAKFB@!WQ#
+      - NEXTAUTH_URL=http://localhost:3000
+      - NODE_ENV=production
+      - DEPLOYMENT_TYPE=docker
   backend:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile.backend
+      dockerfile: ./docker/production/Dockerfile.backend
     ports:
       - "3001:3001"
+    volumes:
+      - MEDIA_PATH:/Music
+      - MISSING_COVER_ART_PATH:/missing_cover_art
+      - CONFIG_PATH:/Config

@@ -1,0 +1,55 @@
+version: '3.8'
+
+x-defaults:
+  &defaults
+  init: true
+  tty: true
+  networks:
+    - monorepo_network
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: ./docker/development/Dockerfile.frontend
+      args:
+        - APP=music
+        - DIR_NAME=web
+        - START_COMMAND=dev
+
+    command: yarn workspace music dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/web:/app/apps/web
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next
+      - /apps/web/node_modules
+
+      - MEDIA_PATH:/Music
+      - MISSING_COVER_ART_PATH:/missing_cover_art
+      - CONFIG_PATH:/Config
+    environment:
+      - PORT=3000
+      - BACKEND_PORT=3001
+      - NEXTAUTH_SECRET=SALKDNAKFB@!WQ#
+      - NEXTAUTH_URL=http://localhost:3000
+      - NODE_ENV=development
+      - DEPLOYMENT_TYPE=docker
+  backend:
+    build:
+      context: .
+      dockerfile: ./docker/development/Dockerfile.backend
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/web/backend:/app/src 
+
+      - MEDIA_PATH:/Music
+      - MISSING_COVER_ART_PATH:/missing_cover_art
+      - CONFIG_PATH:/Config
+    environment:
+      - NODE_ENV=development
+
+networks:
+  monorepo_network:
