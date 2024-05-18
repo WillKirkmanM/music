@@ -1,0 +1,19 @@
+# Dockerfile for Rust
+FROM rust:1-alpine as builder
+
+# Install musl-dev to fix missing crti.o
+RUN apk add --no-cache musl-dev
+
+WORKDIR /app/src
+
+COPY ./apps/web/backend .
+
+RUN cargo build 
+
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+COPY --from=builder /app/src/target/release/backend /usr/local/bin/backend
+
+CMD ["backend"]

@@ -6,8 +6,8 @@ const withPWA = withPWAInit({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = withPWA({
-  output: "standalone",
   /*
+  output: "standalone",
   typescript: {
     ignoreBuildErrors: true
   },

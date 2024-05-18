@@ -50,7 +50,7 @@ async function onSubmit(values: z.infer<typeof registerSchema>) {
         username: values.username,
         password: values.password,
         redirect: true,
-        callbackUrl: "/account/library"
+        callbackUrl: "/setup/library"
       })
     }
 
