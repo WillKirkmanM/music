@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams
   const query = searchParams.get("q") ?? ""
 
-  const results = mini.search(query)
+  const results = mini?.search(query)
 
   return NextResponse.json({ results })
 }
