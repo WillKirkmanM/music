@@ -20,6 +20,7 @@ export default async function getConfig(): Promise<string | null> {
     if (deploymentType === "docker") {
       configPath = "/Config/music.json"
     }
+
     const fileContent = await fs.readFile(configPath, 'utf8');
 
     return fileContent;
