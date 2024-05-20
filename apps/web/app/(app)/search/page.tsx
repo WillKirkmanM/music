@@ -38,8 +38,8 @@ export default async function SearchPage({ searchParams }: SearchParamsProps) {
   const minisearch = await miniSearch;
   const query = searchParams.q;
 
-  const results = minisearch.search(query).slice(0, 20);
-  const suggestion = minisearch.autoSuggest(query, { fields: ["artist", "songName", "albumName"] })[0]
+  const results = minisearch?.search(query).slice(0, 20);
+  const suggestion = minisearch?.autoSuggest(query, { fields: ["artist", "songName", "albumName"] })[0]
 
   return (
     <>
