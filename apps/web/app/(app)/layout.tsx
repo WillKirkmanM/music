@@ -60,11 +60,11 @@ export default async function RootLayout({ children }: any) {
           <div className="fixed top-0 left-0 z-50 w-full">
             <NavBar />
           </div>
-          <div className="grid grid-cols-6 gap-4 pt-16 h-screen overflow-auto">
-            <div className="col-span-1 fixed h-full overflow-auto">
+          <div className="px-2 md:px-0 grid grid-cols-1 md:grid-cols-6 gap-4 pt-16 h-screen overflow-auto">
+            <div className="hidden md:block md:col-span-1 fixed h-full overflow-auto">
               <Sidebar />
             </div>
-            <div className="col-start-2 col-span-5 overflow-auto">
+            <div className="col-start-1 md:col-start-2 md:col-span-5 overflow-auto">
               <QueuePanel>
                 <LyricsOverlay>
                   {children}
