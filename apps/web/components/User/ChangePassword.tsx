@@ -69,14 +69,14 @@ export function ChangePassword({ user }: ChangePasswordProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Change password</DialogTitle>
+          <DialogTitle className="text-black">Change password</DialogTitle>
           <DialogDescription>
             Enter a new Password
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="password" className="text-right">
+            <Label htmlFor="password" className="text-right text-black">
               Password
             </Label>
             <Input
@@ -88,7 +88,7 @@ export function ChangePassword({ user }: ChangePasswordProps) {
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="confirmPassword" className="text-right">
+            <Label htmlFor="confirmPassword" className="text-right text-black">
               Confirm password
             </Label>
             <Input
@@ -97,7 +97,7 @@ export function ChangePassword({ user }: ChangePasswordProps) {
               {...form.register('confirmPassword')}
               placeholder="Confirm your password"
               className="col-span-3"
-            />
+              />
           </div>
           <DialogFooter>
             <DialogClose>

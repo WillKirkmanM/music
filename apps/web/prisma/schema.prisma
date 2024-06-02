@@ -44,7 +44,7 @@ model Session {
 model User {
   id            String    @id @default(cuid())
   name          String?
-  username      String
+  username      String    @unique
   password      String
   email         String?   @unique
   emailVerified DateTime?
@@ -54,7 +54,23 @@ model User {
   accounts      Account[]
   sessions      Session[]
   playlists     Playlist[]
+  followers     Follow[] @relation("followingRelation")
+  followings    Follow[] @relation("followerRelation")
+  nowPlaying    String?
 }
+
+
+model Follow {
+  id        String  @id @default(cuid())
+  followerId  String
+  followingId  String
+
+  follower  User @relation("followerRelation", fields: [followerId], references: [id])
+  following User @relation("followingRelation", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+}
+
 
 model Playlist {
   id        String   @id @default(cuid())

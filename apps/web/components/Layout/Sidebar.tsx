@@ -1,38 +1,40 @@
-import getServerSession from "@/lib/Authentication/Sessions/GetServerSession";
-import Link from "next/link";
-import prisma from "@/prisma/prisma";
+"use client"
+
 import { Button } from "@music/ui/components/button";
-import CreatePlaylistDialog from "../Music/Playlist/CreatePlaylistDialog";
-import { ListMusic, Plus } from "lucide-react";
+import Link from "next/link";
+import { Home } from "lucide-react";
+import { useSidebar } from "../Providers/SideBarProvider";
+import { ReactNode, useContext } from "react";
+import { ScrollContext } from "../Providers/ScrollProvider";
 
-export async function Sidebar() {
-  const user = await getServerSession()
-  let playlists;
-  if (user) playlists = await prisma.playlist.findMany({ where: { users: { some: { username: user.user.username } } } })
-  return (
-    <aside className="fixed left-0 hidden h-full w-1/5 space-y-2 p-4 lg:block xl:w-[15%] border-r">
-      <h3 className="font-heading text-xl">Welcome</h3>
-
-      {playlists?.map(playlist => {
-        return (
-          <div className="pl-5 text-sm flex flex-row items-center gap-3 py-2" key={playlist.id}>
-            <ListMusic className="size-4"/>
-            <Link href={"/playlist/" + playlist.id} key={playlist.id}>
-              <p key={playlist.id}>{playlist.name}</p>
-            </Link>
-          </div>
-        )
-      })}
- 
-      {user && (
-        <CreatePlaylistDialog username={user.user.username}>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Playlist
-          </Button>
-        </CreatePlaylistDialog>
-      )}
-
-    </aside>
-  );
+type SidebarProps = {
+  children: ReactNode,
+  sidebarContent: ReactNode
 }
+
+
+export default function Sidebar({ children, sidebarContent }: SidebarProps) {
+  const { isOpen } = useSidebar()
+  const { onTopOfPage } = useContext(ScrollContext)
+
+  return (
+    <div className="flex">
+
+      <aside className={`hidden md:block z-40 fixed h-full ${onTopOfPage ? "" : "border-r border-gray-500"} ${isOpen ? "w-1/5 xl:w-[20%]" : "w-3 xl:w-20"} space-y-2 p-4 lg:block pt-20`}>
+        <Button variant="ghost" size="icon" asChild className={`${isOpen ? "items-start justify-start" : "items-center justify-center"} w-full flex items-start justify-start `}>
+          <Link href="/">
+            <div className={`flex ${isOpen ? "flex-row" : "flex-col"} items-center text-white text-semibold `}>
+              <Home className={`h-4 w-4 ${isOpen && "mr-4"}`} />
+              Home
+            </div>
+          </Link>
+        </Button>
+        {isOpen && sidebarContent}
+      </aside>
+
+      <div className={`overflow-x-auto flex-grow ${isOpen ? "ml-[20%] md:ml-80" : "ml-[5%] md:ml-28"}`}>
+        {children}
+      </div>
+    </div>
+  )
+};

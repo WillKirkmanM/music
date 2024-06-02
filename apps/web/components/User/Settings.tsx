@@ -8,7 +8,7 @@ type ProfileProps = {
 
 export default function Settings({ user }: ProfileProps) {
   return (
-    <div className="flex flex-col items-center justify-center align-middle min-h-screen">
+    <div className="flex flex-col items-center justify-center align-middle min-h-screen text-black">
       <Username username={user.username}/>
       <ChangePassword user={user}/>
     </div>

@@ -13,6 +13,9 @@ import type Song from "@/types/Music/Song";
 import Artist from "@/types/Music/Artist";
 import Album from "@/types/Music/Album";
 import imageToBase64 from "@/actions/ImageToBase64";
+import SetNowPlaying from "@/actions/Player/SetNowPlaying";
+import { useSession } from "next-auth/react";
+import getServerIpAddress from "@/actions/System/GetIpAddress";
 
 const isBrowser = typeof window !== "undefined";
 const audioElement = isBrowser ? new Audio() : null;
@@ -27,6 +30,8 @@ type PlayerContextType = {
   duration: number;
   togglePlayPause: Function;
   toggleLoopSong: Function;
+  playNextSong: Function;
+  playPreviousSong: Function;
   setAudioVolume: Function;
   handleTimeChange: Function;
   handleTimeUpdate: Function;
@@ -64,6 +69,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const audioRef = useRef<HTMLAudioElement>(audioElement);
   const audio = audioRef.current as HTMLAudioElement;
 
+  const user = useSession()
+
   const [imageSrc, setImageSrc] = useState("");
   const [audioSource, setAudioSource] = useState("");
   const [song, setSong] = useState<Song>({
@@ -73,8 +80,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     path: "",
     track_number: 0,
     id: 0,
+    duration: 0
   });
-  const [artist, setArtist] = useState<Artist>({ albums: [], id: 0, name: "" });
+  const [artist, setArtist] = useState<Artist>({ albums: [], id: 0, name: "", followers: 0, icon_url: "" });
   const [album, setAlbum] = useState<Album>({
     cover_url: "",
     id: 0,
@@ -94,6 +102,23 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const [duration, setDuration] = useState(0);
   const [base64Image, setBase64Image] = useState("")
   const [bufferedTime, setBufferedTime] = useState(0)
+
+  const [serverIP, setServerIP] = useState("");
+
+  useEffect(() => {
+    async function getServerIP() {
+      const ip = await getServerIpAddress()
+      setServerIP(ip)
+    }
+
+    getServerIP()
+  })
+
+  useEffect(() => {
+    if (song.id && user.data) {
+      SetNowPlaying(user.data.user.username, String(song.id));
+    }
+  }, [song.id, user.data]);
   
   const playAudioSource = useCallback(() => {
     if (audio) {
@@ -127,14 +152,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           setImageSrc(base64Data);
         });
       }
-      setAudioSource(`http://localhost:3001/stream/${encodeURIComponent(song.path)}`);
+      setAudioSource(`http://${serverIP}:3001/stream/${encodeURIComponent(song.path)}`);
 
       const index = queueRef.current.findIndex((q) => q.song.id === song.id);
       if (index !== -1) {
         setCurrentSongIndex(index);
       }
     },
-    [setSong]
+    [setSong, serverIP]
   );
 
   const playNextSong = useCallback(() => {
@@ -144,10 +169,6 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }
     setCurrentSongIndex(nextSongIndex);
     const next = queueRef.current[nextSongIndex];
-    if (!next) {
-      
-
-    }
     if (next) {
       const nextSong = next!.song;
       const nextArtist = next!.artist;
@@ -159,6 +180,27 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       }
     }
   }, [currentSongIndex, setSongCallback, playAudioSource]);
+
+  const playPreviousSong = useCallback(() => {
+    let previousSongIndex = currentSongIndex - 1;
+    if (previousSongIndex < 0) {
+      previousSongIndex = queueRef.current.length - 1;
+    }
+    setCurrentSongIndex(previousSongIndex);
+    const previous = queueRef.current[previousSongIndex];
+    if (previous) {
+      const previousSong = previous.song;
+      const previousArtist = previous.artist;
+      const previousAlbum = previous.album;
+      
+      if (previousSong) {
+        setSongCallback(previousSong, previousArtist, previousAlbum);
+        playAudioSource();
+      }
+    }
+}, [currentSongIndex, setSongCallback, playAudioSource])
+
+
 
   useEffect(() => {
     if (audioRef.current) {
@@ -271,7 +313,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audio.addEventListener("timeupdate", handleTimeUpdate);
 
       const handleKeyPress = (event: KeyboardEvent) => {
-        if ((event.target as HTMLElement).tagName.toLowerCase() === "input") {
+        const target = event.target as HTMLElement;
+        if (target.tagName.toLowerCase() === "input") {
           return;
         }
         switch (event.key.toLocaleLowerCase()) {
@@ -327,6 +370,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         onLoop,
         volume,
         muted,
+        playNextSong,
+        playPreviousSong,
         currentTime,
         duration,
         togglePlayPause,

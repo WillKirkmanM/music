@@ -33,8 +33,8 @@ export default function PlaylistCard({ song, coverURL, artist, album }: Playlist
     <div className="flex items-center">
       <Image src={imageSrc} alt={song.name + " Image"} width={64} height={64} className="rounded" />
       <div className="flex flex-col ml-4">
-        <Link href={`/album/${album.id}`}><p>{song.name}</p></Link>
-        <Link href={`/artist/${artist.id}`}><p>{song.artist}</p></Link>
+        <Link onClick={(e) => e.stopPropagation()} href={`/album/${album.id}`}><p>{song.name}</p></Link>
+        <Link onClick={(e) => e.stopPropagation()} href={`/artist/${artist.id}`}><p>{song.artist}</p></Link>
       </div>
     </div>
   )

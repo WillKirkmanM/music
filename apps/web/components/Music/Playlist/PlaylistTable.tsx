@@ -18,6 +18,8 @@ import SongContextMenu from "../SongContextMenu";
 import Artist from "@/types/Music/Artist";
 import Album from "@/types/Music/Album";
 import Link from "next/link";
+import getServerIpAddress from "@/actions/System/GetIpAddress";
+import { useState, useEffect } from "react";
 
 type PlaylistTableProps = {
   songsWithMetadata: {
@@ -36,6 +38,16 @@ type PlaylistTableProps = {
 
 export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps) {
   const { setImageSrc, setSong, setArtist, setAudioSource, setAlbum } = usePlayer()
+  const [serverIP, setServerIP] = useState("");
+
+  useEffect(() => {
+    async function getServerIP() {
+      const ip = await getServerIpAddress()
+      setServerIP(ip)
+    }
+
+    getServerIP()
+  })
 
   const handlePlay = async (coverURL: string, song: Song, songURL: string, artist: Artist, album: Album) => {
     let base64Image = coverURL
@@ -50,6 +62,12 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
     setAudioSource(songURL)
   }
 
+  function formatDuration(duration: number) {
+    const minutes = Math.floor(duration / 60);
+    const seconds = Math.round(duration % 60);
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+  };
+
   return (
     <div className="pb-36">
       <Table>
@@ -58,6 +76,7 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
             <TableHead className="w-[80px]">#</TableHead>
             <TableHead className="w-[200px]">Title</TableHead>
             <TableHead className="w-[200px]">Album</TableHead>
+            <TableHead className="w-[200px]">Duration</TableHead>
             <TableHead className="text-right">Artist</TableHead>
           </TableRow>
         </TableHeader>
@@ -65,15 +84,16 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
         {songsWithMetadata.map((song, index) => (
           <SongContextMenu song={song.song} album={song.album} artist={song.artist} key={song.song.id}>
             <TableBody key={song.song.id}>
-              <TableRow onClick={() => handlePlay(song.coverURL, song.song, `http://localhost:3001/stream/${encodeURIComponent(song.path)}`, song.artist, song.album)}>
+              <TableRow onClick={() => handlePlay(song.coverURL, song.song, `http://${serverIP}:3001/stream/${encodeURIComponent(song.path)}`, song.artist, song.album)}>
                 <TableCell className="font-medium">{index + 1}</TableCell>
                 <TableCell>
                   <div className="w-[300px] overflow-hidden whitespace-nowrap text-overflow">
                     <PlaylistCard song={song.song} coverURL={song.coverURL} artist={song.artist} album={song.album} />
                   </div>
                 </TableCell>
-                <TableCell><Link href={`/album/${song.album.id}`}>{song.album.name}</Link></TableCell>
-                <TableCell className="text-right"><Link href={`/artist/${song.artist.id}`}>{song.artist.name}</Link></TableCell>
+                <TableCell><Link onClick={(e) => e.stopPropagation()}href={`/album/${song.album.id}`}>{song.album.name}</Link></TableCell>
+                <TableCell>{formatDuration(song.song.duration)}</TableCell>
+                <TableCell className="text-right"><Link onClick={(e) => e.stopPropagation()}href={`/artist/${song.artist.id}`}>{song.artist.name}</Link></TableCell>
               </TableRow>
             </TableBody>
           </SongContextMenu>

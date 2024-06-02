@@ -7,6 +7,7 @@ import type Artist from "@/types/Music/Artist";
 import type Album from "@/types/Music/Album";
 import type Song from "@/types/Music/Song";
 import getConfig from "@/actions/Config/getConfig";
+import { randomUUID } from "crypto";
 
 export async function populateSearch() {
   const config = await getConfig()
@@ -14,33 +15,64 @@ export async function populateSearch() {
   const library: Library = JSON.parse(config);
 
   if (Object.keys(library).length !== 0) {
-      // Library has nested data. Search wants linear data.  
-      const flattenedLibrary = library.flatMap((artist: Artist) =>
-        artist.albums.flatMap((album: Album) =>
-        album.songs.map((song: Song) => ({
-          artist: artist,
-          album: album,
-          coverURL: album.cover_url,
-          albumName: album.name,
-          songName: song.name,
-          contributingArtists: song.contributing_artists.join(", "),
-          trackNumber: song.track_number,
-          path: song.path,
-          song: song,
-        }))
-      )
-    );
-    
-    const miniSearch = new MiniSearch({ 
-      fields: ["artist", "albumName", "songName", "contributingArtists", "trackNumber", "path", "coverURL", "song"],
-      storeFields: ["artist", "album", "albumName", "songName", "coverURL", "song"],
-      idField: "path",
-      searchOptions: {
-        fuzzy: 0.3
-      }
-    });
-    
-    await miniSearch.addAllAsync(flattenedLibrary);
+
+  let generatedIDs = new Set();
+
+  function uniqueUUID() {
+    let id;
+    do {
+      id = randomUUID();
+    } while (generatedIDs.has(id));
+    generatedIDs.add(id);
+    return id;
+  }
+
+  const flattenedArtists = library.map((artist: Artist) => ({
+    type: 'Artist',
+    name: artist.name,
+    id: artist.id,
+    artist: artist,
+    generatedID: uniqueUUID()
+  }));
+
+  const flattenedAlbums = library.flatMap((artist: Artist) =>
+    artist.albums.map((album: Album) => ({
+      type: 'Album',
+      name: album.name,
+      id: album.id,
+      artist: artist,
+      album: album,
+      generatedID: uniqueUUID()
+    }))
+  );
+
+  const flattenedSongs = library.flatMap((artist: Artist) =>
+    artist.albums.flatMap((album: Album) =>
+      album.songs.map((song: Song) => ({
+        type: 'Song',
+        name: song.name,
+        id: song.id,
+        album: album,
+        artist: album,
+        song: song,
+        generatedID: uniqueUUID()
+      }))
+    )
+  );
+
+  const miniSearch = new MiniSearch({
+    fields: ['type', 'name', 'id', 'generatedID'],
+    storeFields: ['type', 'name', 'id', 'artist', 'album', 'song'],
+    idField: 'generatedID',
+    searchOptions: {
+      fuzzy: 0.3
+    }
+  });
+
+    await miniSearch.addAllAsync(flattenedArtists);
+    await miniSearch.addAllAsync(flattenedAlbums);
+    await miniSearch.addAllAsync(flattenedSongs);
+
     
     return miniSearch;
   }

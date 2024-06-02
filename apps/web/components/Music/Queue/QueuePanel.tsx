@@ -10,6 +10,7 @@ import Artist from "@/types/Music/Artist"
 import Song from "@/types/Music/Song"
 import Album from "@/types/Music/Album"
 import Link from "next/link"
+import { Separator } from "@music/ui/components/separator"
 
 type QueuePanelProps = {
   children: React.ReactNode
@@ -31,7 +32,7 @@ export default function QueuePanel({ children }: QueuePanelProps) {
       <ChildrenComponent>{children}</ChildrenComponent>
       {isPanelVisible && (
         <>
-          <ResizableHandle withHandle />
+          <ResizableHandle />
           <ResizablePanel defaultSize={30} maxSize={30} minSize={20}>
             {queue && queue.map(queueItem => {
               return (
@@ -72,13 +73,15 @@ function QueueItem({ queueItem }: Queue) {
   const { song, artist, album } = queueItem
 
   return (
+    <>
     <div className="flex items-center">
-      <Image src={imageSrc} width={64} height={64} alt={song.name + " Image"}/>
+      <Image src={imageSrc} width={64} height={64} alt={song.name + " Image"} className="rounded h-10 w-10"/>
       <div className="ml-4">
         <Link href={`/album/${album.id}`}><p>{song.name}</p></Link>
         <Link href={`/artist/${artist.id}`}><p>{artist.name}</p></Link>
-        <Link href={`/album/${artist.id}`}><p>{album.name}</p></Link>
       </div>
     </div>
+  <Separator className="my-2 bg-gray-700"/>
+  </>
   )
 }

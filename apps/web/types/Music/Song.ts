@@ -5,4 +5,5 @@ export default interface Song {
   contributing_artists: string[],
   track_number: number,
   path: string
+  duration: number
 }
