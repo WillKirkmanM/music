@@ -60,9 +60,30 @@ export default async function PlaylistPage({ params }: PlaylistPageParams) {
   let songIds = playlist.songs.map((song) => song.id);
 
   let songsWithMetadata = flattenedLibrary.filter((librarySong) => songIds.includes(librarySong.song.id.toString()))
+  
+  function formatDuration(duration: number) {
+    const hours = Math.floor(duration / 3600);
+    const minutes = Math.floor((duration % 3600) / 60);
+    const seconds = Math.round(duration % 60);
+
+    let result = '';
+    if (hours > 0) {
+      result += `${hours} Hour${hours > 1 ? 's' : ''} `;
+    }
+    if (minutes > 0) {
+      result += `${minutes} Minute${minutes > 1 ? 's' : ''} `;
+    }
+    if (seconds > 0) {
+      result += `${seconds} Second${seconds > 1 ? 's' : ''}`;
+    }
+    return result.trim();
+  }
+  
+  let totalDuration = songsWithMetadata.reduce((total, song) => total + song.song.duration, 0)
+
 
   return (
-    <ScrollArea className="h-full overflow-x-hidden overflow-y-auto">
+    <ScrollArea className="h-full overflow-x-hidden overflow-y-auto pt-20">
       <div className="flex flex-row items-start justify-between space-x-5 m-10">
         <div className="flex items-center justify-center space-x-5 flex-grow">
           <div>
@@ -75,6 +96,7 @@ export default async function PlaylistPage({ params }: PlaylistPageParams) {
             {playlist.users.map(user => {
               return <h1 key={user.id} className="text-2xl">Created by {user.username}</h1>
             })}
+          {formatDuration(totalDuration)}
           </div>
         </div>
         <div className="flex items-start">
