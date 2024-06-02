@@ -7,6 +7,8 @@ import Song from "@/types/Music/Song"
 import Link from "next/link"
 import Artist from "@/types/Music/Artist"
 import Album from "@/types/Music/Album"
+import { useGradientHover } from "@/components/Providers/GradientHoverProvider"
+import { FastAverageColor } from "fast-average-color"
 
 type BigCardProps = {
   imageSrc: string,
@@ -36,10 +38,22 @@ export default function BigCard({ imageSrc, title, artist, songURL, albumURL, ty
     setAudioSource(songURL)
   }
 
+ 
+  const { setGradient } = useGradientHover()
+
+  function setDominantGradient() {
+    const fac = new FastAverageColor();
+    const getColor = async () => {
+      const color = await fac.getColorAsync(imageSrc)
+      setGradient(color.hex)
+    }
+    getColor()
+  }
+
   return (
-    <div className="w-36 h-36">
+    <div className="w-44 h-44" onMouseEnter={setDominantGradient}>
       <SongContextMenu song={song} album={album} artist={artist}>
-        <Image src={imageSrc} alt={title + " Image"} height={256} width={256} className="rounded cursor-pointer transition-filter duration-300 hover:brightness-50" onClick={handlePlay}/>
+        <Image src={imageSrc} alt={title + " Image"} height={512} width={512} className="rounded cursor-pointer transition-filter duration-300 hover:brightness-50" onClick={handlePlay}/>
       </SongContextMenu>
 
       <div className="flex flex-col text-left mt-3">
