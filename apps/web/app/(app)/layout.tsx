@@ -7,9 +7,14 @@ import { Metadata, Viewport } from "next"
 import NavBar from "@/components/Layout/Navbar"
 import Player from "@/components/Music/Player"
 import Providers from "@/components/Providers/Providers"
-import { Sidebar } from "@/components/Layout/Sidebar"
+import Sidebar from "@/components/Layout/Sidebar"
 import QueuePanel from "@/components/Music/Queue/QueuePanel"
 import LyricsOverlay from "@/components/Lyrics/LyricsOverlay"
+import { Suspense } from "react"
+import FriendActivity from "@/components/Friends/FriendActivity"
+import Playlists from "@/components/Layout/Playlists"
+import { Separator } from "@music/ui/components/separator"
+import TopGradient from "@/components/Layout/TopGradient"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -52,26 +57,36 @@ export default async function RootLayout({ children }: any) {
       <head />
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased bg-gray-600",
+          "min-h-screen font-sans antialiased bg-black text-white",
           fontSans.variable
         )}
       >
         <Providers>
+          <TopGradient />
           <div className="fixed top-0 left-0 z-50 w-full">
             <NavBar />
           </div>
-          <div className="px-2 md:px-0 grid grid-cols-1 md:grid-cols-6 gap-4 pt-16 h-screen overflow-auto">
-            <div className="hidden md:block md:col-span-1 fixed h-full overflow-auto">
-              <Sidebar />
-            </div>
-            <div className="col-start-1 md:col-start-2 md:col-span-5 overflow-auto">
-              <QueuePanel>
-                <LyricsOverlay>
-                  {children}
-                </LyricsOverlay>
-              </QueuePanel>
-            </div>
-          </div>
+
+            <Sidebar sidebarContent={
+              <>
+              <Separator className="bg-gray-800"/>
+                <Suspense>
+                  <FriendActivity />
+                </Suspense>
+
+                <Suspense>
+                  <Playlists />
+                </Suspense>
+              </>
+            }>
+
+            <QueuePanel>
+              <LyricsOverlay>
+                {children}
+              </LyricsOverlay>
+            </QueuePanel>
+          </Sidebar>
+
           <Player />
           <Toaster />
         </Providers>
