@@ -28,11 +28,6 @@ import {
 } from "@music/ui/components/table";
 
 
-import IconPlus from "../Icons/IconPlus";
-import IconQueue from "../Icons/IconQueue";
-import IconGoToArtist from "../Icons/IconGoToArtist";
-import PlusCircle from "../Icons/PlusCircle";
-import ArrowUpCircle from "../Icons/ArrowUpCircle";
 import Bars3Left from "../Icons/Bars3Left";
 import Song from "@/types/Music/Song";
 import { useSession } from "next-auth/react";
@@ -148,8 +143,8 @@ export default function SongContextMenu({
       </ContextMenu>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Song Information</DialogTitle>
-          <Table>
+          <DialogTitle className="text-black">Song Information</DialogTitle>
+          <Table className="text-black">
             <TableHeader></TableHeader>
             <TableBody>
               <TableRow>
