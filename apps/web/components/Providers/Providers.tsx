@@ -5,6 +5,9 @@ import NextAuthSessionProvider from '@/lib/Authentication/Sessions/SessionProvid
 import PanelProvider from '../Music/Queue/QueuePanelContext';
 import LyricsOverlayProvider from '../Lyrics/LyricsOverlayContext';
 import RestrictedAppProvider from '@/lib/Authentication/Sessions/RestrictedAppProvider';
+import { ScrollProvider } from './ScrollProvider';
+import SidebarProvider from './SideBarProvider';
+import { GradientHoverProvider } from './GradientHoverProvider';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -15,13 +18,19 @@ export default function Providers({ children }: ProvidersProps) {
     <ThemeProvider>
       <NextAuthSessionProvider>
         <RestrictedAppProvider>
-          <PlayerProvider>
-            <PanelProvider>
-              <LyricsOverlayProvider>
-                {children}
-              </LyricsOverlayProvider>
-            </PanelProvider>
-          </PlayerProvider>
+          <GradientHoverProvider>
+            <ScrollProvider>
+              <SidebarProvider>
+                <PlayerProvider>
+                  <PanelProvider>
+                    <LyricsOverlayProvider>
+                      {children}
+                    </LyricsOverlayProvider>
+                  </PanelProvider>
+                </PlayerProvider>
+              </SidebarProvider>
+            </ScrollProvider>
+          </GradientHoverProvider>
         </RestrictedAppProvider>
       </NextAuthSessionProvider>
     </ThemeProvider>
