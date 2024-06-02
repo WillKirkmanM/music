@@ -2,17 +2,21 @@ mod routes;
 mod structures;
 mod utils;
 
-use actix_web::{HttpServer, App};
+use actix_web::{App, HttpServer};
 use std::env;
+use std::task;
 
 use routes::index::home;
 use routes::music::{
     songs_list,
-    index_library,
+    process_library,
     stream_song,
     format_contributing_artists_route,
+    test,
     index_library_no_cover_url
 };
+
+use utils::websocket::{start_ws, log_to_ws};
 
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
@@ -25,7 +29,8 @@ async fn main() -> std::io::Result<()> {
     tracing::subscriber::set_global_default(subscriber)
         .expect("setting default subscriber failed");
 
-    let mut port = 3001; // Default port
+    
+    let mut port = 3001;
 
     let args: Vec<String> = env::args().collect();
     for i in 0..args.len() {
@@ -36,15 +41,21 @@ async fn main() -> std::io::Result<()> {
             break;
         }
     }
-
-
+    
+    
     info!("Starting server on port {}", port); 
 
-    HttpServer::new(|| {
+    tokio::spawn(async move {
+        start_ws().await.unwrap()
+    });
+
+    
+    HttpServer::new(move || {
         App::new()
             .service(home)
             .service(songs_list)
-            .service(index_library)
+            .service(process_library)
+            .service(test)
             .service(stream_song)
             .service(format_contributing_artists_route)
             .service(index_library_no_cover_url)

@@ -1,21 +1,11 @@
 import BigCard from "./Card/BigCard";
 import getConfig from "@/actions/Config/getConfig";
-import path from "path"
 import fs from "fs";
 import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
 import type { Library } from "@/types/Music/Library";
+import getServerIpAddress from "@/actions/System/GetIpAddress";
 
 export default async function HomeSelection() {
-  // const json = await fetch("http:/localhost:3001/music.json")
-  // let library: Library = await json.json()
-
-  // const firstTenArtists = library.slice(0, 50).map((artist, index) => (
-  //   <div key={index}>
-  //     <h2 className="text-lg">{artist.name}</h2>
-  //     <p>{artist.albums.length} albums</p>
-  //   </div>
-  // ));
-
   const config = await getConfig()
   if (!config) return []
 
@@ -50,15 +40,15 @@ export default async function HomeSelection() {
   const randomSongs = allSongs.slice(0, 10);
 
   function imageToBase64(src: string) {
-    const image = fs.readFileSync(src);
+    const image = fs.readFileSync(src)
     const base64Image = Buffer.from(image).toString("base64");
     return base64Image;
   }
 
   return (
     <ScrollArea className="w-full overflow-x-auto overflow-y-auto h-full">
-      <div className="flex flex-row px-5">
-        {randomSongs.map((song, index) => (
+      <div className="flex flex-row">
+        {randomSongs.map(async (song, index) => (
           <div className="mr-20" key={index}>
             <BigCard
               title={song.name}
@@ -70,7 +60,7 @@ export default async function HomeSelection() {
                   : `data:image/jpg;base64,${imageToBase64(song.image)}`
               }
               albumURL=""
-              songURL={`http://localhost:3001/stream/${encodeURIComponent(song.path)}`}
+              songURL={`http://${await getServerIpAddress()}:3001/stream/${encodeURIComponent(song.path)}`}
               type="Song"
               song={song}
             />
