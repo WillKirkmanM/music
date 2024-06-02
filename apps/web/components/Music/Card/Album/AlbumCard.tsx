@@ -14,7 +14,7 @@ export default async function AlbumCard({ artist, album }: AlbumCardProps) {
   const albumCoverURL = (!album.cover_url || album.cover_url.length === 0) ? "/snf.png" : `data:image/jpg;base64,${base64Image}`
 
   return (
-    <div className="w-36 h-36">
+    <div className="w-44 h-44">
       <Link href={`/album/${album.id}`}>
         <Image src={albumCoverURL} alt={album.name + " Image"} height={256} width={256} className="rounded cursor-pointer transition-filter duration-300 hover:brightness-50" />
         <p className="font-bold text-white overflow-hidden overflow-ellipsis whitespace-nowrap" title={album.name}>{album.name}</p>
