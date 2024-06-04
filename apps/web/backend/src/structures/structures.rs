@@ -6,6 +6,11 @@ pub struct Album {
     pub name: String,
     pub cover_url: String,
     pub songs: Vec<Song>,
+    pub first_release_date: String,
+    pub musicbrainz_id: String,
+    pub wikidata_id: Option<String>,
+    pub primary_type: String,
+    pub description: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -15,6 +20,7 @@ pub struct Artist {
     pub icon_url: String,
     pub followers: u64,
     pub albums: Vec<Album>,
+    pub description: String
 }
 
 #[derive(Serialize, Deserialize, Clone)]

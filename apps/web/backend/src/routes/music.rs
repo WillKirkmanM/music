@@ -280,7 +280,7 @@ async fn index_library_no_cover_url(path: web::Path<String>) -> impl Responder {
             let artist = if let Some(artist_position) = artist_position {
                 &mut library[artist_position]
             } else {
-                let new_artist = Artist { id: hash_artist(&artist_name), name: artist_name.clone(), albums: Vec::new(), icon_url: String::new(), followers: 0 };
+                let new_artist = Artist { id: hash_artist(&artist_name), name: artist_name.clone(), albums: Vec::new(), icon_url: String::new(), followers: 0, description: String::new() };
                 library.push(new_artist);
                 library.last_mut().unwrap()
             };
@@ -290,7 +290,7 @@ async fn index_library_no_cover_url(path: web::Path<String>) -> impl Responder {
             let album = if let Some(album_position) = album_position {
                 &mut artist.albums[album_position]
             } else {
-                let mut new_album = Album { id: hash_album(&album_name_without_cd.clone(), &artist_name), name: album_name_without_cd.clone(), songs: Vec::new(), cover_url: String::new() };
+                let mut new_album = Album { id: hash_album(&album_name_without_cd.clone(), &artist_name), name: album_name_without_cd.clone(), songs: Vec::new(), cover_url: String::new(), first_release_date: String::new(), musicbrainz_id: String::new(), primary_type: String::new(), description: String::new(), wikidata_id: None };
     
                 if let Some(parent_path) = path.parent() {
                     let mut cover_found = false;
