@@ -1,4 +1,4 @@
-use std::{error::Error, time::Duration};
+use std::{error::Error, path::Path, time::Duration};
 use reqwest::{header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE, USER_AGENT}, Client};
 use serde::Deserialize;
 use serde_json::Value;
@@ -9,6 +9,8 @@ use regex::Regex;
 use serde::ser::StdError;
 
 use crate::{structures::structures::{Album, Artist}, utils::websocket::log_to_ws};
+
+use super::hash::hash_album;
 
 #[derive(Debug, Deserialize)]
 struct SearchResponse {
@@ -85,31 +87,35 @@ async fn get_artist_metadata(client: &Client, artist_name: &str, access_token: S
 }
 
 pub async fn process_artist(client: &Client, artist: &mut Artist, access_token: String) {
-  if artist.icon_url.is_empty() {
-    let client1 = client.clone();
-    let artist_name1 = artist.name.clone();
-    let wikipedia_future = tokio::spawn(async move {
-      fetch_wikipedia_extract(&client1, &artist_name1, None, None).await
-    });
+  let icon_path_formatted = format!("missing_cover_art/{}", artist.id);
+  let icon_path = Path::new(&icon_path_formatted);
 
+  let client1 = client.clone();
+  let artist_name1 = artist.name.clone();
+  let wikipedia_future = tokio::spawn(async move {
+    fetch_wikipedia_extract(&client1, &artist_name1, None, None).await
+  });
+
+  let wikipedia_extract = wikipedia_future.await.unwrap();
+  if let Some(wikipedia_extract) = wikipedia_extract {
+    artist.description = wikipedia_extract;
+  }
+
+  if !icon_path.exists() {
     let client2 = client.clone();
     let artist_name2 = artist.name.clone();
     let metadata_future = tokio::spawn(async move {
       get_artist_metadata(&client2, &artist_name2, access_token.clone()).await
     });
 
-    let wikipedia_extract = wikipedia_future.await.unwrap();
     let metadata_result = metadata_future.await.unwrap();
-    
-    if let Some(wikipedia_extract) = wikipedia_extract {
-      artist.description = wikipedia_extract;
-    }
+
     if let Ok(metadata) = metadata_result {
       match download_and_store_icon_art(client, &metadata.0, &artist.id.to_string()).await {
         Ok(path) => {
           artist.icon_url = path;
           artist.followers = metadata.1;
-    
+
           let log = format!("Icon art and metadata downloaded and stored for Artist: {}", artist.name);
           info!(log);
           log_to_ws(log).await.unwrap()
@@ -152,11 +158,16 @@ async fn download_and_store_icon_art(client: &Client, image_url: &str, artist_id
 }
 
 
-async fn fetch_album_metadata(client: &Client, artist_name: &str, album_name: &str) -> AlbumMetadata {
+async fn fetch_album_metadata(client: &Client, artist_name: &str, album_name: &str, album_id: String) -> AlbumMetadata {
   let query = format!("artist:\"{}\" AND release:\"{}\" AND (status:\"Official\" OR status:\"Promotion\")", artist_name, album_name);
   
+  let cover_url_path_formatted = format!("missing_cover_art/{}.jpg", album_id);
+  let cover_url_path = Path::new(&cover_url_path_formatted);
+  let cover_art_already_downloaded = cover_url_path.exists();
+
+
   let url = format!("https://musicbrainz.org/ws/2/release-group/?query={}&fmt=json&limit=10", query);
-  let album_metadata = fetch_musicbrainz_metadata(client, &url).await;
+  let album_metadata = fetch_musicbrainz_metadata(client, &url, cover_art_already_downloaded).await;
 
   if album_metadata.is_err() {
     let log_message = format!("Didn't find the album: {} in release group, trying release...", album_name);
@@ -164,7 +175,7 @@ async fn fetch_album_metadata(client: &Client, artist_name: &str, album_name: &s
     log_to_ws(log_message).await.unwrap();
 
     let url = format!("https://musicbrainz.org/ws/2/release/?query={}&fmt=json&limit=10", query);
-    let album_metadata = fetch_musicbrainz_metadata(client, &url).await;
+    let album_metadata = fetch_musicbrainz_metadata(client, &url, cover_art_already_downloaded).await;
     album_metadata.unwrap()
   } else {
     album_metadata.unwrap()
@@ -243,7 +254,7 @@ pub struct AlbumMetadata {
   pub wikidata_id: Option<String>,
   pub primary_type: String,
 }
-async fn fetch_musicbrainz_metadata(client: &Client, url: &str) -> Result<AlbumMetadata, Box<dyn std::error::Error>> {
+async fn fetch_musicbrainz_metadata(client: &Client, url: &str, cover_art_already_downloaded: bool) -> Result<AlbumMetadata, Box<dyn std::error::Error>> {
   let response = client.get(url).send().await?;
   let body = response.text().await?;
   let v: serde_json::Value = serde_json::from_str(&body)?;
@@ -261,26 +272,27 @@ async fn fetch_musicbrainz_metadata(client: &Client, url: &str) -> Result<AlbumM
   for release in release_groups {
     let id = release["id"].as_str().unwrap_or("");
     let is_release_group = url.contains("release-group");
-    let cover_art_url = if is_release_group {
-      format!("http://coverartarchive.org/release-group/{}", id)
-    } else {
-      format!("http://coverartarchive.org/release/{}", id)
-    };
 
-    time::sleep(Duration::from_secs(1)).await;
+    let cover_url = if !cover_art_already_downloaded {
+      let cover_art_url = if is_release_group {
+          format!("http://coverartarchive.org/release-group/{}", id)
+      } else {
+          format!("http://coverartarchive.org/release/{}", id)
+      };
 
-    let cover_art_response = client.get(&cover_art_url).send().await?;
-    let cover_art_body = if cover_art_response.status().is_success() {
-      cover_art_response.text().await?
-    } else {
-      "".to_string()
-    };
-    let cover_art: serde_json::Value = serde_json::from_str(&cover_art_body)?;
-    let images = cover_art["images"].as_array().unwrap_or(&empty_vec);
-    let first_image = images.get(0).unwrap_or(&serde_json::Value::Null);
-    let cover_url = first_image["image"].as_str().unwrap_or("");
+      time::sleep(Duration::from_secs(1)).await;
 
-    time::sleep(Duration::from_secs(1)).await;
+      let cover_art_response = client.get(&cover_art_url).send().await?;
+      let cover_art_body = if cover_art_response.status().is_success() {
+          cover_art_response.text().await?
+      } else {
+          "".to_string()
+      };
+      let cover_art: serde_json::Value = serde_json::from_str(&cover_art_body)?;
+      let images = cover_art["images"].as_array().unwrap_or(&empty_vec);
+      let first_image = images.get(0).unwrap_or(&serde_json::Value::Null).clone();
+      first_image["image"].as_str().unwrap_or("").to_string()
+  } else { "".to_string() };
 
     let release_url = if is_release_group {
       format!("https://musicbrainz.org/ws/2/release-group/{}?inc=aliases+artist-credits+releases+url-rels&fmt=json", id)
@@ -359,7 +371,7 @@ pub async fn process_albums(client: &Client, library: &mut Vec<Artist>) {
 pub async fn process_album(client: &Client, artist_name: String, album: &mut Album) {
   let album_name = album.name.to_lowercase().replace("cd1", "").replace("cd2", "").to_string();
 
-  let metadata = fetch_album_metadata(client, &artist_name, &album_name).await;
+  let metadata = fetch_album_metadata(client, &artist_name, &album_name, album.id.to_string()).await;
 
   if let Some(wikidata_id) = metadata.wikidata_id.clone() {
       if let Some(wikipedia_extract) = fetch_wikipedia_extract(client, &album_name, Some(&artist_name), Some(&wikidata_id)).await {
