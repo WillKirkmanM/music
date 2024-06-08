@@ -1,4 +1,4 @@
-use std::{error::Error, path::Path, time::Duration};
+use std::{path::Path, time::Duration};
 use reqwest::{header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE, USER_AGENT}, Client};
 use serde::Deserialize;
 use serde_json::Value;
@@ -6,11 +6,8 @@ use tokio::{io, time};
 use tokio::{fs, time::sleep};
 use tracing::{info, warn};
 use regex::Regex;
-use serde::ser::StdError;
 
 use crate::{structures::structures::{Album, Artist}, utils::websocket::log_to_ws};
-
-use super::hash::hash_album;
 
 #[derive(Debug, Deserialize)]
 struct SearchResponse {
@@ -57,7 +54,7 @@ pub async fn get_access_token() -> Result<String, Box<dyn std::error::Error>> {
   Ok(token_res.accessToken)
 }
 
-async fn get_artist_metadata(client: &Client, artist_name: &str, access_token: String) -> Result<(String, u64), Box<dyn StdError + Send>> {
+async fn get_artist_metadata(client: &Client, artist_name: &str, access_token: String) -> Option<(String, u64)> {
   let mut headers = HeaderMap::new();
 
   headers.insert(AUTHORIZATION, format!("Bearer {}", access_token).parse().unwrap());
@@ -66,28 +63,42 @@ async fn get_artist_metadata(client: &Client, artist_name: &str, access_token: S
 
   let url = format!("https://api.spotify.com/v1/search?type=artist&q={}&decorate_restrictions=false&best_match=true&include_external=audio&limit=1", artist_name);
 
-  let response = client
-    .get(&url)
-    .headers(headers)
-    .send()
-    .await
-    .unwrap();
-  
-  let body = response.text().await.unwrap();
-  
-  let res: SearchResponse = serde_json::from_str(&body).unwrap();
+  let response = match client.get(&url).headers(headers).send().await {
+    Ok(response) => response,
+    Err(_) => {
+      warn!("Failed to send request for artist: {}", artist_name);
+      return None;
+    },
+  };
+
+  let body = match response.text().await {
+    Ok(body) => body,
+    Err(_) => {
+      warn!("Failed to read response body for artist: {}", artist_name);
+      return None;
+    },
+  };
+
+  let res: SearchResponse = match serde_json::from_str(&body) {
+    Ok(res) => res,
+    Err(_) => {
+      warn!("Failed to parse response body for artist: {}", artist_name);
+      return None;
+    },
+  };
 
   if let Some(artist) = res.best_match.items.get(0) {
     if let Some(image) = artist.images.get(0) {
-      return Ok((image.url.clone(), artist.followers.total));
+      return Some((image.url.clone(), artist.followers.total));
     }
   }
 
-  Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "No artist found")))
+  warn!("No artist found for: {}", artist_name);
+  None
 }
 
 pub async fn process_artist(client: &Client, artist: &mut Artist, access_token: String) {
-  let icon_path_formatted = format!("missing_cover_art/{}", artist.id);
+  let icon_path_formatted = format!("missing_icon_art/{}.jpg", artist.id);
   let icon_path = Path::new(&icon_path_formatted);
 
   let client1 = client.clone();
@@ -99,6 +110,9 @@ pub async fn process_artist(client: &Client, artist: &mut Artist, access_token: 
   let wikipedia_extract = wikipedia_future.await.unwrap();
   if let Some(wikipedia_extract) = wikipedia_extract {
     artist.description = wikipedia_extract;
+    let log = format!("Wikipedia extract downloaded for Artist: {}", artist.name);
+    info!(log);
+    log_to_ws(log).await.unwrap();
   }
 
   if !icon_path.exists() {
@@ -110,15 +124,15 @@ pub async fn process_artist(client: &Client, artist: &mut Artist, access_token: 
 
     let metadata_result = metadata_future.await.unwrap();
 
-    if let Ok(metadata) = metadata_result {
+    if let Some(metadata) = metadata_result {
       match download_and_store_icon_art(client, &metadata.0, &artist.id.to_string()).await {
         Ok(path) => {
           artist.icon_url = path;
           artist.followers = metadata.1;
 
-          let log = format!("Icon art and metadata downloaded and stored for Artist: {}", artist.name);
+          let log = format!("Icon art downloaded and stored for Artist: {}", artist.name);
           info!(log);
-          log_to_ws(log).await.unwrap()
+          log_to_ws(log).await.unwrap();
         },
         Err(e) => warn!("Failed to store icon art for Artist: {}. Error: {}", artist.name, e),
       }
@@ -176,9 +190,9 @@ async fn fetch_album_metadata(client: &Client, artist_name: &str, album_name: &s
 
     let url = format!("https://musicbrainz.org/ws/2/release/?query={}&fmt=json&limit=10", query);
     let album_metadata = fetch_musicbrainz_metadata(client, &url, cover_art_already_downloaded).await;
-    album_metadata.unwrap()
+    album_metadata.unwrap_or_default()
   } else {
-    album_metadata.unwrap()
+    album_metadata.unwrap_or_default()
   }
 }
 
@@ -243,9 +257,10 @@ async fn fetch_wikipedia_page_extract(client: &Client, page_title: &str) -> Opti
       }
     }
   }
-  time::sleep(Duration::from_secs(1)).await;
   None
 }
+
+
 
 pub struct AlbumMetadata {
   pub cover_url: String,
@@ -253,6 +268,18 @@ pub struct AlbumMetadata {
   pub musicbrainz_id: String,
   pub wikidata_id: Option<String>,
   pub primary_type: String,
+}
+  
+impl Default for AlbumMetadata {
+  fn default() -> Self {
+    Self {
+      cover_url: String::from(""),
+      first_release_date: String::from(""),
+      musicbrainz_id: String::from(""),
+      wikidata_id: None,
+      primary_type: String::from(""),
+    }
+  }
 }
 async fn fetch_musicbrainz_metadata(client: &Client, url: &str, cover_art_already_downloaded: bool) -> Result<AlbumMetadata, Box<dyn std::error::Error>> {
   let response = client.get(url).send().await?;
@@ -392,7 +419,7 @@ pub async fn process_album(client: &Client, artist_name: String, album: &mut Alb
         Err(e) => warn!("Failed to store cover art for Album: {}. Error: {}", album.name, e),
     }
   } else {
-    let log = format!("Cover art already exists for Album: {}", album.name);
+    let log = format!("Cover art already found for Album: {}", album.name);
     warn!(log);
     log_to_ws(log).await.unwrap_or_else(|e| warn!("Failed to log to ws: {}", e));
   }
