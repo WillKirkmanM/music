@@ -13,7 +13,7 @@ switch (command) {
   case 'run':
     execSync('bun install', { stdio: 'inherit' });
     if (action === 'dev') {
-      execSync(`${envVariables && "bunx"} ${envVariables} bun run dev --filter ${project}`, { stdio: 'inherit' });
+      execSync(`${envVariables && "bunx"} ${envVariables} bun run dev --filter ${project} --env-mode loose`, { stdio: 'inherit' });
     } else {
       execSync(`bunx cross-env NODE_ENV=production DEPLOYMENT_TYPE=containerless BACKEND_PORT=3001 bun run start --filter ${project}`, { stdio: 'inherit' });
     }
