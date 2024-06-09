@@ -32,7 +32,7 @@ export default function Sidebar({ children, sidebarContent }: SidebarProps) {
         {isOpen && sidebarContent}
       </aside>
 
-      <div className={`overflow-x-auto flex-grow ${isOpen ? "ml-[20%] md:ml-80" : "ml-[5%] md:ml-28"}`}>
+      <div className={`overflow-x-auto flex-grow ${isOpen ? "ml-[20%] md:ml-80" : "ml-[5%] md:ml-28 mt-5"}`}>
         {children}
       </div>
     </div>

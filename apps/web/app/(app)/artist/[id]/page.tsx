@@ -166,7 +166,9 @@ export default async function ArtistPage({ params }: ArtistPage) {
           <h1 className="text-2xl">{formatFollowers(artist.followers)} Followers</h1>
         </div>
       </div>
-      <Description description={artist.description}/>
+      <div className="mx-52">
+        <Description description={artist.description}/>
+      </div>
       <p className="text-2xl text-bold">Songs</p>
       <ScrollArea className="w-full overflow-x-auto overflow-y-auto mb-4 h-72">
         <div className="flex flex-row justify-center items-start">
