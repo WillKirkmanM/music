@@ -39,23 +39,25 @@ pub async fn get_config_path() -> std::path::PathBuf {
 }
 
 pub async fn save_config(indexed_json: &String) -> std::io::Result<()> {
-    let config_path = get_config_path().await;
-    let config_dir = config_path.parent().unwrap();
-    let config_filename = config_path.file_stem().unwrap().to_str().unwrap();
-    let config_extension = config_path.extension().unwrap().to_str().unwrap();
+  let config_path = get_config_path().await;
+  let config_dir = config_path.parent().unwrap();
+  let config_filename = config_path.file_stem().unwrap().to_str().unwrap();
+  let config_extension = config_path.extension().unwrap().to_str().unwrap();
 
-    let mut backup_number = 1;
-    let mut backup_path = config_dir.join(format!("{}_{}.{}", config_filename, backup_number, config_extension));
+  let mut backup_number = 1;
+  let mut backup_path = config_dir.join(format!("{}_{}.{}", config_filename, backup_number, config_extension));
 
-    while backup_path.exists() {
-        backup_number += 1;
-        backup_path = config_dir.join(format!("{}_{}.{}", config_filename, backup_number, config_extension));
-    }
+  while backup_path.exists() {
+    backup_number += 1;
+    backup_path = config_dir.join(format!("{}_{}.{}", config_filename, backup_number, config_extension));
+  }
 
+  if config_path.exists() {
     fs::rename(&config_path, &backup_path)?;
+  }
 
-    let mut file = File::create(&config_path).await?;
-    file.write_all(indexed_json.as_bytes()).await?;
+  let mut file = File::create(&config_path).await?;
+  file.write_all(indexed_json.as_bytes()).await?;
 
-    Ok(())
+  Ok(())
 }

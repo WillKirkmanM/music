@@ -4,7 +4,6 @@ mod utils;
 
 use actix_web::{App, HttpServer};
 use std::env;
-use std::task;
 
 use routes::index::home;
 use routes::music::{
@@ -16,7 +15,7 @@ use routes::music::{
     index_library_no_cover_url
 };
 
-use utils::websocket::{start_ws, log_to_ws};
+use utils::websocket::start_ws;
 
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
