@@ -93,14 +93,15 @@ export default async function AlbumPage({ params }: AlbumPage) {
     if (minutes > 0) {
       result += `${minutes} Minute${minutes > 1 ? 's' : ''} `;
     }
-    if (seconds > 0) {
-      result += `${seconds} Second${seconds > 1 ? 's' : ''}`;
-    }
+    // if (seconds > 0) {
+    //   result += `${seconds} Second${seconds > 1 ? 's' : ''}`;
+    // }
+    
     return result.trim();
   }
   
   let totalDuration = album.songs.reduce((total, song) => total + song.duration, 0)
-
+  let releaseDate = new Date(album.first_release_date).toLocaleString('default', { month: 'long', year: 'numeric' });
 
   return ( album ?
     <ScrollArea className="h-full overflow-x-hidden overflow-y-auto">
@@ -114,15 +115,15 @@ export default async function AlbumPage({ params }: AlbumPage) {
             <p className="text-3xl">{artist.name}</p>
           </Link>
 
-          <p>{album.first_release_date.substring(0, 4)}</p>
-          <div className="flex flex-row gap-4 text-xl">
+          <p>{releaseDate}</p>
+          <div className="flex flex-row gap-2">
             <p>{album.songs.length} Songs</p>
+            <p>•</p>
             <p>{formatDuration(totalDuration)}</p>
           </div>
         </div>
-
       </div>
-      <Description description={artist.description}/>
+      <Description description={album.description}/>
       <AlbumTable album={album} songs={album.songs} artist={artist} key={album.id} />
       <ScrollBar />
     </ScrollArea>

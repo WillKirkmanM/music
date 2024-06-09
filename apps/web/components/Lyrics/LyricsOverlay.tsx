@@ -67,7 +67,6 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
       const fac = new FastAverageColor();
       const getColor = async () => {
         const color = await fac.getColorAsync(imageSrc);
-        console.log(color);
         setBackgroundColour(color.hex);
       };
       getColor();
@@ -156,21 +155,21 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
   
   useEffect(() => {
     const noLyricMessages = [
-    "Why do some songs have lyrics and others just have 'WOO!'s and 'YEAH!'s? It's like they're trying to confuse me on purpose",
-    "Can someone please tell me where in the world of Google my favorite song's lyrics went? Did I accidentally delete the internet?",
-    "I've got a master's degree in searching for lyrics, but somehow I still can't find this one...", 
-    "I've given up on finding the lyrics for that song. I've started making up my own.",
-    "If finding lyrics was an Olympic sport, I'd be a bronze medalist at best... but hey, at least I'm consistent!",
-    "I've searched so hard for those lyrics that I think I might actually have a direct line to the songwriters' email... or maybe I just really need to get out more.",
-    "I'm starting to think that songwriters have a secret pact to make their lyrics impossible to find... like some kind of lyrical Illuminati.",
-    "What if the only way to get the lyrics is to become a professional detective and solve a series of music-themed mysteries?",
-    "I've checked every website, app, and meme page... but it seems even Google can't find those lyrics for me... I'm starting to think they're hiding in a parallel universe.",
-    "I've checked every fan site, forum, and Reddit thread... but it seems even the most dedicated fans don't know what those lyrics say... I'm starting to think it's a conspiracy.",
-    "I've scrolled through so many tabs that I think my browser has started to auto-complete lyrics for me... or maybe it's just trying to get rid of me.",
-    "What's the deal with songwriters not just putting up a 'Lyrics Unavailable' sign like normal people do? Do they think we're all just going to wing it and make up our own words?",
-    "Thanks for nothing, Genius.com, for telling me that I need to 'try harder' to find those lyrics... like it's my fault your algorithm is broken or something",
-    "I'm trying to 'Run the World' but it's hard when I can't even get the lyrics right... thanks, Genius.com, for nothing."
-  ];
+      "Why do some songs have lyrics and others just have 'WOO!'s and 'YEAH!'s? It's like they're trying to confuse me on purpose",
+      "Can someone please tell me where in the world of Google my favorite song's lyrics went? Did I accidentally delete the internet?",
+      "I've got a master's degree in searching for lyrics, but somehow I still can't find this one...", 
+      "I've given up on finding the lyrics for that song. I've started making up my own.",
+      "If finding lyrics was an Olympic sport, I'd be a bronze medalist at best... but hey, at least I'm consistent!",
+      "I've searched so hard for those lyrics that I think I might actually have a direct line to the songwriters' email... or maybe I just really need to get out more.",
+      "I'm starting to think that songwriters have a secret pact to make their lyrics impossible to find... like some kind of lyrical Illuminati.",
+      "What if the only way to get the lyrics is to become a professional detective and solve a series of music-themed mysteries?",
+      "I've checked every website, app, and meme page... but it seems even Google can't find those lyrics for me... I'm starting to think they're hiding in a parallel universe.",
+      "I've checked every fan site, forum, and Reddit thread... but it seems even the most dedicated fans don't know what those lyrics say... I'm starting to think it's a conspiracy.",
+      "I've scrolled through so many tabs that I think my browser has started to auto-complete lyrics for me... or maybe it's just trying to get rid of me.",
+      "What's the deal with songwriters not just putting up a 'Lyrics Unavailable' sign like normal people do? Do they think we're all just going to wing it and make up our own words?",
+      "Thanks for nothing, Genius.com, for telling me that I need to 'try harder' to find those lyrics... like it's my fault your algorithm is broken or something",
+      "I'm trying to 'Run the World' but it's hard when I can't even get the lyrics right... thanks, Genius.com, for nothing."
+    ];
     const randomNoLyricMessage = noLyricMessages[Math.floor(Math.random() * noLyricMessages.length)] ?? "";
     setNoLyricMessage(randomNoLyricMessage)
 
