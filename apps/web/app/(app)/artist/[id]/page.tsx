@@ -14,6 +14,7 @@ import Image from "next/image";
 import { startTransition, Suspense } from "react";
 import SongsInLibrary from "@/components/Artist/SongsInLibrary";
 import getServerIpAddress from "@/actions/System/GetIpAddress";
+import Description from "@/components/Description/Description";
 
 type ArtistPage = {
   params: {
@@ -165,6 +166,7 @@ export default async function ArtistPage({ params }: ArtistPage) {
           <h1 className="text-2xl">{formatFollowers(artist.followers)} Followers</h1>
         </div>
       </div>
+      <Description description={artist.description}/>
       <p className="text-2xl text-bold">Songs</p>
       <ScrollArea className="w-full overflow-x-auto overflow-y-auto mb-4 h-72">
         <div className="flex flex-row justify-center items-start">
