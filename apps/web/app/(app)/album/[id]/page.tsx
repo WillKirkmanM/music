@@ -8,6 +8,7 @@ import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
 import getConfig from "@/actions/Config/getConfig";
 import fs from "fs"
 import path from "path"
+import Description from "@/components/Description/Description";
 
 type AlbumPage = {
   params: {
@@ -113,9 +114,15 @@ export default async function AlbumPage({ params }: AlbumPage) {
             <p className="text-3xl">{artist.name}</p>
           </Link>
 
-          <p className="text-xl">{formatDuration(totalDuration)}</p>
+          <p>{album.first_release_date.substring(0, 4)}</p>
+          <div className="flex flex-row gap-4 text-xl">
+            <p>{album.songs.length} Songs</p>
+            <p>{formatDuration(totalDuration)}</p>
+          </div>
         </div>
+
       </div>
+      <Description description={artist.description}/>
       <AlbumTable album={album} songs={album.songs} artist={artist} key={album.id} />
       <ScrollBar />
     </ScrollArea>
