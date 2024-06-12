@@ -1,6 +1,7 @@
 import { User } from "@prisma/client"
 import Username from "./Username"
 import { ChangePassword } from "./ChangePassword"
+import ChangeBitrate from "./ChangeBitrate"
 
 type ProfileProps = {
   user: User
@@ -11,6 +12,7 @@ export default function Settings({ user }: ProfileProps) {
     <div className="flex flex-col items-center justify-center align-middle min-h-screen text-black">
       <Username username={user.username}/>
       <ChangePassword user={user}/>
+      <ChangeBitrate />
     </div>
   )
 }
