@@ -1,10 +1,16 @@
 use actix_web::http::header;
 use actix_web::{ get, web, HttpRequest, HttpResponse, Responder };
+use lofty::{AudioFile, TaggedFile};
+use serde::Deserialize;
 use tokio::fs;
+use tokio::process::Command;
+use tokio_util::io::ReaderStream;
 use std::ffi::OsStr;
 use std::path::Path;
+use std::process::Stdio;
 use std::time::Instant;
 use std::fs::File;
+use futures::stream::StreamExt;
 use std::io::{Read, Seek, SeekFrom};
 
 use walkdir::WalkDir;
@@ -111,9 +117,17 @@ async fn process_library(path_to_library: web::Path<String>, ) -> impl Responder
 }
 
 
+#[derive(Deserialize)]
+struct BitrateQueryParams {
+    bitrate: u64
+}
+
 #[get("/stream/{song}")]
-async fn stream_song(req: HttpRequest, path: web::Path<String>) -> impl Responder {
+async fn stream_song(req: HttpRequest, path: web::Path<String>, bitrate: web::Query<BitrateQueryParams>) -> impl Responder {
     let song = path.into_inner();
+    let bitrate = bitrate.into_inner().bitrate;
+    
+    println!("Bitrate: {}", bitrate);
 
     let file = fs::metadata(&song).await.unwrap();
     let song_file_size = file.len();
@@ -124,10 +138,10 @@ async fn stream_song(req: HttpRequest, path: web::Path<String>) -> impl Responde
         panic!("ERROR: Path is not a file!");
     }
 
-    // let tagged_file = Probe::open(path)
-    //     .expect("ERROR: Bad path provided!")
-    //     .read()
-    //     .expect("ERROR: Failed to read file!");
+    let tagged_file = lofty::Probe::open(path)
+        .expect("ERROR: Bad path provided!")
+        .read()
+        .expect("ERROR: Failed to read file!");
 
     let range = req.headers().get("Range").and_then(|v| v.to_str().ok());
     let (start, end) = match range {
@@ -137,33 +151,69 @@ async fn stream_song(req: HttpRequest, path: web::Path<String>) -> impl Responde
             let start = range_parts[0].parse::<u64>().unwrap_or(0);
             let end = range_parts.get(1).and_then(|s| s.parse::<u64>().ok()).unwrap_or(song_file_size - 1);
             (start, end)
-        },
-        None => (0, song_file_size - 1),
-    };
-
-    let mut file = File::open(&song).unwrap();
-    let mut buffer = vec![0; (end - start + 1) as usize];
-    file.seek(SeekFrom::Start(start)).unwrap();
-    file.read_exact(&mut buffer).unwrap();
-
-    let extension = path.extension().and_then(OsStr::to_str);
-    let mime_type = match extension {
-        Some("mp3") => "audio/mpeg",
-        Some("flac") => "audio/flac",
-        Some("wav") => "audio/wav",
-        Some("ogg") => "audio/ogg",
-        Some("aac") => "audio/aac",
-        _ => "application/octet-stream",
-    };
-
+            },
+            None => (0, song_file_size - 1),
+            };
+            
     let content_range = format!("bytes {}-{}/{}", start, end, song_file_size);
     let content_length = (end - start + 1).to_string();
 
-    HttpResponse::PartialContent()
-        .append_header((header::CONTENT_TYPE, mime_type))
-        .append_header((header::CONTENT_RANGE, content_range))
-        .append_header((header::CONTENT_LENGTH, content_length))
-        .body(buffer)
+    if bitrate == 0 {
+        let mut file = File::open(&song).unwrap();
+        let mut buffer = vec![0; (end - start + 1) as usize];
+        file.seek(SeekFrom::Start(start)).unwrap();
+        file.read_exact(&mut buffer).unwrap();
+
+        let extension = path.extension().and_then(OsStr::to_str);
+        let mime_type = match extension {
+            Some("mp3") => "audio/mpeg",
+            Some("flac") => "audio/flac",
+            Some("wav") => "audio/wav",
+            Some("ogg") => "audio/ogg",
+            Some("aac") => "audio/aac",
+            _ => "application/octet-stream",
+        };
+
+
+        HttpResponse::PartialContent()
+            .append_header((header::CONTENT_TYPE, mime_type))
+            .append_header((header::CONTENT_RANGE, content_range))
+            .append_header((header::CONTENT_LENGTH, content_length))
+            .body(buffer)
+    } else {
+        let audio_bitrate = tagged_file.properties().audio_bitrate().unwrap() as f64 * 1000.0 / 8.0;
+        let start_time = (start) as f64 / audio_bitrate;
+        let duration = ((end - start)) as f64 / audio_bitrate;
+
+        let mut command = Command::new("ffmpeg")
+            .args([
+                "-ss", &start_time.to_string(),
+                "-t", &duration.to_string(),
+                "-i", &song,
+                "-ab", &format!("{}k", bitrate),
+                "-f", "mp3",
+                "pipe:1"
+            ])
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to start ffmpeg process");
+        
+        let stdout = command.stdout.take().expect("Failed to take stdout of ffmpeg");
+        
+        let stream = ReaderStream::new(stdout);
+        let body_stream = stream.map(|result| {
+            result.map(|bytes| bytes.into()).map_err(|e| {
+                println!("Error processing stream: {:?}", e);
+                actix_web::error::ErrorInternalServerError(e)
+            })
+        });
+        
+        HttpResponse::Ok()
+            .append_header((header::CONTENT_TYPE, "audio/mpeg"))
+            .append_header((header::CONTENT_RANGE, content_range))
+            .append_header((header::CONTENT_LENGTH, content_length))
+            .streaming(body_stream)
+    }
 }
 
 #[get("/format/{artist}")]
