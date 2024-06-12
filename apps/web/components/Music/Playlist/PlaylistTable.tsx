@@ -20,6 +20,7 @@ import Album from "@/types/Music/Album";
 import Link from "next/link";
 import getServerIpAddress from "@/actions/System/GetIpAddress";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 type PlaylistTableProps = {
   songsWithMetadata: {
@@ -39,6 +40,9 @@ type PlaylistTableProps = {
 export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps) {
   const { setImageSrc, setSong, setArtist, setAudioSource, setAlbum } = usePlayer()
   const [serverIP, setServerIP] = useState("");
+
+  const session = useSession()
+  const bitrate = session.data?.user.bitrate
 
   useEffect(() => {
     async function getServerIP() {
@@ -84,7 +88,7 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
         {songsWithMetadata.map((song, index) => (
           <SongContextMenu song={song.song} album={song.album} artist={song.artist} key={song.song.id}>
             <TableBody key={song.song.id}>
-              <TableRow onClick={() => handlePlay(song.coverURL, song.song, `http://${serverIP}:3001/stream/${encodeURIComponent(song.path)}`, song.artist, song.album)}>
+              <TableRow onClick={() => handlePlay(song.coverURL, song.song, `http://${serverIP}:3001/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`, song.artist, song.album)}>
                 <TableCell className="font-medium">{index + 1}</TableCell>
                 <TableCell>
                   <div className="w-[300px] overflow-hidden whitespace-nowrap text-overflow">

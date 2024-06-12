@@ -82,13 +82,19 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     id: 0,
     duration: 0
   });
-  const [artist, setArtist] = useState<Artist>({ albums: [], id: 0, name: "", followers: 0, icon_url: "" });
+  const [artist, setArtist] = useState<Artist>({ albums: [], id: 0, name: "", followers: 0, icon_url: "", description: "" });
   const [album, setAlbum] = useState<Album>({
     cover_url: "",
     id: 0,
     name: "",
+    description: "",
+    first_release_date: "",
+    musicbrainz_id: "",
+    primary_type: "",
+    wikidata_id: "",
     songs: [],
   });
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [queue, setQueueState] = useState<Queue[]>([]);
 
@@ -104,6 +110,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const [bufferedTime, setBufferedTime] = useState(0)
 
   const [serverIP, setServerIP] = useState("");
+
+  const session = useSession()
+  const bitrate = session.data?.user.bitrate
 
   useEffect(() => {
     async function getServerIP() {
@@ -152,14 +161,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           setImageSrc(base64Data);
         });
       }
-      setAudioSource(`http://${serverIP}:3001/stream/${encodeURIComponent(song.path)}`);
+      setAudioSource(`http://${serverIP}:3001/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`);
 
       const index = queueRef.current.findIndex((q) => q.song.id === song.id);
       if (index !== -1) {
         setCurrentSongIndex(index);
       }
     },
-    [setSong, serverIP]
+    [setSong, serverIP, bitrate]
   );
 
   const playNextSong = useCallback(() => {

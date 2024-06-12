@@ -20,6 +20,7 @@ import Artist from "@/types/Music/Artist";
 import Link from "next/link";
 import { startTransition, useEffect, useState } from "react";
 import getServerIpAddress from "@/actions/System/GetIpAddress";
+import { useSession } from "next-auth/react";
 
 type PlaylistTableProps = {
   songs: Song[]
@@ -30,6 +31,9 @@ type PlaylistTableProps = {
 export default function AlbumTable({ songs, album, artist }: PlaylistTableProps) {
   const { setImageSrc, setSong, setAudioSource, setArtist, setAlbum } = usePlayer()
   const [serverIP, setServerIP] = useState("");
+
+  const session = useSession()
+  const bitrate = session.data?.user.bitrate
 
   useEffect(() => {
     async function getServerIP() {
@@ -73,7 +77,7 @@ export default function AlbumTable({ songs, album, artist }: PlaylistTableProps)
         {songs.map(song => (
           <SongContextMenu song={song} album={album} artist={artist} key={song.id}>
             <TableBody key={song.id}>
-              <TableRow onClick={() => handlePlay(album.cover_url, song, `http://${serverIP}:3001/stream/${encodeURIComponent(song.path)}`, artist)}>
+              <TableRow onClick={() => handlePlay(album.cover_url, song, `http://${serverIP}:3001/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`, artist)}>
                 <TableCell className="font-medium">{song.track_number}</TableCell>
                 <TableCell>
                   <div className="w-[300px] overflow-hidden whitespace-nowrap text-overflow">

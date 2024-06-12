@@ -37,7 +37,8 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
-          username: user.username
+          username: user.username,
+          bitrate: user.bitrate
         };
       },
     }),
@@ -50,21 +51,23 @@ export const authOptions: NextAuthOptions = {
           ...token,
           id: u.id,
           username: u.username,
+          bitrate: u.bitrate,
           randomKey: u.randomKey,
         };
       }
       return token;
     },
-    session(params) {
+    async session({ session, user, token }) {
       return {
-        ...params.session,
+        ...session,
         user: {
-          ...params.session.user,
-          id: params.token.id as string,
-          username: params.token.username,
-          randomKey: params.token.randomKey,
-        },
-      };
-    },
-  },
-};
+          ...user,
+          id: token.id as string,
+          username: token.username,
+          bitrate: token.bitrate,
+          randomKey: token.randomKey,
+        }
+      }
+    }
+  }
+}

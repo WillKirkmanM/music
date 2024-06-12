@@ -7,6 +7,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       username: string
+      bitrate: number
     } & DefaultSession["user"]
   }
 }
