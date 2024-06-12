@@ -6,8 +6,6 @@ import imageToBase64 from "@/actions/ImageToBase64";
 import Link from "next/link";
 import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
 import getConfig from "@/actions/Config/getConfig";
-import fs from "fs"
-import path from "path"
 import Description from "@/components/Description/Description";
 
 type AlbumPage = {
@@ -80,7 +78,6 @@ export default async function AlbumPage({ params }: AlbumPage) {
   const base64Image = await imageToBase64(album.cover_url)
   const albumCoverURL = album.cover_url.length === 0 ? "/snf.png" : `data:image/jpg;base64,${base64Image}`
 
-  
   function formatDuration(duration: number) {
     const hours = Math.floor(duration / 3600);
     const minutes = Math.floor((duration % 3600) / 60);
