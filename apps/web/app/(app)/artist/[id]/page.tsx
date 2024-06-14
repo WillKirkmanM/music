@@ -15,6 +15,7 @@ import { startTransition, Suspense } from "react";
 import SongsInLibrary from "@/components/Artist/SongsInLibrary";
 import getServerIpAddress from "@/actions/System/GetIpAddress";
 import Description from "@/components/Description/Description";
+import GetPort from "@/actions/System/GetPort";
 
 type ArtistPage = {
   params: {
@@ -184,7 +185,7 @@ export default async function ArtistPage({ params }: ArtistPage) {
                     : `data:image/jpg;base64,${await imageToBase64(song.image)}`
                 }
                 albumURL=""
-                songURL={`http://${await getServerIpAddress()}:3001/stream/${encodeURIComponent(song.path)}`}
+                songURL={`http://${await getServerIpAddress()}:${await GetPort()}/server/stream/${encodeURIComponent(song.path)}`}
                 type="Song"
                 song={song}
               />
