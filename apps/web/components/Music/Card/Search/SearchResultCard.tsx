@@ -5,6 +5,7 @@ import { SearchResult } from 'minisearch';
 import imageToBase64 from '@/actions/ImageToBase64';
 import AlbumCard from '../Album/AlbumCard';
 import getServerIpAddress from '@/actions/System/GetIpAddress';
+import GetPort from '@/actions/System/GetPort';
 
 type ResultCardProps = {
   result: SearchResult
@@ -17,7 +18,7 @@ export default async function ResultCard({ result }: ResultCardProps) {
         <BigCard
           artist={result.artist}
           album={result.album}
-          songURL={`http://${await getServerIpAddress()}:3001/stream/${encodeURIComponent(result.song.path)}`}
+          songURL={`http://${await getServerIpAddress()}:${await GetPort()}/server/stream/${encodeURIComponent(result.song.path)}`}
           title={result.name}
           type="Song"
           imageSrc={
