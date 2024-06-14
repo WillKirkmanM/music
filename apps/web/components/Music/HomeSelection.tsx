@@ -4,6 +4,7 @@ import fs from "fs";
 import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
 import type { Library } from "@/types/Music/Library";
 import getServerIpAddress from "@/actions/System/GetIpAddress";
+import GetPort from "@/actions/System/GetPort";
 
 export default async function HomeSelection() {
   const config = await getConfig()
@@ -60,7 +61,7 @@ export default async function HomeSelection() {
                   : `data:image/jpg;base64,${imageToBase64(song.image)}`
               }
               albumURL=""
-              songURL={`http://${await getServerIpAddress()}:3001/stream/${encodeURIComponent(song.path)}`}
+              songURL={`http://${await getServerIpAddress()}:${await GetPort()}/server/stream/${encodeURIComponent(song.path)}?bitrate=0`}
               type="Song"
               song={song}
             />
