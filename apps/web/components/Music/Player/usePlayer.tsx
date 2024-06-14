@@ -16,6 +16,7 @@ import imageToBase64 from "@/actions/ImageToBase64";
 import SetNowPlaying from "@/actions/Player/SetNowPlaying";
 import { useSession } from "next-auth/react";
 import getServerIpAddress from "@/actions/System/GetIpAddress";
+import GetPort from "@/actions/System/GetPort";
 
 const isBrowser = typeof window !== "undefined";
 const audioElement = isBrowser ? new Audio() : null;
@@ -110,17 +111,21 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const [bufferedTime, setBufferedTime] = useState(0)
 
   const [serverIP, setServerIP] = useState("");
+  const [port, setPort] = useState(0)
 
   const session = useSession()
   const bitrate = session.data?.user.bitrate
 
   useEffect(() => {
-    async function getServerIP() {
+    async function getServerInformation() {
       const ip = await getServerIpAddress()
       setServerIP(ip)
+
+      const port = await GetPort()
+      setPort(port)
     }
 
-    getServerIP()
+    getServerInformation()
   })
 
   useEffect(() => {
@@ -161,14 +166,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           setImageSrc(base64Data);
         });
       }
-      setAudioSource(`http://${serverIP}:3001/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`);
+      setAudioSource(`http://${serverIP}:${port}/server/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`);
 
       const index = queueRef.current.findIndex((q) => q.song.id === song.id);
       if (index !== -1) {
         setCurrentSongIndex(index);
       }
     },
-    [setSong, serverIP, bitrate]
+    [setSong, serverIP, bitrate, port]
   );
 
   const playNextSong = useCallback(() => {
