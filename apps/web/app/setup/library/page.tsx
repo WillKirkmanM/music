@@ -5,21 +5,26 @@ import useWebSocket from "react-use-websocket";
 import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area";
 import FileBrowser from "@/components/FileBrowser/FileBrowser";
 import getServerIpAddress from "@/actions/System/GetIpAddress";
+import GetPort from "@/actions/System/GetPort";
 
 export default function SetupLibrary() {
   const [messageHistory, setMessageHistory] = useState<MessageEvent<any>[]>([]);
   const [serverIP, setServerIP] = useState("");
+  const [port, setPort] = useState(0)
 
   useEffect(() => {
-    async function getServerIP() {
+    async function getServerInformation() {
       const ip = await getServerIpAddress();
       setServerIP(ip);
+
+      const port = await GetPort()
+      setPort(port)
     }
 
-    getServerIP();
+    getServerInformation();
   });
 
-  const socketUrl = serverIP ? `ws://${serverIP}:3002/ws` : null;
+  const socketUrl = serverIP && port ? `ws://${serverIP}:${port}/websocket/` : null;
   const { lastMessage } = useWebSocket(socketUrl);
 
   useEffect(() => {
