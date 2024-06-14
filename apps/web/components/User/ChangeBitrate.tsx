@@ -13,6 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@music/ui/components/form";
+import SetBitrate from "@/actions/Player/SetBitrate";
 
 const FormSchema = z.object({
   bitrate: z
@@ -28,12 +29,12 @@ export default function ChangeBitrate() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      bitrate: selectedBitrate,
+      bitrate: selectedBitrate?.toString(),
     },
   })
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log(data.bitrate);
+    session.data && SetBitrate(session.data.user.username, Number(data.bitrate))
   }
 
 
