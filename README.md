@@ -3,7 +3,6 @@
 
 ![music-artist-showcase](https://github.com/WillKirkmanM/music/assets/98240335/76d1c540-d5cd-4ab0-9ecf-7986e0d84e31)
 ![music-album-showcase](https://github.com/WillKirkmanM/music/assets/98240335/f54c21fc-145f-4eb1-a7e6-72d2de352d34)
-ea24e6067)
 ![music-in-your-library](https://github.com/WillKirkmanM/music/assets/98240335/3b99a0c6-640e-4f38-918f-956a3ad0fd25)
 ![music-synced-lyrics](https://github.com/WillKirkmanM/music/assets/98240335/7798db3d-6146-4d82-bfe3-e7f63b1ce1e1)
 ![music-album-search](https://github.com/WillKirkmanM/music/assets/98240335/21b01fba-3705-4ad7-b610-5e549fa06b08)
