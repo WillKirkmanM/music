@@ -6,6 +6,7 @@ import BigCard from "../Music/Card/BigCard";
 import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area";
 import imageToBase64 from "@/actions/ImageToBase64";
 import getServerIpAddress from "@/actions/System/GetIpAddress";
+import GetPort from "@/actions/System/GetPort";
 
 type SongsInLibraryProps = {
   allSongs: allSongs[]
@@ -81,7 +82,7 @@ export default async function SongsInLibrary({ allSongs }: SongsInLibraryProps) 
                   : `data:image/jpg;base64,${await imageToBase64(song.image)}`
                 }
                 albumURL=""
-                songURL={`http://${await getServerIpAddress()}:3001/stream/${encodeURIComponent(song.path)}`}
+                songURL={`http://${await getServerIpAddress()}:${await GetPort()}/server/stream/${encodeURIComponent(song.path)}`}
                 type="Song"
                 song={song}
                 />
