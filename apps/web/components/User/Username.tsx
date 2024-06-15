@@ -16,12 +16,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@music/ui/components/form"
+import { useSession } from "next-auth/react"
 
-type UsernameProps = {
-  username: string
-}
-
-export default function Username({ username }: UsernameProps) {
+export default function Username() {
+  const session = useSession()
+  const username = session.data?.user.username
 
   const FormSchema = z.object({
     username: z.string()
@@ -46,7 +45,7 @@ export default function Username({ username }: UsernameProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-1/6 space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="username"
@@ -60,7 +59,8 @@ export default function Username({ username }: UsernameProps) {
             </FormItem>
           )}
         />
-        <Button type="submit">Submit</Button>
+
+        <Button type="submit" className="w-1/3">Change Username</Button>
       </form>
     </Form>
   )

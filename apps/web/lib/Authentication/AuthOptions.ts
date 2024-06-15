@@ -44,7 +44,11 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    jwt: ({ token, user }) => {
+    jwt: ({ token, user, trigger, session }) => {
+      if (trigger === "update") {
+        return { ...token, ...session.user }
+      }
+
       if (user) {
         const u: User & { randomKey: string } = user as User & { randomKey: string };
         return {
