@@ -190,6 +190,7 @@ async fn stream_song(req: HttpRequest, path: web::Path<String>, bitrate: web::Qu
                 "-ss", &start_time.to_string(),
                 "-t", &duration.to_string(),
                 "-i", &song,
+                "-af", "loudnorm=I=-14:LRA=11:TP=-1",
                 "-ab", &format!("{}k", bitrate),
                 "-f", "mp3",
                 "pipe:1"
