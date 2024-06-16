@@ -39,14 +39,14 @@ switch (command) {
     if (!nodeModulesExists) {
       runCommand('bun install');
     }
-    runCommand(`bunx cross-env NODE_ENV=production DEPLOYMENT_TYPE=containerless BACKEND_PORT=3001 bun run build --filter ${project} --force`);
+    runCommand(`bunx cross-env NODE_ENV=production DEPLOYMENT_TYPE=containerless BACKEND_PORT=3001 bunx turbo build --log-order=stream --filter ${project} --force`);
     break;
   case 'run':
     if (!nodeModulesExists) {
       runCommand('bun install');
     }
     if (action === 'dev') {
-      runCommand(`${envVariables && "bunx"} ${envVariables} bun run dev --filter ${project} --env-mode loose`);
+      runCommand(`${envVariables && "bunx"} ${envVariables} bunx turbo dev --log-order=stream --filter ${project} --env-mode loose`);
       runCommand('cargo run', { DEPLOYMENT_TYPE: "containerless" }); // Run Rust application in development mode
     } else {
       runCommand(`bunx cross-env NODE_ENV=production DEPLOYMENT_TYPE=containerless BACKEND_PORT=3001 bun run start --filter ${project}`);
