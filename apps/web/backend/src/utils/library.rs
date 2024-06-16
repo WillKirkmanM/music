@@ -75,12 +75,14 @@ files.par_iter().for_each(|entry| {
           library.last_mut().unwrap()
       };
 
-      let album_position = artist.albums.iter().position(|a| a.name == album_name_without_cd);
+      let album_position = artist.albums.iter().position(|a| a.name == album_name_without_cd && a.id == hash_album(&album_name_without_cd.clone(), &artist_name));
 
       let album = if let Some(album_position) = album_position {
           &mut artist.albums[album_position]
       } else {
           let mut new_album = Album { id: hash_album(&album_name_without_cd.clone(), &artist_name), name: album_name_without_cd.clone(), songs: Vec::new(), cover_url: String::new(), primary_type: String::new(), description: String::new(), first_release_date: String::new(), musicbrainz_id: String::new(), wikidata_id: None };
+
+          new_album.songs.push(song.clone());
 
           if let Some(parent_path) = path.parent() {
               let mut cover_found = false;
