@@ -16,6 +16,7 @@ import SongsInLibrary from "@/components/Artist/SongsInLibrary";
 import getServerIpAddress from "@/actions/System/GetIpAddress";
 import Description from "@/components/Description/Description";
 import GetPort from "@/actions/System/GetPort";
+import PageGradient from "@/components/Layout/PageGradient";
 
 type ArtistPage = {
   params: {
@@ -162,6 +163,7 @@ export default async function ArtistPage({ params }: ArtistPage) {
         backgroundPosition: 'center', 
         height: "500px" 
       }}>
+        <PageGradient imageSrc={artistIconURL} />
         <div className="flex flex-col justify-center items-center gap-8 pt-32">
           <h1 className="text-8xl font-extrabold">{artist.name}</h1>
           <h1 className="text-2xl">{formatFollowers(artist.followers)} Followers</h1>

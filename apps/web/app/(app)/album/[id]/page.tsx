@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
 import getConfig from "@/actions/Config/getConfig";
 import Description from "@/components/Description/Description";
+import PageGradient from "@/components/Layout/PageGradient";
 
 type AlbumPage = {
   params: {
@@ -102,6 +103,7 @@ export default async function AlbumPage({ params }: AlbumPage) {
 
   return ( album ?
     <ScrollArea className="h-full overflow-x-hidden overflow-y-auto">
+      <PageGradient imageSrc={albumCoverURL} /> 
       <div className="flex flex-col md:flex-row items-start md:items-center my-8">
         <div className="flex items-center justify-center w-full md:w-auto md:justify-start">
           <Image src={albumCoverURL} alt={`${album.name} Image`} height={256} width={256} className="rounded mr-4 mb-4 md:mb-0" />
