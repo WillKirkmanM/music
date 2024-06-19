@@ -46,10 +46,13 @@ export default async function HomeSelection() {
     return base64Image;
   }
 
+  const serverIPAddress = await getServerIpAddress()
+  const port = await GetPort()
+
   return (
     <ScrollArea className="w-full overflow-x-auto overflow-y-auto h-full">
       <div className="flex flex-row">
-        {randomSongs.map(async (song, index) => (
+        {randomSongs.map((song, index) => (
           <div className="mr-20" key={index}>
             <BigCard
               title={song.name}
@@ -61,7 +64,7 @@ export default async function HomeSelection() {
                   : `data:image/jpg;base64,${imageToBase64(song.image)}`
               }
               albumURL=""
-              songURL={`http://${await getServerIpAddress()}:${await GetPort()}/server/stream/${encodeURIComponent(song.path)}?bitrate=0`}
+              songURL={`http://${serverIPAddress}:${port}/server/stream/${encodeURIComponent(song.path)}?bitrate=0`}
               type="Song"
               song={song}
             />
