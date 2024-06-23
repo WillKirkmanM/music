@@ -74,14 +74,15 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
   }, [imageSrc]);
 
   useEffect(() => {
-    if (!isUserScrolling && lyricsRef.current) {
-      const currentLyricElement = lyricsRef.current.children[
-        currentLyricIndex
-      ] as HTMLParagraphElement;
-      currentLyricElement.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+    if (!isUserScrolling && lyricsRef.current && currentLyricIndex >= 0) {
+      console.log(lyricsRef.current)
+      const currentLyricElement = lyricsRef.current.querySelector(`:scope > div > p:nth-child(${currentLyricIndex + 1})`);
+      if (currentLyricElement) {
+        currentLyricElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
     }
   }, [currentLyricIndex, isUserScrolling]);
 
@@ -110,16 +111,18 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
     setBackgroundColour("");
 
     const fetchLyrics = async () => {
-      const response = await fetch(
-        `https://lrclib.net/api/search?q=${encodeURIComponent(`${song.name} ${song.artist}`)}`
-      );
-      const data: LyricsObjectResponse[] = await response.json();
-      if (data[0]?.syncedLyrics) {
-        setLyrics(parseLyrics(data[0].syncedLyrics));
-        setIsSyncedLyrics(true);
-      } else if (data[0]?.plainLyrics) {
-        setLyrics(parseLyrics(data[0].plainLyrics));
-        setIsSyncedLyrics(false);
+      if (song.id) {
+        const response = await fetch(
+          `https://lrclib.net/api/search?q=${encodeURIComponent(`${song.name} ${song.artist}`)}`
+        );
+        const data: LyricsObjectResponse[] = await response.json();
+        if (data[0]?.syncedLyrics) {
+          setLyrics(parseLyrics(data[0].syncedLyrics));
+          setIsSyncedLyrics(true);
+        } else if (data[0]?.plainLyrics) {
+          setLyrics(parseLyrics(data[0].plainLyrics));
+          setIsSyncedLyrics(false);
+        }
       }
     };
 
@@ -176,33 +179,34 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
   }, [areLyricsVisible])
 
   return areLyricsVisible ? (
+    <>
+    <div className="bg-cover bg-center blur-3xl" style={{ backgroundImage: `url(${imageSrc})`, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', filter: 'blur(24px) brightness(50%)' }} />
     <ScrollArea className="h-full overflow-x-hidden overflow-y-auto">
       <div
         onScroll={handleScroll}
         ref={lyricsRef}
         className="mb-32"
-        style={{
-          background: `linear-gradient(90deg, #4b5563, ${backgroundColour}, #4b5563)`,
-          backgroundSize: "150% 200%",
-          backgroundPosition: "center",
-        }}
-      >
+        // style={{
+        //   background: `linear-gradient(90deg, #4b5563, ${backgroundColour}, #4b5563)`,
+        //   backgroundSize: "150% 200%",
+        //   backgroundPosition: "center",
+        // }}
+        >
         <div className="p-20">
-          {lyrics.length > 0 && <p className="text-center">{song.name} Lyrics</p>}
           {lyrics.length > 0 ? (
             lyrics.map((line, index) => (
               <p
-                key={index}
-                className={`
+              key={index}
+              className={`
                 text-3xl 
                 text-center 
                 transition-opacity 
                 duration-2000 
                 ${index === currentLyricIndex ? "opacity-100" : "opacity-50"} 
                 ${index === currentLyricIndex ? "font-bold" : "font-normal"} 
-                ${isSyncedLyrics ? "cursor-pointer" : ""} 
+                ${isSyncedLyrics && "cursor-pointer"} 
                 ${line.time <= currentTime ? "text-white" : "text-black"}
-              `}
+                `}
                 onClick={
                   isSyncedLyrics ? () => handleTimeChange(line.time) : undefined
                 }
@@ -218,6 +222,7 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
         </div>
       </div>
     </ScrollArea>
+    </>
   ) : (
     children
   );
