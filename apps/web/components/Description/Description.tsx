@@ -7,7 +7,7 @@ type DescriptionProps = { description: string }
 export default function Description({ description }: DescriptionProps) {
   const [showFullDescription, setShowFullDescription] = useState(false)
 
-  return (
+  return description && 
     <>
       <p style={{
         display: '-webkit-box',
@@ -18,9 +18,9 @@ export default function Description({ description }: DescriptionProps) {
       }}>
       {description}
       </p>
-    <button onClick={() => setShowFullDescription(!showFullDescription)} className="py-2">
-      <p className="font-semibold">{showFullDescription ? 'LESS' : 'MORE'}</p>
-    </button>
+
+      <button onClick={() => setShowFullDescription(!showFullDescription)} className="py-2">
+        <p className="font-semibold">{showFullDescription ? 'LESS' : 'MORE'}</p>
+      </button>
     </>
-  )
 }
