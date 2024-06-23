@@ -101,32 +101,37 @@ export default async function AlbumPage({ params }: AlbumPage) {
   let totalDuration = album.songs.reduce((total, song) => total + song.duration, 0)
   let releaseDate = new Date(album.first_release_date).toLocaleString('default', { month: 'long', year: 'numeric' });
 
-  return ( album ?
-    <ScrollArea className="h-full overflow-x-hidden overflow-y-auto">
-      <PageGradient imageSrc={albumCoverURL} /> 
-      <div className="flex flex-col md:flex-row items-start md:items-center my-8">
-        <div className="flex items-center justify-center w-full md:w-auto md:justify-start">
-          <Image src={albumCoverURL} alt={`${album.name} Image`} height={256} width={256} className="rounded mr-4 mb-4 md:mb-0" />
-        </div>
-        <div className="md:pl-0">
-          <h1 className="text-4xl">{album.name}</h1>
-          <Link href={`/artist/${artist.id}`}>
-            <p className="text-3xl">{artist.name}</p>
-          </Link>
+return ( album ?
+  <>
+  <div className="bg-cover bg-center blur-3xl" style={{ backgroundImage: `url(${albumCoverURL})`, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', filter: 'blur(24px) brightness(50%)' }} />
+    <div className="h-full overflow-x-hidden overflow-y-auto">
+      <ScrollArea>
+        <PageGradient imageSrc={albumCoverURL} /> 
+        <div className="flex flex-col md:flex-row items-start md:items-center my-8">
+          <div className="flex items-center justify-center w-full md:w-auto md:justify-start">
+            <Image src={albumCoverURL} alt={`${album.name} Image`} height={256} width={256} className="rounded mr-4 mb-4 md:mb-0" />
+          </div>
+          <div className="md:pl-0">
+            <h1 className="text-4xl">{album.name}</h1>
+            <Link href={`/artist/${artist.id}`}>
+              <p className="text-3xl">{artist.name}</p>
+            </Link>
 
-          <p>{releaseDate}</p>
-          <div className="flex flex-row gap-2">
-            <p>{album.songs.length} Songs</p>
-            <p>•</p>
-            <p>{formatDuration(totalDuration)}</p>
+            <p>{releaseDate}</p>
+            <div className="flex flex-row gap-2">
+              <p>{album.songs.length} Songs</p>
+              <p>•</p>
+              <p>{formatDuration(totalDuration)}</p>
+            </div>
           </div>
         </div>
-      </div>
-      <Description description={album.description}/>
-      <AlbumTable album={album} songs={album.songs} artist={artist} key={album.id} />
-      <ScrollBar />
-    </ScrollArea>
-    : redirect("/404")
-  )
+        <Description description={album.description}/>
+        <AlbumTable album={album} songs={album.songs} artist={artist} key={album.id} />
+        <ScrollBar />
+      </ScrollArea>
+    </div>
+  </>
+  : redirect("/404")
+)
   
 }
