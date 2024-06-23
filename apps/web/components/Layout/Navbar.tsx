@@ -31,7 +31,7 @@ export default function NavBar() {
 
       <SearchBar isSearchActive={isSearchActive} setIsSearchActive={setIsSearchActive} />
 
-      <div className={`${isSearchActive ? 'hidden' : 'flex'} gap-3 md:flex`}>
+      <div className={`${isSearchActive ? 'hidden' : 'flex'} gap-3 md:flex ${onTopOfPage && "opacity-35"}`}>
         <NavbarProfilePicture />
       </div>
     </nav>
