@@ -84,13 +84,12 @@ export default function Player() {
   }, [imageSrc]);
 
   return song.id && (
-    // <footer className="z-50 fixed bottom-0 border-t bg-black border-gray-800 px-3 py-3 flex flex-col md:flex-row items-center justify-between md:gap-4 w-full">
-  <footer className="z-50 fixed bottom-0 border-t border-gray-800 px-3 py-3 flex flex-col md:flex-row items-center justify-between md:gap-4 w-full" 
-    style={{ 
-      backgroundColor: "#212121"
-      //  backgroundImage: `linear-gradient(90deg, ${backgroundColour}, ${backgroundColour})`,
-      //  backdropFilter: 'blur(100px)'
-    }}>
+    <footer className="z-50 fixed bottom-0 border-t border-gray-800 px-3 py-3 flex flex-col md:flex-row items-center justify-between md:gap-4 w-full" 
+      style={{ 
+        backgroundColor: "#212121",
+      }}>
+      <div className="bg-cover bg-center blur-3xl" style={{ backgroundImage: `url(${imageSrc})`, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', filter: 'blur(96px) brightness(50%)', zIndex: -1 }} />
+    
       <section className="flex flex-col md:flex-row items-center justify-between gap-3 w-full md:w-1/4">
         <div className="flex items-center w-full md:w-1/2 justify-center">
           <Slider
