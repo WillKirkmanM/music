@@ -20,12 +20,11 @@ export default function Sidebar({ children, sidebarContent }: SidebarProps) {
   return (
     <div className="flex">
 
-      <aside className={`hidden md:block z-40 fixed h-full ${onTopOfPage ? "" : "border-r border-gray-500"} ${isOpen ? "w-1/5 xl:w-[20%]" : "w-3 xl:w-20"} space-y-2 p-4 lg:block pt-20`}>
-        <Button variant="ghost" size="icon" asChild className={`${isOpen ? "items-start justify-start" : "items-center justify-center"} w-full flex items-start justify-start `}>
+      <aside className={`hidden md:block z-40 fixed h-full ${onTopOfPage ? "" : "border-r border-gray-500"} ${isOpen ? "w-1/5 xl:w-[18%]" : "w-3 xl:w-20"} space-y-2 p-4 lg:block pt-20`}>
+        <Button variant="ghost" asChild size={isOpen ? "default" : "icon"} className={`${!isOpen && "items-center justify-center"} w-full flex items-start justify-start`}>
           <Link href="/">
             <div className={`flex ${isOpen ? "flex-row" : "flex-col"} items-center text-white text-semibold `}>
-              <Home className={`h-4 w-4 ${isOpen && "mr-4"}`} />
-              Home
+              <Home className={`h-4 w-4 ${isOpen && "mr-4"}`} /> Home
             </div>
           </Link>
         </Button>
