@@ -51,16 +51,16 @@ return friends && (
       {friends.map((friend) => (
         <div key={friend.id}>
           <p className="text-sm">{friend.username}</p>
-          {friend.nowPlaying && (
+          {friend.nowPlaying && friend.nowPlaying.album &&
             <div className="pl-4">
               <Link href={`/album/${friend.nowPlaying.album.id}`}><p className="text-sm">{friend.nowPlaying.song.name}</p></Link>
               <div className="flex flex-row text-sm">
                 <Link href={`/album/${friend.nowPlaying.album.id}`}><p>{friend.nowPlaying.album.name}</p></Link>
                 <p className="px-1">•</p>
-                <Link href={`/artist/${friend.nowPlaying.artist.id}`}><p>{friend.nowPlaying.artist.name}</p></Link>
+                {friend.nowPlaying.artist && <Link href={`/artist/${friend.nowPlaying.artist.id}`}><p>{friend.nowPlaying.artist.name}</p></Link>}
               </div>
             </div>
-          )}
+        }
         </div>
       ))}
     </>
