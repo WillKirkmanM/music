@@ -180,7 +180,7 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
 
   return areLyricsVisible ? (
     <>
-    <div className="bg-cover bg-center blur-3xl" style={{ backgroundImage: `url(${imageSrc})`, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', filter: 'blur(24px) brightness(50%)' }} />
+    <div className="bg-cover bg-center blur-3xl" style={{ backgroundImage: `url(${imageSrc})`, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', filter: 'blur(96px) brightness(50%)' }} />
     <ScrollArea className="h-full overflow-x-hidden overflow-y-auto">
       <div
         onScroll={handleScroll}
@@ -202,10 +202,10 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
                 text-center 
                 transition-opacity 
                 duration-2000 
+                text-white
                 ${index === currentLyricIndex ? "opacity-100" : "opacity-50"} 
                 ${index === currentLyricIndex ? "font-bold" : "font-normal"} 
                 ${isSyncedLyrics && "cursor-pointer"} 
-                ${line.time <= currentTime ? "text-white" : "text-black"}
                 `}
                 onClick={
                   isSyncedLyrics ? () => handleTimeChange(line.time) : undefined
