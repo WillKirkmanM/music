@@ -35,6 +35,14 @@ export async function populateSearch() {
     generatedID: uniqueUUID()
   }));
 
+  function extractAcronym(name: string): string {
+  // const ignoreWords = new Set(['a', 'the', 'of', 'in', 'and', 'to']);
+  return name.split(' ')
+    // .filter(word => !ignoreWords.has(word.toLowerCase()))
+    .map(word => word[0]?.toUpperCase())
+    .join('');
+  }
+
   const flattenedAlbums = library.flatMap((artist: Artist) =>
     artist.albums.map((album: Album) => ({
       type: 'Album',
@@ -42,6 +50,7 @@ export async function populateSearch() {
       id: album.id,
       artist: artist,
       album: album,
+      acronym: extractAcronym(album.name),
       generatedID: uniqueUUID()
     }))
   );
@@ -61,8 +70,8 @@ export async function populateSearch() {
   );
 
   const miniSearch = new MiniSearch({
-    fields: ['type', 'name', 'id', 'generatedID'],
-    storeFields: ['type', 'name', 'id', 'artist', 'album', 'song'],
+    fields: ['type', 'name', 'id', 'generatedID', 'acronym'],
+    storeFields: ['type', 'name', 'id', 'artist', 'album', 'song', 'acronym'],
     idField: 'generatedID',
     searchOptions: {
       fuzzy: 0.3
