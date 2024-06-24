@@ -11,11 +11,7 @@ export default function PageGradient({ imageSrc }: { imageSrc: string }) {
   useEffect(() => {
     const fac = new FastAverageColor();
     const getColor = async () => {
-      let src = imageSrc;
-      if (imageSrc.endsWith('snf.png')) {
-        src = await imageToBase64(imageSrc);
-      }
-      const color = await fac.getColorAsync(src)
+    const color = await fac.getColorAsync(imageSrc)
       setGradient(color.hex)
     }
 
