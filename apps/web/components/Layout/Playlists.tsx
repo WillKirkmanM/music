@@ -1,8 +1,9 @@
 import prisma from "@/prisma/prisma";
 import getServerSession from "@/lib/Authentication/Sessions/GetServerSession";
-import { ListMusic } from "lucide-react";
+import { ListMusic, Plus } from "lucide-react";
 import Link from "next/link";
 import CreatePlaylistDialog from "../Music/Playlist/CreatePlaylistDialog";
+import { Button } from "@music/ui/components/button";
 
 export const dynamic = "force-dynamic"
 
@@ -26,9 +27,14 @@ export default async function Playlists() {
         </div>
       ))}
    
-      {user?.user.username && (
-        <CreatePlaylistDialog username={user!.user.username}>Create Playlist</CreatePlaylistDialog>
-      )}
+      <div className="mt-6">
+        <CreatePlaylistDialog username={user!.user.username}>
+          <Button style={{ backgroundColor: "#353535" }}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Playlist
+          </Button>
+        </CreatePlaylistDialog>
+      </div>
     </div>
   )
 }

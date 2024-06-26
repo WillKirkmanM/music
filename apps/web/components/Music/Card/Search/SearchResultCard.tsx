@@ -6,19 +6,23 @@ import imageToBase64 from '@/actions/ImageToBase64';
 import AlbumCard from '../Album/AlbumCard';
 import getServerIpAddress from '@/actions/System/GetIpAddress';
 import GetPort from '@/actions/System/GetPort';
+import getServerSession from '@/lib/Authentication/Sessions/GetServerSession';
 
 type ResultCardProps = {
   result: SearchResult
 }
 
 export default async function ResultCard({ result }: ResultCardProps) {
+  const session = await getServerSession()
+  const bitrate = session!.user.bitrate
+
   if (result.type === 'Song') {
     return (
       <div key={result.id} className="flex flex-col items-center p-14">
         <BigCard
           artist={result.artist}
           album={result.album}
-          songURL={`http://${await getServerIpAddress()}:${await GetPort()}/server/stream/${encodeURIComponent(result.song.path)}`}
+          songURL={`http://${await getServerIpAddress()}:${await GetPort()}/server/stream/${encodeURIComponent(result.song.path)}?bitrate=${bitrate}`}
           title={result.name}
           type="Song"
           imageSrc={

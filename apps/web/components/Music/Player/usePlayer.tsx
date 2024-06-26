@@ -17,6 +17,7 @@ import SetNowPlaying from "@/actions/Player/SetNowPlaying";
 import { useSession } from "next-auth/react";
 import getServerIpAddress from "@/actions/System/GetIpAddress";
 import GetPort from "@/actions/System/GetPort";
+import AddSongToHistory from "@/actions/Player/AddSongToHistory";
 
 const isBrowser = typeof window !== "undefined";
 const audioElement = isBrowser ? new Audio() : null;
@@ -128,10 +129,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     getServerInformation();
   }, []);
 
+  const lastAddedSongIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (song.id && user.data) {
+    if (song.id && user.data && lastAddedSongIdRef.current != String(song.id)) {
       SetNowPlaying(user.data.user.username, String(song.id));
+      AddSongToHistory(user.data.user.username, String(song.id));
+      lastAddedSongIdRef.current = String(song.id)
     }
   }, [song.id, user.data]);
   
