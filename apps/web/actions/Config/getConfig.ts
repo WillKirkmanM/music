@@ -1,11 +1,13 @@
 "use server"
 
 import { promises as fs } from "fs"
+import isDocker from "@/lib/Environments/isDocker";
 
 export default async function getConfig(): Promise<string | null> {
   try {
     const env = process.env.NODE_ENV || 'development';
-    const deploymentType = process.env.DEPLOYMENT_TYPE || 'docker';
+    const deploymentType = process.env.DEPLOYMENT_TYPE || (isDocker() ? "docker" : "containerless");
+
 
     if (!["production", "development"].includes(env)) {
       throw new Error(`Invalid NODE_ENV: ${env}`);
