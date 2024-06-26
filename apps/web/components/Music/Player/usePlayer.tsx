@@ -118,15 +118,16 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   useEffect(() => {
     async function getServerInformation() {
-      const ip = await getServerIpAddress()
-      setServerIP(ip)
+      const ip = typeof window !== 'undefined' ? window.location.hostname : await getServerIpAddress();
+      setServerIP(ip);
 
-      const port = await GetPort()
-      setPort(port)
+      const port = typeof window !== 'undefined' ? parseInt(window.location.port) : await GetPort();
+      setPort(port);
     }
 
-    getServerInformation()
-  })
+    getServerInformation();
+  }, []);
+
 
   useEffect(() => {
     if (song.id && user.data) {
@@ -229,12 +230,38 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         setIsPlaying(true);
       };
       audio.addEventListener("ended", playNextSong);
+
+      if ('mediaSession' in navigator) {
+        // This creates a blob url for the artwork. Either base64 directly or a blob url.
+        // const base64Pattern = /^data:image\/[a-z]+;base64,/;
+        // const cleanImageSrc = imageSrc.replace(base64Pattern, "");
+
+        // const byteCharacters = atob(cleanImageSrc);
+        // const byteNumbers = new Array(byteCharacters.length);
+        // for (let i = 0; i < byteCharacters.length; i++) {
+        //   byteNumbers[i] = byteCharacters.charCodeAt(i);
+        // }
+        // const byteArray = new Uint8Array(byteNumbers);
+        // const blob = new Blob([byteArray], { type: "image/jpeg" });
+        // const imageUrl = URL.createObjectURL(blob);
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: song.name,
+          artist: song.artist,
+          album: album.name,
+          artwork: [{ src: imageSrc, type: "image/jpeg" }]
+        });
+          navigator.mediaSession.setActionHandler('play', () => audio.play());
+          navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+          navigator.mediaSession.setActionHandler('previoustrack', playPreviousSong);
+          navigator.mediaSession.setActionHandler('nexttrack', playNextSong);
+      }
     }
 
     return () => {
       audio.removeEventListener("ended", playNextSong);
     };
-  }, [audioSource, audio, song, playNextSong]);
+  }, [audioSource, audio, song, playNextSong, album.name, imageSrc, playPreviousSong]);
 
   const removeFromQueue = useCallback((index: number) => {
     const newQueue = [...queueRef.current];
