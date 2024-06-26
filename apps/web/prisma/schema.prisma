@@ -58,8 +58,19 @@ model User {
   followers     Follow[] @relation("followingRelation")
   followings    Follow[] @relation("followerRelation")
   nowPlaying    String?
+  listenHistory ListenHistoryItem[]       
 }
 
+model ListenHistoryItem {
+  id        String   @id @default(cuid())
+  userId    String
+  songId    String
+  listenedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], name: "idx_listen_history_user")
+}
 
 model Follow {
   id        String  @id @default(cuid())
