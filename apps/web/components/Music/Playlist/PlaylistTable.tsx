@@ -48,15 +48,15 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
 
   useEffect(() => {
     async function getServerInformation() {
-      const ip = await getServerIpAddress()
-      setServerIP(ip)
+      const ip = typeof window !== 'undefined' ? window.location.hostname : await getServerIpAddress();
+      setServerIP(ip);
 
-      const port = await GetPort()
-      setPort(port)
+      const port = typeof window !== 'undefined' ? parseInt(window.location.port) : await GetPort();
+      setPort(port);
     }
 
-    getServerInformation()
-  })
+    getServerInformation();
+  }, []);
 
   const handlePlay = async (coverURL: string, song: Song, songURL: string, artist: Artist, album: Album) => {
     let base64Image = coverURL
