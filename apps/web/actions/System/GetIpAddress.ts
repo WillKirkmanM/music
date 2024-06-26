@@ -1,10 +1,17 @@
 "use server"
 
 import os from 'os';
+import { headers } from 'next/headers';
 
 export default async function getServerIpAddress() {
   if (process.env.HOST_IP) {
     return process.env.HOST_IP;
+  }
+
+  let url = headers().get("host")
+  if (url) {
+    const hostname = new URL(`http://${url}`).hostname;
+    return hostname
   }
 
   const networkInterfaces = os.networkInterfaces();

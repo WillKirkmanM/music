@@ -39,15 +39,15 @@ export default function AlbumTable({ songs, album, artist }: PlaylistTableProps)
 
   useEffect(() => {
     async function getServerInformation() {
-      const ip = await getServerIpAddress();
+      const ip = typeof window !== 'undefined' ? window.location.hostname : await getServerIpAddress();
       setServerIP(ip);
 
-      const port = await GetPort()
-      setPort(port)
+      const port = typeof window !== 'undefined' ? parseInt(window.location.port) : await GetPort();
+      setPort(port);
     }
 
     getServerInformation();
-  });
+  }, []);
 
   const handlePlay = async (coverURL: string, song: Song, songURL: string, artist: Artist) => {
     let base64Image = coverURL
