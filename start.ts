@@ -4,24 +4,7 @@ import { join } from "path"
 
 const [,, project, command, action] = process.argv;
 
-const envVariables = project === 'music' ? 'cross-env NODE_ENV=development DEPLOYMENT_TYPE=containerless BACKEND_PORT=3001 PORT=3000' : '';
-
-// const runCommand = (command: string) => {
-//   const [cmd, ...args] = command.split(' ');
-//   const proc = spawn(cmd, args);
-
-//   proc.stdout.on('data', (data) => {
-//     console.log(`${project}: ${data}`);
-//   });
-
-//   proc.stderr.on('data', (data) => {
-//     console.error(`${project} Error: ${data}`);
-//   });
-
-//   proc.on('error', (error) => {
-//     console.error(`exec error: ${error}`);
-//   });
-// };
+const envVariables = project === 'music' ? 'cross-env NODE_ENV=development BACKEND_PORT=3001 PORT=3000' : '';
 
 const runCommand = (command: string, envVariables?: NodeJS.ProcessEnv) => {
   const [cmd, ...args] = command.split(' ');
@@ -39,7 +22,8 @@ switch (command) {
     if (!nodeModulesExists) {
       runCommand('bun install');
     }
-    runCommand(`bunx cross-env NODE_ENV=production DEPLOYMENT_TYPE=containerless BACKEND_PORT=3001 bunx turbo build --log-order=stream --filter ${project} --force`);
+    runCommand(`bunx turbo build --log-order=stream --filter ${project} --force`);
+    runCommand("cargo build --release")
     break;
   case 'run':
     if (!nodeModulesExists) {
@@ -47,10 +31,10 @@ switch (command) {
     }
     if (action === 'dev') {
       runCommand(`${envVariables && "bunx"} ${envVariables} bunx turbo dev --log-order=stream --filter ${project} --env-mode loose`);
-      runCommand('cargo run', { DEPLOYMENT_TYPE: "containerless" }); // Run Rust application in development mode
+      runCommand('cargo run');
     } else {
-      runCommand(`bunx cross-env NODE_ENV=production DEPLOYMENT_TYPE=containerless BACKEND_PORT=3001 bun run start --filter ${project}`);
-      runCommand('cargo run --release', { DEPLOYMENT_TYPE: "containerless" }); // Run Rust application in release mode
+      runCommand(`bunx turbo start --log-order=stream --filter ${project} --env-mode loose`);
+      runCommand('cargo run --release');
     }
     break;
   default:
