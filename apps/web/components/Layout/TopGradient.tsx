@@ -7,7 +7,7 @@ export default function TopBlur() {
 
   return (
     <div 
-      className="absolute top-0 left-0 w-full h-48 bg-gradient-to-b to-transparent z-0 transition-opacity duration-500"
+      className="absolute top-0 left-0 w-full h-48 bg-gradient-to-b to-transparent z-0 transition-opacity"
       style={{ backgroundImage: `linear-gradient(${gradient}, transparent)` }}
     />
   )
