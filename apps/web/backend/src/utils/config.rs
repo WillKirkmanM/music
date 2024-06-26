@@ -4,9 +4,22 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::path::Path;
 use std::error::Error;
 
+fn is_docker() -> bool {
+  if Path::new("/.dockerenv").exists() {
+      return true;
+  }
+
+  match fs::read_to_string("/proc/self/cgroup") {
+      Ok(contents) => contents.contains("docker"),
+      Err(_) => false,
+  }
+}
+
 pub async fn get_config() -> Result<String, Box<dyn Error>> {
   let env = env::var("NODE_ENV").unwrap_or_else(|_| String::from("development"));
-  let deployment_type = env::var("DEPLOYMENT_TYPE").unwrap_or_else(|_| String::from("containerless"));
+  let deployment_type = env::var("DEPLOYMENT_TYPE").unwrap_or_else(|_| {
+    if is_docker() { "docker" } else { "containerless" }.to_string()
+  });
 
   if !["production", "development"].contains(&env.as_str()) {
     return Err(format!("Invalid NODE_ENV: {}", env).into());
@@ -16,12 +29,12 @@ pub async fn get_config() -> Result<String, Box<dyn Error>> {
     return Err(format!("Invalid DEPLOYMENT_TYPE: {}", deployment_type).into());
   }
 
-  let mut config_path = Path::new("./apps/web/Config/music.json");
-  if deployment_type == "docker" {
-    config_path = Path::new("/Config/music.json");
-  }
+  let config_path = match deployment_type.as_str() {
+    "docker" => Path::new("/Config/music.json"),
+    _ => Path::new("./apps/web/Config/music.json"),
+  };
 
-  let mut file = File::open(&config_path).await?;
+  let mut file = File::open(config_path).await?;
   let mut contents = String::new();
   file.read_to_string(&mut contents).await?;
 
