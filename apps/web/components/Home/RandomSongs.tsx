@@ -45,13 +45,14 @@ async function getRandomSongs() {
 const getCachedRandomSongs = cache(
   async () => await getRandomSongs(),
   ['random-songs'],
-  { revalidate: 3600 }
+  { revalidate: 3600, tags: ["random-songs"] }
 );
 
 
 export default async function RandomSongs() {
-
   let randomSongs = await getCachedRandomSongs()
+
+  if (!randomSongs || randomSongs.length === 0) return null
 
   function imageToBase64(src: string) {
     const image = fs.readFileSync(src)
