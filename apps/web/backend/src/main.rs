@@ -3,6 +3,7 @@ mod structures;
 mod utils;
 
 use actix_web::{App, HttpServer};
+use routes::images::image;
 use std::env;
 
 use routes::index::home;
@@ -57,6 +58,7 @@ async fn main() -> std::io::Result<()> {
             .service(test)
             .service(stream_song)
             .service(format_contributing_artists_route)
+            .service(image)
             .service(index_library_no_cover_url)
     })
     .bind(("0.0.0.0", port))?
