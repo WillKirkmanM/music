@@ -453,8 +453,8 @@ pub async fn process_albums(client: &Client, library: &mut Vec<Artist>) {
 }
 
 pub async fn process_album(client: &Client, artist_name: String, album: &mut Album) {
-  let re = Regex::new(r"(?i)[^\w]cd\d*[^\w]").unwrap();
-  let album_name = album.name.to_lowercase().replace("cd1", "").replace("cd2", "");
+  let re = Regex::new(r"(?i)\b.*cd.*\b").unwrap();
+  let album_name = album.name.to_lowercase();
   let album_name = re.replace_all(&album_name, "").trim().to_string();
 
   let metadata = fetch_album_metadata(client, &artist_name, &album_name, album.id.to_string()).await;
