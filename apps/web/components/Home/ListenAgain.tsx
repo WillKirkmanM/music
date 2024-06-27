@@ -69,15 +69,17 @@ export async function GetListenHistory() {
   return listenHistorySongs
 }
 
-const getCachedListenHistory = cache(
-  async () => await GetListenHistory(),
-  ['listen-history'],
-  { revalidate: 120 }
-);
+// const getCachedListenHistory = cache(
+//   async () => await GetListenHistory(),
+//   ['listen-history'],
+//   { revalidate: 120, tags: ["listen-history"] }
+// );
 
 export default async function ListenAgain() {
-  const listenHistorySongs = await getCachedListenHistory()
-  // const listenHistorySongs = await GetListenHistory()
+  // const listenHistorySongs = await getCachedListenHistory()
+  const listenHistorySongs = await GetListenHistory()
+
+  if (!listenHistorySongs || listenHistorySongs.length === 0) return null
 
   const serverIPAddress = await getServerIpAddress()
   const port = await GetPort()
@@ -88,10 +90,10 @@ export default async function ListenAgain() {
     return base64Image;
   }
 
-  const base64Image = await imageToBase64(listenHistorySongs[0].image);
+  const base64Image = imageToBase64(listenHistorySongs[0].image) || "";
   const albumCoverSrc = listenHistorySongs[0].image.length === 0 ? "/snf.png" : `data:image/jpg;base64,${base64Image}`;
 
-  return (
+  return listenHistorySongs &&
     <>
       <PageGradient imageSrc={albumCoverSrc} />
       <h1 className="flex align-start text-3xl font-bold pb-8">Listen Again</h1>
@@ -119,5 +121,4 @@ export default async function ListenAgain() {
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </>
-  );
 }

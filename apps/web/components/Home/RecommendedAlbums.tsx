@@ -63,15 +63,18 @@ const librarySongs = allSongs.filter(song => playlistSongIDs.includes(String(son
 return librarySongs;
 }
 
-const getCachedSongsFromYourLibrary = cache(
-  async () => await getSongsFromYourLibrary(),
-  ['from-your-library'],
-  { revalidate: 300 }
-);
+// const getCachedSongsFromYourLibrary = cache(
+//   async () => await getSongsFromYourLibrary(),
+//   ['recommended-albums'],
+//   { revalidate: 300, tags: ["recommended-albums"] }
+// );
 
 
 export default async function RecommendedAlbums() {
-  let librarySongs = await getCachedSongsFromYourLibrary()
+  // let librarySongs = await getCachedSongsFromYourLibrary()
+  let librarySongs = await getSongsFromYourLibrary()
+
+  if (!librarySongs|| librarySongs.length === 0) return null
 
   function imageToBase64(src: string) {
     const image = fs.readFileSync(src)

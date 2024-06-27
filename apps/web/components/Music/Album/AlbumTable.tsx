@@ -68,6 +68,10 @@ export default function AlbumTable({ songs, album, artist }: PlaylistTableProps)
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
+  function sanitizeSongName(songName: string) {
+    return songName.replace(/\s+/g, '_').replace(/[^\w-]+/g, '');
+  }
+
   return (
     <div className="pb-36">
       <Table>
@@ -82,7 +86,7 @@ export default function AlbumTable({ songs, album, artist }: PlaylistTableProps)
         {songs.map(song => (
           <SongContextMenu song={song} album={album} artist={artist} key={song.id}>
             <TableBody key={song.id}>
-              <TableRow onClick={() => handlePlay(album.cover_url, song, `http://${serverIP}:${port}/server/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`, artist)}>
+              <TableRow id={sanitizeSongName(song.name)} onClick={() => handlePlay(album.cover_url, song, `http://${serverIP}:${port}/server/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`, artist)}>
                 <TableCell className="font-medium">{song.track_number}</TableCell>
                 <TableCell>
                   <div className="w-[300px] overflow-hidden whitespace-nowrap text-overflow">
