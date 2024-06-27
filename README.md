@@ -4,8 +4,8 @@
 <h1 align="center">ParsonLabs Music</h1>
 
 <p align="center">ParsonLabs Music is the Self Hosted Audio streaming alternative to YouTube Music, Spotify & Apple Music, providing Unrestricted Access to your library in Uncompressed, Lossless Quality</p>
-  
-![home-showcase](https://github.com/WillKirkmanM/music/assets/98240335/a0a2f340-92a5-4a95-a1b0-7a64aa4a20ef)
+
+![home-selection](https://github.com/WillKirkmanM/music/assets/98240335/e6ee3dad-c206-4bc7-93d1-3523e7d6e20a)
 ![lyrics-showcase](https://github.com/WillKirkmanM/music/assets/98240335/7aa78513-03c9-4ee0-912c-f5dfc816247b)
 ![music-album-showcase](https://github.com/WillKirkmanM/music/assets/98240335/9c5c5276-1351-47f2-85dc-eaf55c921696)
 ![music-artist-showcase](https://github.com/WillKirkmanM/music/assets/98240335/76d1c540-d5cd-4ab0-9ecf-7986e0d84e31)
