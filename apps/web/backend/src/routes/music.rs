@@ -127,8 +127,6 @@ async fn stream_song(req: HttpRequest, path: web::Path<String>, bitrate: web::Qu
     let song = path.into_inner();
     let bitrate = bitrate.into_inner().bitrate;
     
-    println!("Bitrate: {}", bitrate);
-
     let file = fs::metadata(&song).await.unwrap();
     let song_file_size = file.len();
 
@@ -222,11 +220,14 @@ async fn format_contributing_artists_route(artist: web::Path<String>) -> impl Re
     let artists = vec![artist.to_string()];
     let formatted_artists = format_contributing_artists(artists);
     let json = serde_json::to_string(&formatted_artists).unwrap();
-    HttpResponse::Ok().body(json)
+    HttpResponse::Ok()
+        .content_type("application/json; charset=utf-8")
+        .body(json)
 }
 
 #[get("/library/index/without_cover_url/{path}")]
 async fn index_library_no_cover_url(path: web::Path<String>) -> impl Responder {
+    println!("Indexing");
     let indexed_library = index_library(path.as_str()).await.unwrap();
 
     let json: String = serde_json::to_string(&*indexed_library.lock().unwrap()).unwrap();

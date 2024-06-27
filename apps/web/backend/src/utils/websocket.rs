@@ -4,11 +4,12 @@ use std::env;
 
 use tracing::info;
 
+use super::config::is_docker;
+
 fn get_path(file: &str) -> String {
-  let deployment_type = env::var("DEPLOYMENT_TYPE").unwrap_or("docker".to_string());
-  match deployment_type.as_str() {
-    "containerless" => format!("apps/web/websocket/{}", file),
-    _ => format!("/app/apps/web/websocket/{}", file),
+  match is_docker() {
+    true => format!("/app/apps/web/websocket/{}", file),
+    false => format!("apps/web/websocket/{}", file),
   }
 }
 

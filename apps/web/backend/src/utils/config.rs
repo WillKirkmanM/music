@@ -4,7 +4,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::path::Path;
 use std::error::Error;
 
-fn is_docker() -> bool {
+pub fn is_docker() -> bool {
   if Path::new("/.dockerenv").exists() {
       return true;
   }
