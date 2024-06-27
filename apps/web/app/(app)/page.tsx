@@ -1,10 +1,18 @@
-import HomeSelection from "@/components/Music/HomeSelection";
+import FromYourLibrary from "@/components/Home/FromYourLibrary";
+import LandingCarousel from "@/components/Home/LandingCarousel";
+import ListenAgain from "@/components/Home/ListenAgain";
+import RandomSongs from "@/components/Home/RandomSongs";
+import RecommendedAlbums from "@/components/Home/RecommendedAlbums";
+
 
 export default async function Home() {
   return (
-    <div className="flex justify-center items-center h-screen flex-col px-20 pt-28 pb-20">
-      <HomeSelection />
-      <HomeSelection />
-    </div>
+    <div className="min-h-screen px-20 pt-28 pb-20">
+      <LandingCarousel />
+      <ListenAgain />
+      <RecommendedAlbums />
+      <RandomSongs />
+      <FromYourLibrary />
+     </div>
   );
 }
