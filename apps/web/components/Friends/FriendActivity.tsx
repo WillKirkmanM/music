@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import GetActivity from "@/actions/Friends/GetActivity";
 import { useSession } from "next-auth/react";
+import { Disc3Icon } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@music/ui/components/avatar";
 
 type Friend = {
   nowPlaying: {
@@ -45,22 +47,29 @@ export default function FriendActivity() {
     }
   }, [username])
 
-return friends && (
+  
+  return friends && (
     <>
-      {friends.length !== 0 && <h3 className="font-heading text-semibold text-white text-xl">Friend Activity</h3>}
+      {friends.length !== 0 && <h3 className="font-heading text-white font-semibold text-xl">Friend Activity</h3>}
       {friends.map((friend) => (
-        <div key={friend.id}>
-          <p className="text-sm">{friend.username}</p>
-          {friend.nowPlaying && friend.nowPlaying.album &&
-            <div className="pl-4">
-              <Link href={`/album/${friend.nowPlaying.album.id}`}><p className="text-sm">{friend.nowPlaying.song.name}</p></Link>
-              <div className="flex flex-row text-sm">
-                <Link href={`/album/${friend.nowPlaying.album.id}`}><p>{friend.nowPlaying.album.name}</p></Link>
-                <p className="px-1">•</p>
-                {friend.nowPlaying.artist && <Link href={`/artist/${friend.nowPlaying.artist.id}`}><p>{friend.nowPlaying.artist.name}</p></Link>}
-              </div>
-            </div>
-        }
+        <div key={friend.id} className="flex items-center">
+          <Avatar className="cursor-pointer">
+            <AvatarImage src="" alt="usr" className="bg-gray-600"/>
+            <AvatarFallback>{friend.username?.substring(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="ml-4">
+            <p className="text-sm">{friend.username}</p>
+            {friend.nowPlaying && friend.nowPlaying.album &&
+              <>
+                <Link href={`/album/${friend.nowPlaying.album.id}`}><p className="text-sm">{friend.nowPlaying.song.name}</p></Link>
+                {friend.nowPlaying.artist && <Link href={`/artist/${friend.nowPlaying.artist.id}`}><p className="text-sm">{friend.nowPlaying.artist.name}</p></Link>}
+                <div className="flex flex-row items-center text-base">
+                  <Disc3Icon className="mr-1" size={16} />
+                  <Link href={`/album/${friend.nowPlaying.album.id}`}><p>{friend.nowPlaying.album.name}</p></Link>
+                </div>
+              </>
+            }
+          </div>
         </div>
       ))}
     </>
