@@ -15,6 +15,7 @@ import FriendActivity from "@/components/Friends/FriendActivity"
 import Playlists from "@/components/Layout/Playlists"
 import { Separator } from "@music/ui/components/separator"
 import TopGradient from "@/components/Layout/TopGradient"
+import AIPanel from "@/components/AI/AIPanel"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -82,7 +83,9 @@ export default async function RootLayout({ children }: any) {
 
             <QueuePanel>
               <LyricsOverlay>
-                {children}
+                <AIPanel>
+                  {children}
+                </AIPanel>
               </LyricsOverlay>
             </QueuePanel>
           </Sidebar>
