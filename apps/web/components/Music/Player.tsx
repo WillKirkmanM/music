@@ -11,7 +11,7 @@ import CheckCircle from "../Icons/CheckCircle";
 import ArrowPath from "../Icons/ArrowPath";
 import SpeakerXMark from "../Icons/SpeakerXMark";
 import SpeakerWave from "../Icons/SpeakerWave";
-import { MicVocal, SkipBack, SkipForward } from "lucide-react";
+import { BookAudioIcon, MicVocal, SkipBack, SkipForward } from "lucide-react";
 import IconQueue from "../Icons/IconQueue";
 import { usePlayer } from "./Player/usePlayer";
 import Head, { defaultHead } from "next/head"
@@ -24,6 +24,7 @@ import {
 } from "@music/ui/components/slider";
 import Link from "next/link";
 import { LyricsContext } from "../Lyrics/LyricsOverlayContext";
+import { AIContext } from "../AI/AIOverlayContext";
 import { useGradientHover } from "../Providers/GradientHoverProvider";
 import { FastAverageColor } from "fast-average-color";
 
@@ -34,6 +35,7 @@ export default function Player() {
 
   const { togglePanel } = useContext(PanelContext);
   const { toggleLyrics } = useContext(LyricsContext);
+  const { toggleAI, isAIVisible } = useContext(AIContext)
 
   const {
     isPlaying,
@@ -176,11 +178,17 @@ export default function Player() {
         </div>
       </section>
 
-
       <section className="hidden md:flex items-center gap-2">
         <button onClick={toggleLyrics}>
           <MicVocal />
         </button>
+
+        {process.env.NEXT_PUBLIC_AI_URL && (
+          <button onClick={toggleAI}>
+            <BookAudioIcon />
+          </button>
+        )}
+
         <button onClick={togglePanel}>
           <IconQueue />
         </button>
