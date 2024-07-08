@@ -7,8 +7,11 @@ import RecommendedAlbums from "@/components/Home/RecommendedAlbums";
 
 export default async function Home() {
   return (
-    <div className="min-h-screen px-20 pt-28 pb-20">
-      <LandingCarousel />
+    <div className="min-h-screen pt-28 pb-20">
+      <div className="pb-5">
+        <LandingCarousel />
+      </div>
+      
       <ListenAgain />
       <RecommendedAlbums />
       <RandomSongs />
