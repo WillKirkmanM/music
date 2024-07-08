@@ -249,11 +249,21 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         // const blob = new Blob([byteArray], { type: "image/jpeg" });
         // const imageUrl = URL.createObjectURL(blob);
 
+        // Normalizing the path is necessary to remove the Windows long path prefix ("\\?\") if present.
+        // This prefix allows Windows applications to handle paths longer than the MAX_PATH limit (260 characters),
+        // but it's not recognized by web browsers or servers. Removing it ensures the path can be used in URLs
+        // More Here:
+        // https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
+        let normalisedAlbumPath = album.cover_url.startsWith("\\\\?\\") ? album.cover_url.substring(4) : album.cover_url
+        let albumPath = `http://${serverIP}:${port}/server/image/${encodeURIComponent(normalisedAlbumPath)}`
+
+        if (!serverIP || !port) return
+
         navigator.mediaSession.metadata = new MediaMetadata({
           title: song.name,
           artist: song.artist,
           album: album.name,
-          artwork: [{ src: imageSrc, type: "image/jpeg" }]
+          artwork: [{ src: albumPath, type: "image/jpeg" }]
         });
           navigator.mediaSession.setActionHandler('play', () => audio.play());
           navigator.mediaSession.setActionHandler('pause', () => audio.pause());
@@ -265,7 +275,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     return () => {
       audio.removeEventListener("ended", playNextSong);
     };
-  }, [audioSource, audio, song, playNextSong, album.name, imageSrc, playPreviousSong]);
+  }, [audioSource, audio, song, playNextSong, album.name, imageSrc, playPreviousSong, album.cover_url, serverIP, port]);
 
   const removeFromQueue = useCallback((index: number) => {
     const newQueue = [...queueRef.current];
