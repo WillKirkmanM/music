@@ -7,6 +7,8 @@ export const LyricsContext = createContext({
   areLyricsVisible: false,
   setLyricsVisible: (visible: boolean) => {},
   toggleLyrics: () => {},
+  currentLyrics: "",
+  setCurrentLyrics: (lyrics: string) => {}
 });
 
 type PanelProviderProps = {
@@ -15,6 +17,7 @@ type PanelProviderProps = {
 
 function LyricsOverlayProvider({ children }: PanelProviderProps) {
   const [areLyricsVisible, setLyricsVisible] = useState(false);
+  const [currentLyrics, setCurrentLyrics] = useState("");
   const pathName = usePathname()
 
   const toggleLyrics = () => {
@@ -22,7 +25,7 @@ function LyricsOverlayProvider({ children }: PanelProviderProps) {
   };
 
   return (
-    <LyricsContext.Provider value={{ areLyricsVisible, toggleLyrics, setLyricsVisible }}>
+    <LyricsContext.Provider value={{ areLyricsVisible, toggleLyrics, setLyricsVisible, currentLyrics, setCurrentLyrics }}>
       <Suspense fallback={<div>Loading...</div>}>
         <SearchParamsComponent setLyricsVisible={setLyricsVisible} pathName={pathName} />
       </Suspense>
