@@ -8,6 +8,7 @@ import RestrictedAppProvider from '@/lib/Authentication/Sessions/RestrictedAppPr
 import { ScrollProvider } from './ScrollProvider';
 import SidebarProvider from './SideBarProvider';
 import { GradientHoverProvider } from './GradientHoverProvider';
+import AIOverlayProvider from '../AI/AIOverlayContext';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -24,7 +25,9 @@ export default function Providers({ children }: ProvidersProps) {
                 <PlayerProvider>
                   <PanelProvider>
                     <LyricsOverlayProvider>
-                      {children}
+                      <AIOverlayProvider>
+                        {children}
+                      </AIOverlayProvider>
                     </LyricsOverlayProvider>
                   </PanelProvider>
                 </PlayerProvider>

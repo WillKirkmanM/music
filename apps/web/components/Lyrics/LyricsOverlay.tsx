@@ -48,7 +48,7 @@ const parseLyrics = (lyrics: string) => {
 };
 
 export default function LyricsOverlay({ children }: QueuePanelProps) {
-  const { areLyricsVisible, setLyricsVisible } = useContext(LyricsContext);
+  const { areLyricsVisible, setLyricsVisible, setCurrentLyrics } = useContext(LyricsContext);
   const { song, currentTime, handleTimeChange, imageSrc } = usePlayer();
   const [lyrics, setLyrics] = useState<{ time: number; text: string }[]>([]);
   const [currentLyric, setCurrentLyric] = useState("");
@@ -75,7 +75,6 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
 
   useEffect(() => {
     if (!isUserScrolling && lyricsRef.current && currentLyricIndex >= 0) {
-      console.log(lyricsRef.current)
       const currentLyricElement = lyricsRef.current.querySelector(`:scope > div > p:nth-child(${currentLyricIndex + 1})`);
       if (currentLyricElement) {
         currentLyricElement.scrollIntoView({
@@ -116,6 +115,7 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
           `https://lrclib.net/api/search?q=${encodeURIComponent(`${song.name} ${song.artist}`)}`
         );
         const data: LyricsObjectResponse[] = await response.json();
+        setCurrentLyrics(data[0]?.plainLyrics ?? "")
         if (data[0]?.syncedLyrics) {
           setLyrics(parseLyrics(data[0].syncedLyrics));
           setIsSyncedLyrics(true);
@@ -127,7 +127,7 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
     };
 
     fetchLyrics();
-  }, [song]);
+  }, [song, setCurrentLyrics]);
 
   useEffect(() => {
     let animationFrameId: number;
