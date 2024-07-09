@@ -3,7 +3,7 @@
 import { useState, FormEvent, useContext, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@music/ui/components/input";
-import { Clock5Icon, Search, SearchCheck, Trash2Icon } from "lucide-react";
+import { HistoryIcon, Search, SearchCheck, Trash2Icon } from "lucide-react";
 import { ScrollContext } from "../Providers/ScrollProvider";
 import AddSearchHistory from "@/actions/Search/AddSearchHistory";
 import { useSession } from "next-auth/react";
@@ -81,7 +81,7 @@ export default function SearchBar({
               >
                 <Link href={`/search?q=${item.search}`}>
                   <div className="flex flex-row items-center">
-                    <Clock5Icon className="mr-2" />
+                    <HistoryIcon className="mr-2" />
                     <p className="ml-5 border-b border-gray-700 last:border-b-0">
                       {item.search}
                     </p>

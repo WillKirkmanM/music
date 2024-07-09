@@ -2,7 +2,7 @@
 
 import { Button } from "@music/ui/components/button";
 import Link from "next/link";
-import { Home } from "lucide-react";
+import { Home, HistoryIcon } from "lucide-react";
 import { useSidebar } from "../Providers/SideBarProvider";
 import { ReactNode, useContext } from "react";
 import { ScrollContext } from "../Providers/ScrollProvider";
@@ -25,6 +25,13 @@ export default function Sidebar({ children, sidebarContent }: SidebarProps) {
           <Link href="/">
             <div className={`flex ${isOpen ? "flex-row" : "flex-col"} items-center text-white text-semibold `}>
               <Home className={`h-4 w-4 ${isOpen && "mr-4"}`} /> Home
+            </div>
+          </Link>
+        </Button>
+        <Button variant="ghost" asChild size={isOpen ? "default" : "icon"} className={`${!isOpen && "items-center justify-center"} w-full flex items-start justify-start`}>
+          <Link href="/history">
+            <div className={`flex ${isOpen ? "flex-row" : "flex-col"} items-center text-white text-semibold `}>
+              <HistoryIcon className={`h-4 w-4 ${isOpen && "mr-4"}`} /> History
             </div>
           </Link>
         </Button>
