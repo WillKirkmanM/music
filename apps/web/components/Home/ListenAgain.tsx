@@ -9,75 +9,25 @@ import GetPort from "@/actions/System/GetPort"
 import { unstable_cache as cache } from "next/cache"
 import fs from "fs"
 import PageGradient from "../Layout/PageGradient"
+import ScrollButtons from "./ScrollButtons"
+import GetListenHistory from "@/actions/History/GetListenHistory"
 
-export async function GetListenHistory() {
-  const session = await getServerSession()
-  if (!session) {
-    throw new Error("Session not found")
-  }
-
-  const username = session.user.username
-  if (!username) {
-    throw new Error("Username not found")
-  }
-
-  const userWithListenHistory = await prisma.user.findUnique({
-    where: {
-      username
-    },
-    include: {
-      listenHistory: {
-        orderBy: {
-          listenedAt: 'desc'
-        },
-        take: 10,
-      },
-    },
-  })
-
-  if (!userWithListenHistory) {
-    throw new Error("User not found")
-  }
-
-  const listenHistorySongIds = userWithListenHistory.listenHistory.map(historyItem => historyItem.songId)
-
-  const config = await getConfig()
-  if (!config) return []
-
-  const typedLibrary: Library = JSON.parse(config)
-  if (Object.keys(typedLibrary).length === 0) {
-    return []
-  }
-
-  const allSongs = typedLibrary.flatMap((artist) =>
-    artist.albums.flatMap((album) =>
-      (album.songs.filter(Boolean) as any[]).map((song) => ({
-        ...song,
-        artistObject: artist,
-        albumObject: album,
-        album: album.name,
-        image: album.cover_url,
-      }))
-    )
-  )
-
-  const uniqueSongIds = Array.from(new Set(listenHistorySongIds))
-  let listenHistorySongs = allSongs.filter(song => uniqueSongIds.includes(String(song.id)))
-
-  listenHistorySongs = uniqueSongIds.map(songId => listenHistorySongs.find(song => String(song.id) === songId)).filter(Boolean)
-
-  return listenHistorySongs
-}
 
 // const getCachedListenHistory = cache(
-//   async () => await GetListenHistory(),
+//   async () => {
+//     const session = await getServerSession();
+//     const username = session?.user?.username;
+//     return await GetListenHistory(username ?? "", true);
+//   },
 //   ['listen-history'],
 //   { revalidate: 120, tags: ["listen-history"] }
 // );
 
 export default async function ListenAgain() {
   // const listenHistorySongs = await getCachedListenHistory()
-  const listenHistorySongs = await GetListenHistory()
+  const session = await getServerSession()
+  const username = session?.user.username
+  const listenHistorySongs = (await GetListenHistory(username ?? "", true)).slice(0, 10)
 
   if (!listenHistorySongs || listenHistorySongs.length === 0) return null
 
@@ -97,7 +47,8 @@ export default async function ListenAgain() {
     <>
       <PageGradient imageSrc={albumCoverSrc} />
       <h1 className="flex align-start text-3xl font-bold pb-8">Listen Again</h1>
-      <ScrollArea className="w-full overflow-x-auto overflow-y-auto h-80 pb-20">
+        <ScrollButtons>
+
         <div className="flex flex-row">
           {listenHistorySongs.map((song, index) => (
             <div className="mr-20" key={index}>
@@ -118,7 +69,6 @@ export default async function ListenAgain() {
             </div>
           ))}
         </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+        </ScrollButtons>
     </>
 }
