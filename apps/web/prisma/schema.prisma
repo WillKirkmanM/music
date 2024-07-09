@@ -57,8 +57,17 @@ model User {
   playlists     Playlist[]
   followers     Follow[] @relation("followingRelation")
   followings    Follow[] @relation("followerRelation")
+  lastSearched  SearchItem[]
   nowPlaying    String?
   listenHistory ListenHistoryItem[]       
+}
+
+model SearchItem {
+  id        String   @id @default(cuid())
+  userId    String
+  search    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model ListenHistoryItem {
