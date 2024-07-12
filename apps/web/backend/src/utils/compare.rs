@@ -6,22 +6,22 @@ use rayon::prelude::*;
 use crate::utils::config::get_config;
 use crate::structures::structures::{Album, Artist, Song};
 
-fn flatten_data(library: &[Artist]) -> (HashMap<u64, Song>, HashMap<u64, Album>, HashMap<u64, Artist>) {
+fn flatten_data(library: &[Artist]) -> (HashMap<String, Song>, HashMap<String, Album>, HashMap<String, Artist>) {
   let flat_songs = Arc::new(Mutex::new(HashMap::new()));
   let flat_albums = Arc::new(Mutex::new(HashMap::new()));
   let flat_artists = Arc::new(Mutex::new(HashMap::new()));
 
   library.par_iter().for_each(|artist| {
     let mut artists = flat_artists.lock().unwrap();
-    artists.insert(artist.id, artist.clone());
+    artists.insert(artist.id.clone(), artist.clone());
     drop(artists);
     for album in &artist.albums {
       let mut albums = flat_albums.lock().unwrap();
-      albums.insert(album.id, album.clone());
+      albums.insert(album.id.clone(), album.clone());
       drop(albums);
       for song in &album.songs {
         let mut songs = flat_songs.lock().unwrap();
-        songs.insert(song.id, song.clone());
+        songs.insert(song.id.clone(), song.clone());
         drop(songs);
       }
     }
@@ -35,34 +35,34 @@ fn flatten_data(library: &[Artist]) -> (HashMap<u64, Song>, HashMap<u64, Album>,
 }
 
 fn find_new_artist_entries(
-  current_artists: &HashMap<u64, Artist>, 
-  new_artists: &HashMap<u64, Artist>,
+  current_artists: &HashMap<String, Artist>, 
+  new_artists: &HashMap<String, Artist>,
 ) -> Vec<Artist> {
   new_artists
     .iter()
-    .filter(|(id, _)| !current_artists.contains_key(id))
+    .filter(|(id, _)| !current_artists.contains_key(*id))
     .map(|(_, artist)| artist.clone())
     .collect()
 }
 
 fn find_new_album_entries(
-  current_albums: &HashMap<u64, Album>, 
-  new_albums: &HashMap<u64, Album>,
+  current_albums: &HashMap<String, Album>, 
+  new_albums: &HashMap<String, Album>,
 ) -> Vec<Album> {
   new_albums
     .iter()
-    .filter(|(id, _)| !current_albums.contains_key(id))
+    .filter(|(id, _)| !current_albums.contains_key(*id))
     .map(|(_, album)| album.clone())
     .collect()
 }
 
 fn find_new_song_entries(
-  current_songs: &HashMap<u64, Song>, 
-  new_songs: &HashMap<u64, Song>,
+  current_songs: &HashMap<String, Song>, 
+  new_songs: &HashMap<String, Song>,
 ) -> Vec<Song> {
   new_songs
     .iter()
-    .filter(|(id, _)| !current_songs.contains_key(id))
+    .filter(|(id, _)| !current_songs.contains_key(*id))
     .map(|(_, song)| song.clone())
     .collect()
 }
