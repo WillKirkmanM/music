@@ -1,3 +1,6 @@
 pub mod index;
 pub mod music;
-pub mod images;
+pub mod image;
+pub mod artist;
+pub mod album;
+pub mod song;
