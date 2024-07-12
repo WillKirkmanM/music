@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Album {
-    pub id: u64,
+    pub id: String,
     pub name: String,
     pub cover_url: String,
     pub songs: Vec<Song>,
@@ -15,7 +15,7 @@ pub struct Album {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Artist {
-    pub id: u64,
+    pub id: String,
     pub name: String,
     pub icon_url: String,
     pub followers: u64,
@@ -25,7 +25,7 @@ pub struct Artist {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Song {
-    pub id: u64,
+    pub id: String,
     pub name: String,
     pub artist: String,
     pub contributing_artists: Vec<String>,
