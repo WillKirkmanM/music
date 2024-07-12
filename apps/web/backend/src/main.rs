@@ -3,7 +3,10 @@ mod structures;
 mod utils;
 
 use actix_web::{App, HttpServer};
-use routes::images::image;
+use routes::album::{get_album_info, get_random_album};
+use routes::artist::{get_artist_info, get_random_artist};
+use routes::image::image;
+use routes::song::{get_random_song, get_song_info};
 use std::env;
 
 use routes::index::home;
@@ -60,6 +63,12 @@ async fn main() -> std::io::Result<()> {
             .service(format_contributing_artists_route)
             .service(image)
             .service(index_library_no_cover_url)
+            .service(get_random_artist)
+            .service(get_artist_info)
+            .service(get_random_album)
+            .service(get_album_info)
+            .service(get_random_song)
+            .service(get_song_info)
     })
     .bind(("0.0.0.0", port))?
     .run()
