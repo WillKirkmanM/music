@@ -1,10 +1,28 @@
 "use server"
 
-import getConfig from "../Config/getConfig";
 import prisma from "@/prisma/prisma";
+import getServerIpAddress from "../System/GetIpAddress";
+import GetPort from "../System/GetPort";
+
+type Friend = {
+  nowPlaying: {
+    song: any;
+    album: any;
+    artist: any;
+  };
+  id: string;
+  name: string | null;
+  username: string;
+  password: string;
+  email: string | null;
+  emailVerified: Date | null;
+  image: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export default async function GetActivity(username: string) {
-  let friends = [];
+  let friends: Friend[] = [];
   let nowPlayingId;
     const userData = await prisma.user.findUnique({
       where: { username },
@@ -15,29 +33,22 @@ export default async function GetActivity(username: string) {
       }
     });
     
-    const config = await getConfig()
-    const library = JSON.parse(config ?? "")
-    
+    if (!friends || !userData) return
+
     for (const follow of userData!.followings) {
+
       const friend = follow.following;
       const friendNowPlayingId = friend.nowPlaying;
       let friendNowPlayingSong, friendNowPlayingAlbum, friendNowPlayingArtist;
-      
-      for (const artist of library) {
-        for (const album of artist.albums) {
-          for (const song of album.songs) {
-            if (String(song.id) === friendNowPlayingId) {
-              friendNowPlayingSong = song;
-              friendNowPlayingAlbum = album;
-              friendNowPlayingArtist = artist;
-              break;
-            }
-          }
-          if (friendNowPlayingSong) break;
-      }
-      if (friendNowPlayingSong) break;
-    }
-    
+
+      const serverIPAddress = await getServerIpAddress()
+      const port = await GetPort()
+      const songRequest = await fetch(`http://${serverIPAddress}:${port}/server/song/info/${friendNowPlayingId}`)
+      const song = await songRequest.json()
+      friendNowPlayingSong = song
+      friendNowPlayingAlbum = song.album_object
+      friendNowPlayingArtist = song.artist_object
+         
     friends.push({
       ...friend,
       nowPlaying: {
