@@ -1,5 +1,5 @@
 export default interface Song {
-  id: number
+  id: string 
   name: string,
   artist: string,
   contributing_artists: string[],
