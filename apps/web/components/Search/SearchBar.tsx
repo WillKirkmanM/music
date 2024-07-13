@@ -57,7 +57,7 @@ export default function SearchBar({
           className={`${isSearchActive ? "w-full flex" : "hidden"} md:flex md:w-96`}
         >
           <Input
-            className={`flex-1 text-white border border-[#6e777d] ${onTopOfPage ? "opacity-35 bg-gradient-to-r from-[#2f353a80] to-[#34373580]" : "bg-white"}`}
+            className={`flex-1 text-black border border-[#6e777d] ${onTopOfPage ? "opacity-35 bg-gradient-to-r from-[#2f353a80] to-[#34373580]" : "bg-white"}`}
             placeholder="Search songs, albums, artists"
             value={query}
             onClick={() => setIsSearchBoxClicked(true)}
