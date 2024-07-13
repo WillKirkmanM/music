@@ -1,16 +1,14 @@
 import prisma from "@/prisma/prisma";
 import { Playlist, Song as SSong, User } from "@prisma/client";
-import Artist from "@/types/Music/Artist";
 import Song from "@/types/Music/Song";
-import Album from "@/types/Music/Album";
 import PlaylistTable from "@/components/Music/Playlist/PlaylistTable";
 import { Avatar, AvatarFallback } from "@music/ui/components/avatar";
 import DeletePlaylistButton from "@/components/Music/Playlist/DeletePlaylistButton";
 import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area";
-import path from "path"
-import fs from "fs"
-import { Library } from "@/types/Music/Library";
-import getConfig from "@/actions/Config/getConfig";
+import getServerIpAddress from "@/actions/System/GetIpAddress";
+import GetPort from "@/actions/System/GetPort";
+import Album from "@/types/Music/Album";
+import Artist from "@/types/Music/Artist";
 
 type PlaylistPageParams = {
   params: {
@@ -27,39 +25,20 @@ export default async function PlaylistPage({ params }: PlaylistPageParams) {
       songs: true,
       users: true
     },
-  })) as Playlist & { songs: SSong[], users: User[] };
-
-  const config = await getConfig()
-  if (!config) return <p>No Library</p>;
-  const art: Library = JSON.parse(config);
-
-  if (Object.keys(art).length === 0) {
-    return (
-      <p>No Data Available</p>
-    )
-  }
-
-  // Flatten the library
-  const flattenedLibrary = art.flatMap((artist: Artist) =>
-    artist.albums.flatMap((album: Album) =>
-      album.songs.map((song: Song) => ({
-        artistName: artist.name,
-        coverURL: album.cover_url,
-        albumName: album.name,
-        songName: song.name,
-        contributingArtists: song.contributing_artists.join(", "),
-        trackNumber: song.track_number,
-        path: song.path,
-        song: song,
-        album: album,
-        artist: artist
-      }))
-    )
-  );
+  })) as Playlist & { songs: Song[], users: User[] };
 
   let songIds = playlist.songs.map((song) => song.id);
 
-  let songsWithMetadata = flattenedLibrary.filter((librarySong) => songIds.includes(librarySong.song.id.toString()))
+  const serverIPAddress = await getServerIpAddress();
+  const port = await GetPort();
+
+  let songsWithMetadataPromises = songIds.map(async (songID) => {
+    const response = await fetch(`http://${serverIPAddress}:${port}/server/song/info/${songID}`);
+    const data: Song & { artist_object: Artist; album_object: Album } = await response.json();
+    return data;
+  });
+  
+  let songsWithMetadata: (Song & { artist_object: Artist; album_object: Album })[] = await Promise.all(songsWithMetadataPromises);
   
   function formatDuration(duration: number) {
     const hours = Math.floor(duration / 3600);
@@ -79,8 +58,7 @@ export default async function PlaylistPage({ params }: PlaylistPageParams) {
     return result.trim();
   }
   
-  let totalDuration = songsWithMetadata.reduce((total, song) => total + song.song.duration, 0)
-
+  let totalDuration = songsWithMetadata.reduce((total, song) => total + song.duration, 0)
 
   return (
     <ScrollArea className="h-full overflow-x-hidden overflow-y-auto pt-20">
