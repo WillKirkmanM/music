@@ -25,7 +25,7 @@ import GetPort from "@/actions/System/GetPort";
 
 type PlaylistTableProps = {
   songs: Song[]
-  album: Album
+  album: Album & { artist_object: Artist }
   artist: Artist
 }
 
@@ -50,12 +50,7 @@ export default function AlbumTable({ songs, album, artist }: PlaylistTableProps)
   }, []);
 
   const handlePlay = async (coverURL: string, song: Song, songURL: string, artist: Artist) => {
-    let base64Image = coverURL
-    if (coverURL.length > 0) {
-      base64Image = await imageToBase64(coverURL)
-    }
-
-    setImageSrc(`data:image/jpg;base64,${base64Image}`)
+    setImageSrc(`http://${serverIP}:${port}/server/image/${encodeURIComponent(album.cover_url)}`)
     setArtist(artist)
     setAlbum(album)
     setSong(song)
@@ -73,7 +68,7 @@ export default function AlbumTable({ songs, album, artist }: PlaylistTableProps)
   }
 
   return (
-    <div className="pb-36">
+    <div className="pb-24">
       <Table>
         <TableHeader>
           <TableRow>

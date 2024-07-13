@@ -17,7 +17,7 @@ type allSongs = {
   albumObject: Album;
   album: string;
   image: string;
-  id: number;
+  id: string;
   name: string;
   artist: string;
   contributing_artists: string[];
@@ -58,7 +58,7 @@ export default async function SongsInLibrary({ allSongs }: SongsInLibraryProps) 
 
   const songIdsFromPlaylist = songsFromPlaylist.flatMap(playlist => 
     playlist.songs
-      .filter(song => songIds.includes(Number(song.id)))
+      .filter(song => songIds.includes(song.id))
       .map(song => song.id)
   );
 

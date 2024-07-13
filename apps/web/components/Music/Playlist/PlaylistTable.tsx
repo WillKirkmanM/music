@@ -24,18 +24,7 @@ import { useSession } from "next-auth/react";
 import GetPort from "@/actions/System/GetPort";
 
 type PlaylistTableProps = {
-  songsWithMetadata: {
-    artistName: string;
-    coverURL: string;
-    albumName: string;
-    songName: string;
-    contributingArtists: string;
-    trackNumber: number;
-    path: string;
-    song: Song;
-    artist: Artist;
-    album: Album
-  }[]
+  songsWithMetadata: (Song & { artist_object: Artist; album_object: Album })[];
 }
 
 export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps) {
@@ -59,12 +48,7 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
   }, []);
 
   const handlePlay = async (coverURL: string, song: Song, songURL: string, artist: Artist, album: Album) => {
-    let base64Image = coverURL
-    if (coverURL.length > 0) {
-      base64Image = await imageToBase64(coverURL)
-    }
-
-    setImageSrc(`data:image/jpg;base64,${base64Image}`)
+    setImageSrc(`http://${serverIP}:${port}/image/${encodeURIComponent(coverURL)}`)
     setArtist(artist)
     setAlbum(album)
     setSong(song)
@@ -90,19 +74,19 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
           </TableRow>
         </TableHeader>
 
-        {songsWithMetadata.map((song, index) => (
-          <SongContextMenu song={song.song} album={song.album} artist={song.artist} key={song.song.id}>
-            <TableBody key={song.song.id}>
-              <TableRow onClick={() => handlePlay(song.coverURL, song.song, `http://${serverIP}:${port}/server/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`, song.artist, song.album)}>
+        {songsWithMetadata.map((song: Song & { album_object: Album, artist_object: Artist }, index) => (
+          <SongContextMenu song={song} album={song.album_object} artist={song.artist_object} key={song.id}>
+            <TableBody key={song.id}>
+              <TableRow onClick={() => handlePlay(song.album_object.cover_url, song, `http://${serverIP}:${port}/server/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`, song.artist_object, song.album_object)}>
                 <TableCell className="font-medium">{index + 1}</TableCell>
                 <TableCell>
                   <div className="w-[300px] overflow-hidden whitespace-nowrap text-overflow">
-                    <PlaylistCard song={song.song} coverURL={song.coverURL} artist={song.artist} album={song.album} />
+                    <PlaylistCard song={song} coverURL={song.album_object.cover_url} artist={song.artist_object} album={song.album_object} />
                   </div>
                 </TableCell>
-                <TableCell><Link onClick={(e) => e.stopPropagation()}href={`/album/${song.album.id}`}>{song.album.name}</Link></TableCell>
-                <TableCell>{formatDuration(song.song.duration)}</TableCell>
-                <TableCell className="text-right"><Link onClick={(e) => e.stopPropagation()}href={`/artist/${song.artist.id}`}>{song.artist.name}</Link></TableCell>
+                <TableCell><Link onClick={(e) => e.stopPropagation()} href={`/album/${song.album_object.id}`}>{song.album_object.name}</Link></TableCell>
+                <TableCell>{formatDuration(song.duration)}</TableCell>
+                <TableCell className="text-right"><Link onClick={(e) => e.stopPropagation()}href={`/artist/${song.artist_object.id}`}>{song.artist_object.name}</Link></TableCell>
               </TableRow>
             </TableBody>
           </SongContextMenu>

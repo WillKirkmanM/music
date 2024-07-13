@@ -3,6 +3,8 @@ import imageToBase64 from "@/actions/ImageToBase64"
 import type Artist from "@/types/Music/Artist"
 import type Album from "@/types/Music/Album"
 import Link from "next/link"
+import getServerIpAddress from "@/actions/System/GetIpAddress"
+import GetPort from "@/actions/System/GetPort"
 
 type AlbumCardProps = {
   artist: Artist
@@ -10,8 +12,10 @@ type AlbumCardProps = {
 }
 
 export default async function AlbumCard({ artist, album }: AlbumCardProps) {
-  const base64Image = await imageToBase64(album.cover_url)
-  const albumCoverURL = (!album.cover_url || album.cover_url.length === 0) ? "/snf.png" : `data:image/jpg;base64,${base64Image}`
+  const serverIPAddress = await getServerIpAddress()
+  const port = await GetPort()
+  // const base64Image = await imageToBase64(album.cover_url)
+  const albumCoverURL = (!album.cover_url || album.cover_url.length === 0) ? "/snf.png" : `http://${serverIPAddress}:${port}/server/image/${encodeURIComponent(album.cover_url)}`
   let releaseDate = new Date(album.first_release_date).toLocaleString('default', { year: 'numeric' });
 
   return (

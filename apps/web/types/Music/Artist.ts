@@ -1,7 +1,7 @@
 import type Album from "./Album"
 
 export default interface Artist {
-  id: number
+  id: string 
   name: string
   icon_url: string
   followers: number

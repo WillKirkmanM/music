@@ -81,13 +81,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     name: "",
     path: "",
     track_number: 0,
-    id: 0,
+    id: "",
     duration: 0
   });
-  const [artist, setArtist] = useState<Artist>({ albums: [], id: 0, name: "", followers: 0, icon_url: "", description: "" });
+  const [artist, setArtist] = useState<Artist>({ albums: [], id: "", name: "", followers: 0, icon_url: "", description: "" });
   const [album, setAlbum] = useState<Album>({
     cover_url: "",
-    id: 0,
+    id: "",
     name: "",
     description: "",
     first_release_date: "",

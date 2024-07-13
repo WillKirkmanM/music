@@ -1,22 +1,21 @@
 import type { Library } from "@/types/Music/Library";
 import { redirect } from "next/navigation";
 import AlbumCard from "@/components/Music/Card/Album/AlbumCard";
-import path from "path"
-import fs from "fs"
 import getConfig from "@/actions/Config/getConfig";
 import {ScrollArea, ScrollBar} from "@music/ui/components/scroll-area"
 import BigCard from "@/components/Music/Card/BigCard";
-import imageToBase64 from "@/lib/Image/imageToBase64";
 import getServerSession from "@/lib/Authentication/Sessions/GetServerSession";
 import prisma from "@/prisma/prisma";
-import { Metadata } from "next";
-import Image from "next/image";
-import { startTransition, Suspense } from "react";
+import { Suspense } from "react";
 import SongsInLibrary from "@/components/Artist/SongsInLibrary";
 import getServerIpAddress from "@/actions/System/GetIpAddress";
 import Description from "@/components/Description/Description";
 import GetPort from "@/actions/System/GetPort";
 import PageGradient from "@/components/Layout/PageGradient";
+
+import { Tweet, TweetSkeleton, EmbeddedTweet, TweetNotFound } from "react-tweet"
+import { getTweet as _getTweet, getOEmbed } from "react-tweet/api";
+import Artist from "@/types/Music/Artist";
 
 type ArtistPage = {
   params: {
@@ -30,20 +29,11 @@ export const revalidate = 3600
 export async function generateMetadata({ params }: ArtistPage) {
   const id = params.id;
 
-  const config = await getConfig()
-  if (!config) return <p>No Library</p>
-  
-  const library: Library = JSON.parse(config);
+  const serverIPAddress = await getServerIpAddress()
+  const port = await GetPort()
 
-  if (Object.keys(library).length === 0) {
-    return (
-      <div>
-        <h2>No data available</h2>
-      </div>
-    );
-  }
-
-  const artist = library.find((artist: any) => String(artist.id) === String(id));
+  const artistRequest = await fetch(`http://${serverIPAddress}:${port}/server/artist/info/${id}`)
+  const artist = await artistRequest.json()
 
   if (!artist) redirect("/404")
   
@@ -72,20 +62,11 @@ export async function generateStaticParams() {
 export default async function ArtistPage({ params }: ArtistPage) {
   const id = params.id;
 
-  const config = await getConfig()
-  if (!config) return <p>No Library</p>
-  
-  const library: Library = JSON.parse(config);
+  const serverIPAddress = await getServerIpAddress()
+  const port = await GetPort()
 
-  if (Object.keys(library).length === 0) {
-    return (
-      <div>
-        <h2>No data available</h2>
-      </div>
-    );
-  }
-
-  const artist = library.find((artist: any) => String(artist.id) === String(id));
+  const artistRequest = await fetch(`http://${serverIPAddress}:${port}/server/artist/info/${id}`)
+  const artist: Artist = await artistRequest.json()
 
   if (!artist) redirect("/404")
 
@@ -136,14 +117,7 @@ export default async function ArtistPage({ params }: ArtistPage) {
     }
   });
 
-  const songIdsFromPlaylist = songsFromPlaylist.flatMap(playlist => 
-    playlist.songs
-      .filter(song => songIds.includes(Number(song.id)))
-      .map(song => song.id)
-  );
-
-  const base64Image = await imageToBase64(artist.icon_url)
-  const artistIconURL = artist.icon_url.length === 0 ? "/snf.png" : `data:image/jpg;base64,${base64Image}`
+  const artistIconURL = artist.icon_url.length === 0 ? "/snf.png" : `http://${serverIPAddress}:${port}/server/image/${encodeURIComponent(artist.icon_url)}`
 
   function formatFollowers(followers: number): string {
     if (followers >= 1000000) {
@@ -172,6 +146,12 @@ export default async function ArtistPage({ params }: ArtistPage) {
       <div className="mx-52">
         <Description description={artist.description}/>
       </div>
+
+      <p className="text-2xl text-bold">Tweets</p>
+      {/* <Suspense fallback={<TweetSkeleton />}>
+        <Tweet id="1786906864346681733" />
+      </Suspense> */}
+
       <p className="text-2xl text-bold">Songs</p>
       <ScrollArea className="w-full overflow-x-auto overflow-y-auto mb-4 h-72">
         <div className="flex flex-row justify-center items-start">
@@ -184,10 +164,10 @@ export default async function ArtistPage({ params }: ArtistPage) {
                 imageSrc={
                   song.image.length === 0
                     ? "/snf.png"
-                    : `data:image/jpg;base64,${await imageToBase64(song.image)}`
+                    : `http://${serverIPAddress}:${port}/server/image/${encodeURIComponent(song.image)}`
                 }
                 albumURL=""
-                songURL={`http://${await getServerIpAddress()}:${await GetPort()}/server/stream/${encodeURIComponent(song.path)}`}
+                songURL={`http://${serverIPAddress}:${port}/server/stream/${encodeURIComponent(song.path)}`}
                 type="Song"
                 song={song}
               />

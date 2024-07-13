@@ -1,7 +1,7 @@
 import type Song from "./Song"
 
 export default interface Album {
-  id: number
+  id: string
   name: string
   cover_url: string
   description: string

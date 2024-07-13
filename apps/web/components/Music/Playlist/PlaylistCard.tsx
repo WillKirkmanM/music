@@ -1,4 +1,6 @@
 import imageToBase64 from "@/actions/ImageToBase64"
+import getServerIpAddress from "@/actions/System/GetIpAddress"
+import GetPort from "@/actions/System/GetPort"
 import Album from "@/types/Music/Album"
 import Artist from "@/types/Music/Artist"
 import Song from "@/types/Music/Song"
@@ -15,19 +17,30 @@ type PlaylistCardProps = {
 
 export default function PlaylistCard({ song, coverURL, artist, album }: PlaylistCardProps) {
   const [imageSrc, setImageSrc] = useState("")
+  const [serverIP, setServerIP] = useState("")
+  const [port, setPort] = useState(0)
+
+  useEffect(() => {
+    async function getServerInformation() {
+      const ip = typeof window !== 'undefined' ? window.location.hostname : await getServerIpAddress();
+      setServerIP(ip);
+
+      const port = typeof window !== 'undefined' ? parseInt(window.location.port) : await GetPort();
+      setPort(port);
+    }
+
+    getServerInformation();
+  }, []);
 
   useEffect(() => {
     async function loadImage() {
-      if (coverURL.length > 0) {
-        const base64Image = await imageToBase64(coverURL)
-        setImageSrc(`data:image/jpg;base64,${base64Image}`)
-      } else {
-        setImageSrc("/snf.png")
+      if (serverIP && port) {
+        coverURL.length > 0 ? setImageSrc(`http://${serverIP}:${port}/server/image/${encodeURIComponent(coverURL)}`) : setImageSrc("/snf.png")
       }
     }
 
     loadImage()
-  }, [coverURL])
+  }, [serverIP, port, coverURL])
 
   return (
     <div className="flex items-center">

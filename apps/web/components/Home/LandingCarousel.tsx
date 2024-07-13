@@ -1,49 +1,25 @@
-import BigCard from "../Music/Card/BigCard";
-import getConfig from "@/actions/Config/getConfig";
-import fs from "fs";
 import { Button } from "@music/ui/components/button";
-import type { Library } from "@/types/Music/Library";
 import getServerIpAddress from "@/actions/System/GetIpAddress";
 import GetPort from "@/actions/System/GetPort";
 import { unstable_cache as cache } from "next/cache";
 import Album from "@/types/Music/Album";
 import Artist from "@/types/Music/Artist";
-import imageToBase64 from "@/actions/ImageToBase64";
 import Image from "next/image";
 import Song from "@/types/Music/Song";
 import Link from "next/link";
-import ShimmerButton from "@music/ui/components/shimmer-button";
 import { Play } from "lucide-react";
-import { FastAverageColor } from "fast-average-color";
 
-export const revalidate = 3600
 
-async function getRandomAlbum() {
-  const config = await getConfig()
-  if (!config) return []
-  
-  const typedLibrary: Library = JSON.parse(config);
-  
-  if (Object.keys(typedLibrary).length === 0) {
-    return []
-  }
+async function getRandomAlbum(): Promise<{ album: Album & { artist_object: Artist }, songs: Song[] }> {
+  const serverIPAddress = await getServerIpAddress();
+  const port = await GetPort();
 
-  const allAlbums: ExtendedAlbum[] = typedLibrary.flatMap((artist) =>
-    artist.albums.map((album) => ({
-      ...album,
-      artistObject: artist,
-      artist: artist.name,
-    }))
-  ).filter(album => album.cover_url.length > 0);
+  const randomAlbumRequest = await fetch(`http://${serverIPAddress}:${port}/server/album/random/1`);
+  const album: Album & { artist_object: Artist } = (await randomAlbumRequest.json())[0];
 
-  for (let i = allAlbums.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [allAlbums[i] as any, allAlbums[j] as any] = [allAlbums[j], allAlbums[i]];
-  }
-  
-  const randomAlbum = allAlbums[0] as ExtendedAlbum;
+  const songs = shuffleSongs(album.songs).slice(0, 3);
 
-  return randomAlbum;
+  return { album, songs };
 }
 
 const getCachedRandomAlbum = cache(
@@ -53,8 +29,9 @@ const getCachedRandomAlbum = cache(
 );
 
 type ExtendedAlbum = Album & {
-  artistObject: Artist,
+  artist_object: Artist,
   artist: string
+  randomSongs: Song[]
 }
 
 function shuffleSongs(array: Song[]) {
@@ -65,22 +42,20 @@ function shuffleSongs(array: Song[]) {
   return array;
 }
 
-
 function sanitizeSongName(songName: string) {
   return songName.replace(/\s+/g, '_').replace(/[^\w-]+/g, '');
 }
 
-
 export default async function LandingCarousel() {
-  let showcaseAlbum = await getCachedRandomAlbum() as ExtendedAlbum
+  // let showcaseAlbum = await getCachedRandomAlbum() as ExtendedAlbum
+  let { album, songs } = await getRandomAlbum()
+  
+  if (!album) return null
 
-  if (!showcaseAlbum) return null
+  const serverIPAddress = await getServerIpAddress()
+  const port = await GetPort()
 
-  const base64Image = await imageToBase64(showcaseAlbum.cover_url)
-  const albumCoverURL = `data:image/jpg;base64,${base64Image}`
-
-  const getCachedRandomSongs = cache(async () => shuffleSongs([...showcaseAlbum.songs]).slice(0, 3), ["landing-carousel-songs"], { revalidate: 3600, tags: ["landing-carousel-songs"] })
-  const randomSongs = await getCachedRandomSongs()
+  const albumCoverURL = `http://${serverIPAddress}:${port}/server/image/${encodeURIComponent(album.cover_url)}`
 
 return (
     <div className="relative p-5 flex items-center" style={{ height: '300px' }}>
@@ -89,13 +64,13 @@ return (
         <Image src={albumCoverURL} alt="Album Cover" width={200} height={200} className="rounded-sm" style={{ maxWidth: '200px', maxHeight: '200px' }} />
       </div>
       <div className="flex-1 text-center">
-        <Link href={`/album/${showcaseAlbum.id}`}>
-          <h2 className="text-xl font-bold">{showcaseAlbum.name}</h2>
+        <Link href={`/album/${album.id}`}>
+          <h2 className="text-xl font-bold">{album.name}</h2>
         </Link>
-        <Link href={`/artist/${showcaseAlbum.artistObject.id}`}>
-          <p className="text-base">{showcaseAlbum.artist}</p>
+        <Link href={`/artist/${album.artist_object.id}`}>
+          <p className="text-base">{album.artist_object.name}</p>
         </Link>
-        <Link href={`/album/${showcaseAlbum.id}`}>
+        <Link href={`/album/${album.id}`}>
           <Button className="mt-10 px-4 py-2 text-white rounded" >
             Play
             <Play className="ml-2 h-4 w-4"/>
@@ -105,9 +80,9 @@ return (
       <div className="flex-1">
         <p className="font-bold text-xl">Featuring songs like:</p>
         <ul>
-          {randomSongs.map((song: Song, index) => (
+          {songs?.map((song, index) => (
             <li key={index} className="ml-5">
-              <Link href={`/album/${showcaseAlbum.id}#${sanitizeSongName(song.name)}`}>
+              <Link href={`/album/${album.id}#${sanitizeSongName(song.name)}`}>
                 {song.name}
               </Link>
             </li>

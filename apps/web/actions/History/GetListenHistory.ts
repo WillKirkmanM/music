@@ -1,8 +1,8 @@
 "use server"
 
 import prisma from "@/prisma/prisma"
-import getConfig from "../Config/getConfig"
-import { Library } from "@/types/Music/Library"
+import getServerIpAddress from "../System/GetIpAddress"
+import GetPort from "../System/GetPort"
 
 export default async function GetListenHistory(username: string, unique = false) {
   const listenHistory = await prisma.user.findUnique({
@@ -22,31 +22,19 @@ export default async function GetListenHistory(username: string, unique = false)
 
   const listenHistorySongIds = listenHistory.listenHistory.map(historyItem => historyItem.songId)
 
-  const config = await getConfig()
-  if (!config) return []
+  const serverIPAddress = await getServerIpAddress()
+  const port = await GetPort()
 
-  const typedLibrary: Library = JSON.parse(config)
-  if (Object.keys(typedLibrary).length === 0) {
-    return []
-  }
+  const listenHistorySongsPromises = listenHistorySongIds.map(async (songId) => {
+    const songRequest = await fetch(`http://${serverIPAddress}:${port}/server/song/info/${songId}`)
+    return songRequest.json()
+  })
 
-  const allSongs = typedLibrary.flatMap((artist) =>
-    artist.albums.flatMap((album) =>
-      (album.songs.filter(Boolean) as any[]).map((song) => ({
-        ...song,
-        artistObject: artist,
-        albumObject: album,
-        album: album.name,
-        image: album.cover_url,
-      }))
-    )
-  )
-
-  let listenHistorySongs = allSongs.filter(song => listenHistorySongIds.includes(String(song.id)))
+  let listenHistorySongs = await Promise.all(listenHistorySongsPromises)
 
   if (unique) {
-    const uniqueSongIds = Array.from(new Set(listenHistorySongIds))
-    listenHistorySongs = listenHistorySongs.filter(song => uniqueSongIds.includes(String(song.id)))
+    const uniqueSongs = new Map(listenHistorySongs.map(song => [song.id, song]))
+    listenHistorySongs = Array.from(uniqueSongs.values())
   }
 
   return listenHistorySongs

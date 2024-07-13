@@ -11,6 +11,7 @@ audiotags = "0.5"
 fancy-regex = "0.13.0"
 lofty = "0.18.2"
 rayon = "1.8.0"
+rand = "0.8.5"
 regex = "1.10.3"
 reqwest = { version = "0.12.3", features = ["json"] }
 serde = { version = "1.0.190", features = ["derive"] }

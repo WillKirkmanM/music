@@ -1,13 +1,7 @@
 import getServerSession from "@/lib/Authentication/Sessions/GetServerSession"
-import getConfig from "@/actions/Config/getConfig"
-import prisma from "@/prisma/prisma"
-import type { Library } from "@/types/Music/Library"
-import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
 import BigCard from "../Music/Card/BigCard"
 import getServerIpAddress from "@/actions/System/GetIpAddress"
 import GetPort from "@/actions/System/GetPort"
-import { unstable_cache as cache } from "next/cache"
-import fs from "fs"
 import PageGradient from "../Layout/PageGradient"
 import ScrollButtons from "./ScrollButtons"
 import GetListenHistory from "@/actions/History/GetListenHistory"
@@ -34,14 +28,7 @@ export default async function ListenAgain() {
   const serverIPAddress = await getServerIpAddress()
   const port = await GetPort()
 
-  function imageToBase64(src: string) {
-    const image = fs.readFileSync(src)
-    const base64Image = Buffer.from(image).toString("base64");
-    return base64Image;
-  }
-
-  const base64Image = imageToBase64(listenHistorySongs[0].image) || "";
-  const albumCoverSrc = listenHistorySongs[0].image.length === 0 ? "/snf.png" : `data:image/jpg;base64,${base64Image}`;
+  const albumCoverSrc = listenHistorySongs[0].album_object.cover_url.length === 0 ? "/snf.png" : `http://${serverIPAddress}:${port}/server/image/${encodeURIComponent(listenHistorySongs[0].album_object.cover_url)}`;
 
   return listenHistorySongs &&
     <>
@@ -54,12 +41,12 @@ export default async function ListenAgain() {
             <div className="mr-20" key={index}>
               <BigCard
                 title={song.name}
-                album={song.albumObject}
-                artist={song.artistObject}
+                album={song.album_object}
+                artist={song.artist_object}
                 imageSrc={
-                  song.image.length === 0
+                  song.album_object.cover_url.length === 0
                   ? "/snf.png"
-                  : `data:image/jpg;base64,${imageToBase64(song.image)}`
+                  : `http://${serverIPAddress}:${port}/server/image/${encodeURIComponent(song.album_object.cover_url)}`
                 }
                 albumURL=""
                 songURL={`http://${serverIPAddress}:${port}/server/stream/${encodeURIComponent(song.path)}?bitrate=0`}

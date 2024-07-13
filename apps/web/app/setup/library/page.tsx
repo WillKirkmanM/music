@@ -14,17 +14,18 @@ export default function SetupLibrary() {
 
   useEffect(() => {
     async function getServerInformation() {
-      const ip = await getServerIpAddress();
+      const ip = typeof window !== 'undefined' ? window.location.hostname : await getServerIpAddress();
       setServerIP(ip);
 
-      const port = await GetPort()
-      setPort(port)
+      const port = typeof window !== 'undefined' ? parseInt(window.location.port) : await GetPort();
+      setPort(port);
     }
 
     getServerInformation();
-  });
+  }, []);
 
-  const socketUrl = serverIP && port ? `ws://${serverIP}:${port}/websocket/` : null;
+
+  const socketUrl = (typeof window !== 'undefined' ? window.location.hostname : serverIP) && port ? `ws://${typeof window !== 'undefined' ? window.location.hostname : serverIP}:${port}/websocket/` : null;
   const { lastMessage } = useWebSocket(socketUrl);
 
   useEffect(() => {
