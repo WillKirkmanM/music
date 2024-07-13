@@ -34,7 +34,7 @@ export default function FriendActivity() {
     async function getActivity() {
       if (username) {
         const friends = await GetActivity(username)
-        setFriends(friends)
+        setFriends(friends || [])
       }
     }
   
@@ -48,7 +48,7 @@ export default function FriendActivity() {
   }, [username])
 
   
-  return friends && (
+  return friends &&  (
     <>
       {friends.length !== 0 && <h3 className="font-heading text-white font-semibold text-xl">Friend Activity</h3>}
       {friends.map((friend) => (
@@ -65,7 +65,7 @@ export default function FriendActivity() {
                 {friend.nowPlaying.artist && <Link href={`/artist/${friend.nowPlaying.artist.id}`}><p className="text-sm">{friend.nowPlaying.artist.name}</p></Link>}
                 <div className="flex flex-row items-center text-base">
                   <Disc3Icon className="mr-1" size={16} />
-                  <Link href={`/album/${friend.nowPlaying.album.id}`}><p>{friend.nowPlaying.album.name}</p></Link>
+                  <Link href={`/album/${friend.nowPlaying.album.id}`}><p className="truncate">{friend.nowPlaying.album.name}</p></Link>
                 </div>
               </>
             }
