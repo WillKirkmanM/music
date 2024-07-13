@@ -8,6 +8,10 @@ import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
 import getConfig from "@/actions/Config/getConfig";
 import Description from "@/components/Description/Description";
 import PageGradient from "@/components/Layout/PageGradient";
+import getServerIpAddress from "@/actions/System/GetIpAddress";
+import GetPort from "@/actions/System/GetPort";
+import Song from "@/types/Music/Song";
+import Artist from "@/types/Music/Artist";
 
 type AlbumPage = {
   params: {
@@ -21,17 +25,12 @@ export const revalidate = 3600
 export async function generateMetadata({ params }: AlbumPage) {
   const id = params.id;
 
-  const config = await getConfig()
-  if (!config) return <p>No Library File</p>;
-  const library: Library = JSON.parse(config);
+  const serverIPAddress = await getServerIpAddress()
+  const port = await GetPort()
 
-  if (Object.keys(library).length === 0) {
-    return (
-      <p>No Results</p>
-    )
-  }
-
-  const { artist, album } = library.flatMap(artist => artist.albums.map(album => ({ artist, album }))).find(({ album }) => String(album.id) === String(id)) || {};
+  const albumRequest = await fetch(`http://${serverIPAddress}:${port}/server/album/info/${id}`)
+  const album = await albumRequest.json()
+  const artist = album.artist_object
 
   if (!artist || !album) redirect("/404")
 
@@ -59,6 +58,19 @@ export async function generateStaticParams() {
   return params
 }
 
+type ResponseAlbum = {
+  id: string;
+  name: string;
+  cover_url: string;
+  songs: Song[];
+  first_release_date: string;
+  musicbrainz_id: string;
+  wikidata_id: string;
+  primary_type: string;
+  description: string;
+  artist_object: Artist;
+};
+
 export default async function AlbumPage({ params }: AlbumPage) {
   const id = params.id;
 
@@ -72,12 +84,19 @@ export default async function AlbumPage({ params }: AlbumPage) {
     )
   }
 
-  const { artist, album } = library.flatMap(artist => artist.albums.map(album => ({ artist, album }))).find(({ album }) => String(album.id) === String(id)) || {};
+  // const { artist, album } = library.flatMap(artist => artist.albums.map(album => ({ artist, album }))).find(({ album }) => String(album.id) === String(id)) || {};
+  const serverIPAddress = await getServerIpAddress()
+  const port = await GetPort()
+
+  const albumRequest = await fetch(`http://${serverIPAddress}:${port}/server/album/info/${id}`)
+  const album: ResponseAlbum = await albumRequest.json()
+  const artist = album.artist_object
 
   if (!artist || !album) redirect("/404")
 
+
   const base64Image = await imageToBase64(album.cover_url)
-  const albumCoverURL = album.cover_url.length === 0 ? "/snf.png" : `data:image/jpg;base64,${base64Image}`
+  const albumCoverURL = album.cover_url.length === 0 ? "/snf.png" : `http://${serverIPAddress}:${port}/server/image/${encodeURIComponent(album.cover_url)}`
 
   function formatDuration(duration: number) {
     const hours = Math.floor(duration / 3600);
@@ -109,7 +128,7 @@ return ( album ?
         <PageGradient imageSrc={albumCoverURL} /> 
         <div className="flex flex-col md:flex-row items-start md:items-center my-8">
           <div className="flex items-center justify-center w-full md:w-auto md:justify-start">
-            <Image src={albumCoverURL} alt={`${album.name} Image`} height={256} width={256} className="rounded mr-4 mb-4 md:mb-0" />
+            <Image src={albumCoverURL} placeholder="blur" blurDataURL={base64Image} alt={`${album.name} Image`} height={256} width={256} className="rounded mr-4 mb-4 md:mb-0" />
           </div>
           <div className="md:pl-0">
             <h1 className="text-4xl">{album.name}</h1>
