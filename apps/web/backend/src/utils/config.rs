@@ -42,7 +42,9 @@ pub async fn get_config() -> Result<String, Box<dyn Error>> {
 }
 
 pub async fn get_config_path() -> std::path::PathBuf {
-  let deployment_type = env::var("DEPLOYMENT_TYPE").unwrap_or_else(|_| String::from("containerless"));
+  let deployment_type = env::var("DEPLOYMENT_TYPE").unwrap_or_else(|_| {
+    if is_docker() { "docker" } else { "containerless" }.to_string()
+  });
   let config_path = match deployment_type.as_str() {
     "docker" => Path::new("/Config/music.json"),
     _ => Path::new("./apps/web/Config/music.json"),

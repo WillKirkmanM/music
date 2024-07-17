@@ -6,21 +6,29 @@ use crate::utils::config::get_config;
 
 #[get("/artist/random/{amount}")]
 async fn get_random_artist(amount: web::Path<usize>) -> HttpResponse {
-	let config = get_config().await.unwrap();
+	let config = match get_config().await {
+		Ok(config) => config,
+		Err(_) => return HttpResponse::InternalServerError().finish(),
+	};
 
 	let library: Vec<Artist> = match serde_json::from_str(&config) {
 		Ok(library) => library,
-		Err(_) => return HttpResponse::Ok().json(Vec::<Artist>::new()),
+		Err(_) => return HttpResponse::InternalServerError().finish(),
 	};
 
-	let mut random_artists = Vec::new();
-	for _ in 0..*amount {
-		let random_artist = match library.choose(&mut rand::thread_rng()) {
-			Some(artist) => artist,
-			None => break,
-		};
+	let artists_with_albums: Vec<&Artist> = library.iter().filter(|artist| !artist.albums.is_empty()).collect();
 
-		random_artists.push(random_artist.clone());
+	let mut random_artists = Vec::new();
+	let mut rng = rand::thread_rng();
+
+	for _ in 0..*amount {
+		if artists_with_albums.is_empty() {
+			break;
+		}
+
+		if let Some(artist) = artists_with_albums.choose(&mut rng) {
+			random_artists.push(artist);
+		}
 	}
 
 	HttpResponse::Ok().json(random_artists)

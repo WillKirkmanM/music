@@ -2,10 +2,12 @@ mod routes;
 mod structures;
 mod utils;
 
+use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 use routes::album::{get_album_info, get_random_album};
 use routes::artist::{get_artist_info, get_random_artist};
 use routes::image::image;
+use routes::search::populate_search;
 use routes::song::{get_random_song, get_song_info};
 use std::env;
 
@@ -51,10 +53,12 @@ async fn main() -> std::io::Result<()> {
     tokio::spawn(async move {
         start_ws().await.unwrap()
     });
-
     
     HttpServer::new(move || {
+        let cors = Cors::permissive();
+
         App::new()
+            .wrap(cors)
             .service(home)
             .service(songs_list)
             .service(process_library)
@@ -62,6 +66,7 @@ async fn main() -> std::io::Result<()> {
             .service(stream_song)
             .service(format_contributing_artists_route)
             .service(image)
+            .service(populate_search)
             .service(index_library_no_cover_url)
             .service(get_random_artist)
             .service(get_artist_info)
