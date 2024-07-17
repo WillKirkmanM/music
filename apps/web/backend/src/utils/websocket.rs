@@ -25,12 +25,17 @@ pub async fn start_ws() -> Result<(), Error> {
   Ok(())
 }
 
+fn sanitise_input(input: &str) -> String {
+    input.chars().filter(|&c| c != '\0').collect()
+}
+
+
 pub async fn log_to_ws(message: String) -> Result<(), Error> {
   let current_dir = env::current_dir()?;
   let output = Command::new("bun")
     .arg(get_path("send.js"))
     .arg("--log")
-    .arg(message)
+    .arg(sanitise_input(&message))
     .current_dir(current_dir)
     .output()?;
 

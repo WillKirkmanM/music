@@ -1,5 +1,5 @@
 use actix_web::{get, web, HttpResponse};
-use rand::seq::SliceRandom;
+use rand::seq::{IteratorRandom, SliceRandom};
 use serde::{Serialize, Deserialize};
 
 use crate::structures::structures::{Album, Artist, Song};
@@ -32,30 +32,41 @@ async fn get_random_album(amount: web::Path<usize>) -> HttpResponse {
 	};
 
 	let mut random_albums_with_artists = Vec::new();
+	let mut rng = rand::thread_rng();
+
 	for _ in 0..*amount {
-		let artists: Vec<&Artist> = library.iter().collect();
-		let random_artist = match artists.choose(&mut rand::thread_rng()) {
-			Some(artist) => artist,
-			None => break,
-		};
+		let mut valid_artist = None;
+		let mut valid_album = None;
 
-		let random_album = match random_artist.albums.choose(&mut rand::thread_rng()) {
-			Some(album) => album,
-			None => break,
-		};
+		for _ in 0..10 {
+			if let Some(artist) = library.iter().choose(&mut rng) {
+				if !artist.albums.is_empty() {
+					valid_artist = Some(artist);
+					break;
+				}
+			}
+		}
 
-		random_albums_with_artists.push(ResponseAlbum {
-			id: random_album.id.clone(),
-			name: random_album.name.clone(),
-			cover_url: random_album.cover_url.clone(),
-			songs: random_album.songs.clone(),
-			first_release_date: random_album.first_release_date.clone(),
-			musicbrainz_id: random_album.musicbrainz_id.clone(),
-			wikidata_id: random_album.wikidata_id.clone(),
-			primary_type: random_album.primary_type.clone(),
-			description: random_album.description.clone(),
-			artist_object: random_artist.to_owned().clone(),
-		});
+		if let Some(artist) = valid_artist {
+			if let Some(album) = artist.albums.choose(&mut rng) {
+				valid_album = Some(album);
+			}
+		}
+
+		if let Some(album) = valid_album {
+			random_albums_with_artists.push(ResponseAlbum {
+				id: album.id.clone(),
+				name: album.name.clone(),
+				cover_url: album.cover_url.clone(),
+				songs: album.songs.clone(),
+				first_release_date: album.first_release_date.clone(),
+				musicbrainz_id: album.musicbrainz_id.clone(),
+				wikidata_id: album.wikidata_id.clone(),
+				primary_type: album.primary_type.clone(),
+				description: album.description.clone(),
+				artist_object: valid_artist.unwrap().to_owned().clone(),
+			});
+		}
 	}
 
 	HttpResponse::Ok().json(random_albums_with_artists)
