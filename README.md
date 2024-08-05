@@ -3,6 +3,10 @@
 </p>
 <h1 align="center">ParsonLabs Music</h1>
 
+<p align="center">
+  <img src="https://www.pwa-shields.com/1.0.0/series/certified/purple.svg" alt="PWA Shields" height="20">
+</p>
+
 <p align="center">ParsonLabs Music is the Self Hosted Audio streaming alternative to YouTube Music, Spotify & Apple Music, providing Unrestricted Access to your library in Uncompressed, Lossless Quality</p>
 
 ![showcase-home](https://github.com/user-attachments/assets/9adbd8df-2020-4fb3-8757-1d45f27c0159)
