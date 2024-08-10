@@ -1,79 +1,72 @@
-import fs from "fs";
-import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area"
-import getServerIpAddress from "@/actions/System/GetIpAddress";
-import GetPort from "@/actions/System/GetPort";
-import getServerSession from "@/lib/Authentication/Sessions/GetServerSession";
-import prisma from "@/prisma/prisma";
+"use client"
+
+import getSession from "@/lib/Authentication/JWT/getSession";
+import setCache, { getCache } from "@/lib/Caching/cache";
+import { getPlaylist, getPlaylists, getSongInfo } from "@music/sdk";
+import { useEffect, useState } from "react";
 import AlbumCard from "../Music/Card/Album/AlbumCard";
+import ScrollButtons from "./ScrollButtons";
 
-export const revalidate = 3600
+async function getSongsFromYourLibrary(user_id: number) {
+  const playlists = await getPlaylists(user_id);
 
-async function getSongsFromYourLibrary() {
-  const session = await getServerSession();
-  const username = session?.user.username;
-
-  const songsFromAllPlaylists = await prisma.playlist.findMany({
-    where: {
-      users: {
-        some: {
-          username
-        }
-      }
-    },
-    select: {
-      songs: {
-        select: {
-          id: true,
-        }
-      }
-    },
-    take: 10,
+  const playlistSongIDsPromises = playlists.map(async (playlist) => {
+    const individualPlaylist = await getPlaylist(playlist.id);
+    return individualPlaylist.song_infos.map((songInfo) => songInfo.song_id);
   });
 
-  const playlistSongIDs = songsFromAllPlaylists.flatMap(playlist => playlist.songs.map(song => song.id));
+  const playlistSongIDsArrays = await Promise.all(playlistSongIDsPromises);
+  const playlistSongIDs = playlistSongIDsArrays.flat();
 
-  const serverIPAddress = await getServerIpAddress()
-  const port = await GetPort()
-
-  const songsDetailsPromises = playlistSongIDs.map(songID =>
-    fetch(`http://${serverIPAddress}:${port}/server/song/info/${songID}`).then(response => response.json())
-  );
+  const songsDetailsPromises = playlistSongIDs.map((songID) => getSongInfo(String(songID)));
 
   const songsDetails = await Promise.all(songsDetailsPromises);
 
   return songsDetails;
 }
 
-// const getCachedSongsFromYourLibrary = cache(
-//   async () => await getSongsFromYourLibrary(),
-//   ['recommended-albums'],
-//   { revalidate: 300, tags: ["recommended-albums"] }
-// );
+export default function RecommendedAlbums() {
+  const [librarySongs, setLibrarySongs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const session = getSession();
+  
+    async function fetchSongs() {
+      const cachedData = getCache("recommendedAlbums");
+  
+      if (cachedData) {
+        setLibrarySongs(cachedData);
+        setLoading(false);
+      } else {
+        if (session) {
+          const songs = await getSongsFromYourLibrary(Number(session.sub));
+          setLibrarySongs(songs);
+          setLoading(false);
+          setCache("recommendedAlbums", songs, 3600000);
+        }
+      }
+    }
+  
+    fetchSongs();
+  }, []);
 
-
-export default async function RecommendedAlbums() {
-  // let librarySongs = await getCachedSongsFromYourLibrary()
-  let librarySongs = await getSongsFromYourLibrary()
-
-  if (!librarySongs|| librarySongs.length === 0) return null
+  if (loading) return null;
+  if (!librarySongs || librarySongs.length === 0) return null;
 
   return (
-    <>
-      <h1 className="flex align-start text-3xl font-bold pb-8">Recommended Albums</h1>
-      <ScrollArea className="w-full overflow-x-auto overflow-y-auto h-80 pb-20">
-        <div className="flex flex-row">
-          {librarySongs.map((song, index) => (
-            <div className="mr-20" key={index}>
-              <AlbumCard 
-                album={song.album_object}
-                artist={song.artist_object}
-                key={song.id}
+    <ScrollButtons heading="Recommended Albums">
+      <div className="flex flex-row">
+        {librarySongs.map((song, index) => (
+          <div className="mr-20" key={index}>
+            <AlbumCard 
+              album={song.album_object}
+              artist={song.artist_object}
+              key={song.id}
               />
-            </div>
-          ))}
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
-    </>
+          </div>
+        ))}
+      </div>
+    </ScrollButtons>
   );
 }
