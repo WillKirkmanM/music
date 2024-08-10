@@ -1,41 +1,52 @@
-import getServerSession from "@/lib/Authentication/Sessions/GetServerSession"
-import BigCard from "../Music/Card/BigCard"
-import getServerIpAddress from "@/actions/System/GetIpAddress"
-import GetPort from "@/actions/System/GetPort"
-import PageGradient from "../Layout/PageGradient"
-import ScrollButtons from "./ScrollButtons"
-import GetListenHistory from "@/actions/History/GetListenHistory"
+"use client"
 
+import getBaseURL from "@/lib/Server/getBaseURL";
 
-// const getCachedListenHistory = cache(
-//   async () => {
-//     const session = await getServerSession();
-//     const username = session?.user?.username;
-//     return await GetListenHistory(username ?? "", true);
-//   },
-//   ['listen-history'],
-//   { revalidate: 120, tags: ["listen-history"] }
-// );
+import getSession from "@/lib/Authentication/JWT/getSession";
+import setCache, { getCache } from "@/lib/Caching/cache";
+import { getListenHistory, getSongInfo } from "@music/sdk";
+import { LibrarySong } from "@music/sdk/types";
+import { useEffect, useState } from "react";
+import PageGradient from "../Layout/PageGradient";
+import BigCard from "../Music/Card/BigCard";
+import ScrollButtons from "./ScrollButtons";
 
-export default async function ListenAgain() {
-  // const listenHistorySongs = await getCachedListenHistory()
-  const session = await getServerSession()
-  const username = session?.user.username
-  const listenHistorySongs = (await GetListenHistory(username ?? "", true)).slice(0, 10)
+export default function ListenAgain() {
+  const [listenHistorySongs, setListenHistorySongs] = useState<LibrarySong[]>([])
 
-  if (!listenHistorySongs || listenHistorySongs.length === 0) return null
+  useEffect(() => {
+    const fetchListenHistory = async () => {
+      const cachedData = getCache("listenAgain");
+  
+      if (cachedData) {
+        setListenHistorySongs(cachedData);
+      } else {
+        const session = getSession();
+        if (session) {
+          const listenHistoryItems = await getListenHistory(Number(session.sub));
+          const uniqueListenHistoryItems = Array.from(new Set(listenHistoryItems.map(item => item.song_id)));
+          const songDetailsPromises = uniqueListenHistoryItems.reverse().slice(0, 30).map(song_id => getSongInfo(song_id));
+          const songDetails = await Promise.all(songDetailsPromises);
+          
+          setListenHistorySongs(songDetails);
+          setCache("listenAgain", songDetails, 3600000);
+        }
+      }
+    };
+  
+    fetchListenHistory();
+  }, []);
 
-  const serverIPAddress = await getServerIpAddress()
-  const port = await GetPort()
+  if (!(listenHistorySongs[0]) || listenHistorySongs.length === 0) return null
 
-  const albumCoverSrc = listenHistorySongs[0].album_object.cover_url.length === 0 ? "/snf.png" : `http://${serverIPAddress}:${port}/server/image/${encodeURIComponent(listenHistorySongs[0].album_object.cover_url)}`;
+  const albumCoverSrc = listenHistorySongs[0].album_object.cover_url.length === 0
+    ? "/snf.png"
+    : `${getBaseURL()}/image/${encodeURIComponent(listenHistorySongs[0].album_object.cover_url)}`
 
-  return listenHistorySongs &&
+  return listenHistorySongs && (
     <>
       <PageGradient imageSrc={albumCoverSrc} />
-      <h1 className="flex align-start text-3xl font-bold pb-8">Listen Again</h1>
-        <ScrollButtons>
-
+      <ScrollButtons heading="Listen Again">
         <div className="flex flex-row">
           {listenHistorySongs.map((song, index) => (
             <div className="mr-20" key={index}>
@@ -45,17 +56,18 @@ export default async function ListenAgain() {
                 artist={song.artist_object}
                 imageSrc={
                   song.album_object.cover_url.length === 0
-                  ? "/snf.png"
-                  : `http://${serverIPAddress}:${port}/server/image/${encodeURIComponent(song.album_object.cover_url)}`
+                    ? "/snf.png"
+                    : `${getBaseURL()}/image/${encodeURIComponent(song.album_object.cover_url)}`
                 }
                 albumURL=""
-                songURL={`http://${serverIPAddress}:${port}/server/stream/${encodeURIComponent(song.path)}?bitrate=0`}
+                songURL={`${getBaseURL()}/api/stream/${encodeURIComponent(song.path)}?bitrate=0`}
                 type="Song"
                 song={song}
-                />
+              />
             </div>
           ))}
         </div>
-        </ScrollButtons>
+      </ScrollButtons>
     </>
+  )
 }
