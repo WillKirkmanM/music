@@ -1,16 +1,15 @@
 "use client"
 
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@music/ui/components/resizable"
-import { useContext, useState, useEffect } from "react"
-import Image from "next/image"
-import { PanelContext } from "./QueuePanelContext"
-import { usePlayer } from "../Player/usePlayer"
-import imageToBase64 from "@/actions/ImageToBase64"
-import Artist from "@/types/Music/Artist"
-import Song from "@/types/Music/Song"
-import Album from "@/types/Music/Album"
-import Link from "next/link"
-import { Separator } from "@music/ui/components/separator"
+import getBaseURL from "@/lib/Server/getBaseURL";
+
+import { Album, Artist, LibrarySong } from "@music/sdk/types";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@music/ui/components/resizable";
+import { Separator } from "@music/ui/components/separator";
+import Image from "next/image";
+import Link from "next/link";
+import { useContext, useEffect, useState } from "react";
+import { usePlayer } from "../Player/usePlayer";
+import { PanelContext } from "./QueuePanelContext";
 
 type QueuePanelProps = {
   children: React.ReactNode
@@ -48,7 +47,7 @@ export default function QueuePanel({ children }: QueuePanelProps) {
 
 type Queue = {
   queueItem: {
-    song: Song
+    song: LibrarySong
     artist: Artist,
     album: Album
   }
@@ -58,16 +57,7 @@ function QueueItem({ queueItem }: Queue) {
   const [imageSrc, setImageSrc] = useState("")
 
   useEffect(() => {
-    const handlePlay = async (coverURL: string) => {
-      let base64Image = coverURL
-      if (coverURL.length > 0) {
-        base64Image = await imageToBase64(coverURL)
-      }
-
-      setImageSrc(`data:image/jpg;base64,${base64Image}`)
-    }
-
-    handlePlay(queueItem.album.cover_url)
+    setImageSrc(`${getBaseURL()}/image/${encodeURIComponent(queueItem.album.cover_url)}`)
   }, [queueItem.album.cover_url])
 
   const { song, artist, album } = queueItem
@@ -77,8 +67,8 @@ function QueueItem({ queueItem }: Queue) {
     <div className="flex items-center">
       <Image src={imageSrc} width={64} height={64} alt={song.name + " Image"} className="rounded h-10 w-10"/>
       <div className="ml-4">
-        <Link href={`/album/${album.id}`}><p>{song.name}</p></Link>
-        <Link href={`/artist/${artist.id}`}><p>{artist.name}</p></Link>
+        <Link href={`/album?id=${album.id}`}><p>{song.name}</p></Link>
+        <Link href={`/artist?id=${artist.id}`}><p>{artist.name}</p></Link>
       </div>
     </div>
   <Separator className="my-2 bg-gray-700"/>
