@@ -1,10 +1,11 @@
 "use client";
 
-import { LyricsContext } from "./LyricsOverlayContext";
-import { useState, useEffect, useContext, useRef } from "react";
-import { usePlayer } from "../Music/Player/usePlayer";
-import { FastAverageColor } from "fast-average-color";
 import { ScrollArea } from "@music/ui/components/scroll-area";
+import { FastAverageColor } from "fast-average-color";
+import Image from "next/image";
+import { useContext, useEffect, useRef, useState } from "react";
+import { usePlayer } from "../Music/Player/usePlayer";
+import { LyricsContext } from "./LyricsOverlayContext";
 
 type QueuePanelProps = {
   children: React.ReactNode;
@@ -180,7 +181,8 @@ export default function LyricsOverlay({ children }: QueuePanelProps) {
 
   return areLyricsVisible ? (
     <>
-    <div className="bg-cover bg-center blur-3xl" style={{ backgroundImage: `url(${imageSrc})`, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', filter: 'blur(96px) brightness(50%)' }} />
+    {/* <div className="bg-cover bg-center blur-3xl" style={{ backgroundImage: `url(${imageSrc})`, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', filter: 'blur(96px) brightness(50%)' }} /> */}
+    <Image className="bg-cover bg-center blur-3xl" alt={`${song.name} Cover`} width={1000} height={1000} src={imageSrc} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', filter: 'blur(96px) brightness(50%)' }} />
     <ScrollArea className="h-full overflow-x-hidden overflow-y-auto">
       <div
         onScroll={handleScroll}
