@@ -1,7 +1,7 @@
 "use client"
 
-import { createContext, useEffect, useState, Suspense } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation';
+import { createContext, Suspense, useEffect, useState } from 'react';
 
 export const LyricsContext = createContext({
   areLyricsVisible: false,
@@ -26,8 +26,8 @@ function LyricsOverlayProvider({ children }: PanelProviderProps) {
 
   return (
     <LyricsContext.Provider value={{ areLyricsVisible, toggleLyrics, setLyricsVisible, currentLyrics, setCurrentLyrics }}>
-      <Suspense fallback={<div>Loading...</div>}>
-        <SearchParamsComponent setLyricsVisible={setLyricsVisible} pathName={pathName} />
+      <Suspense>
+        <SearchParamsComponent setLyricsVisible={setLyricsVisible} pathName={pathName ?? ""} />
       </Suspense>
       {children}
     </LyricsContext.Provider>

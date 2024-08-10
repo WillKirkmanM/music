@@ -1,5 +1,7 @@
 "use client"
 
+import getBaseURL from "@/lib/Server/getBaseURL";
+
 import PlaylistCard from "@/components/Music/Playlist/PlaylistCard";
 import {
   Table,
@@ -8,54 +10,40 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@music/ui/components/table"
-import {} from "@tanstack/react-table"
+} from "@music/ui/components/table";
+import { } from "@tanstack/react-table";
 
 import { usePlayer } from "@/components/Music/Player/usePlayer";
-import Song from "@/types/Music/Song";
-import imageToBase64 from "@/actions/ImageToBase64";
+import getSession from "@/lib/Authentication/JWT/getSession";
+import { Album, Artist, LibrarySong } from "@music/sdk/types";
 import SongContextMenu from "../SongContextMenu";
-import Album from "@/types/Music/Album";
-import Artist from "@/types/Music/Artist";
-import Link from "next/link";
-import { startTransition, useEffect, useState } from "react";
-import getServerIpAddress from "@/actions/System/GetIpAddress";
-import { useSession } from "next-auth/react";
-import GetPort from "@/actions/System/GetPort";
 
 type PlaylistTableProps = {
-  songs: Song[]
+  songs: LibrarySong[]
   album: Album & { artist_object: Artist }
   artist: Artist
 }
 
 export default function AlbumTable({ songs, album, artist }: PlaylistTableProps) {
-  const { setImageSrc, setSong, setAudioSource, setArtist, setAlbum } = usePlayer()
-  const [serverIP, setServerIP] = useState("");
-  const [port, setPort] = useState(0)
+  const { setImageSrc, setSong, setAudioSource, setArtist, setAlbum, addToQueue } = usePlayer()
 
-  const session = useSession()
-  const bitrate = session.data?.user.bitrate
+  const session = getSession()
+  const bitrate = session?.bitrate ?? 0
 
-  useEffect(() => {
-    async function getServerInformation() {
-      const ip = typeof window !== 'undefined' ? window.location.hostname : await getServerIpAddress();
-      setServerIP(ip);
-
-      const port = typeof window !== 'undefined' ? parseInt(window.location.port) : await GetPort();
-      setPort(port);
-    }
-
-    getServerInformation();
-  }, []);
-
-  const handlePlay = async (coverURL: string, song: Song, songURL: string, artist: Artist) => {
-    setImageSrc(`http://${serverIP}:${port}/server/image/${encodeURIComponent(album.cover_url)}`)
-    setArtist(artist)
-    setAlbum(album)
-    setSong(song)
-    setAudioSource(songURL)
-  }
+  const handlePlay = async (coverURL: string, song: LibrarySong, songURL: string, artist: Artist) => {
+    setImageSrc(`${getBaseURL()}/image/${encodeURIComponent(album.cover_url)}`);
+    setArtist(artist);
+    setAlbum(album);
+    setSong(song);
+    setAudioSource(songURL);
+  
+    let track_number = song.track_number;
+  
+    const songsToQueue = album.songs.filter((s) => s.track_number >= track_number);
+    songsToQueue.forEach((s) => {
+      addToQueue(s, album, artist);
+    });
+  };
 
   function formatDuration(duration: number) {
     const minutes = Math.floor(duration / 60);
@@ -80,8 +68,8 @@ export default function AlbumTable({ songs, album, artist }: PlaylistTableProps)
 
         {songs.map(song => (
           <SongContextMenu song={song} album={album} artist={artist} key={song.id}>
-            <TableBody key={song.id}>
-              <TableRow id={sanitizeSongName(song.name)} onClick={() => handlePlay(album.cover_url, song, `http://${serverIP}:${port}/server/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`, artist)}>
+            <TableBody key={song.id} >
+              <TableRow id={sanitizeSongName(song.name)} onClick={() => handlePlay(album.cover_url, song, `${getBaseURL()}/api/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`, artist)}>
                 <TableCell className="font-medium">{song.track_number}</TableCell>
                 <TableCell>
                   <div className="w-[300px] overflow-hidden whitespace-nowrap text-overflow">

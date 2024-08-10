@@ -1,9 +1,7 @@
 "use client";
 
-import { DeletePlaylist } from "@/actions/Playlist/DeletePlaylist";
+import { deletePlaylist } from "@music/sdk";
 import { Button } from "@music/ui/components/button";
-import { Loader2, X } from "lucide-react";
-import { useTransition } from "react";
 import {
   Dialog,
   DialogClose,
@@ -14,6 +12,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@music/ui/components/dialog";
+import { Loader2, X } from "lucide-react";
+import { useTransition } from "react";
 
 type DeletePlaylistButtonProps = {
   playlistID: string;
@@ -47,7 +47,7 @@ export default function DeletePlaylistButton({
           <Button
             variant="destructive"
             disabled={isPending}
-            onClick={() => startTransition(() => DeletePlaylist(playlistID))}
+            onClick={() => deletePlaylist(Number(playlistID))}
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Confirm

@@ -1,16 +1,15 @@
 "use client"
 
-import { User } from "@prisma/client"
-import follow from "@/actions/Friends/Follow"
+import getSession from "@/lib/Authentication/JWT/getSession"
+import { follow } from "@music/sdk"
 import { Button } from "@music/ui/components/button"
 
 type FollowButtonProps = {
-  loggedInUser: User 
-  userToFollow: User
+  userIDToFollow: number 
 }
 
-export default function FollowButton({ loggedInUser, userToFollow }: FollowButtonProps) {
-  return (
-    <Button onClick={() => follow(loggedInUser, userToFollow)}>Follow</Button>
-  )
+export default function FollowButton({ userIDToFollow }: FollowButtonProps) {
+  const session = getSession()
+
+  return session && <Button onClick={() => follow(Number(session.sub), userIDToFollow)}>Follow</Button>
 }

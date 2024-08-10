@@ -1,51 +1,63 @@
 "use client"
 
+import getSession from "@/lib/Authentication/JWT/getSession";
+import { getFollowers, getNowPlaying, getSongInfo, getUserInfoById } from "@music/sdk";
+import { Album, Artist, LibrarySong as Song, User } from "@music/sdk/types";
+import { Avatar, AvatarFallback, AvatarImage } from "@music/ui/components/avatar";
+import { Disc3Icon } from 'lucide-react';
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import GetActivity from "@/actions/Friends/GetActivity";
-import { useSession } from "next-auth/react";
-import { Disc3Icon } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from "@music/ui/components/avatar";
 
-type Friend = {
+type Friend = User & {
   nowPlaying: {
-    song: any;
-    album: any;
-    artist: any;
-  };
-  id: string;
-  name: string | null;
-  username: string;
-  password: string;
-  email: string | null;
-  emailVerified: Date | null;
-  image: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+    artist: Artist,
+    album: Album,
+    song: Song,
+  } | null
 }
 
 export default function FriendActivity() {
   const [friends, setFriends] = useState<Friend[]>([])
 
-  const session = useSession()
-  const username = session?.data?.user.username
-
-  useEffect(() => {
+    useEffect(() => {
+    const session = getSession();
     async function getActivity() {
-      if (username) {
-        const friends = await GetActivity(username)
-        setFriends(friends || [])
+      if (session) {
+        const followerIDs = await getFollowers(Number(session?.sub) ?? "");
+        const friends = await Promise.all(followerIDs.map(async (id: number) => {
+          const friend = await getUserInfoById(id);
+          const nowPlayingSongID = await getNowPlaying(id);
+          
+          if (nowPlayingSongID) {
+            const songResponse = await getSongInfo(String(nowPlayingSongID.now_playing) ?? 0);
+            return {
+              ...friend,
+              nowPlaying: {
+                artist: songResponse.artist_object,
+                album: songResponse.album_object,
+                song: songResponse,
+              }
+            };
+          } else {
+            return {
+              ...friend,
+              nowPlaying: null
+            };
+          }
+        }));
+        
+        setFriends(friends as any as Friend[]);
       }
     }
   
-    getActivity()
+    getActivity();
   
-    const intervalId = setInterval(getActivity, 5000)
+    const intervalId = setInterval(getActivity, 5000);
   
     return () => {
-      clearInterval(intervalId)
-    }
-  }, [username])
+      clearInterval(intervalId);
+    };
+  }, []);
 
   
   return friends &&  (
@@ -61,11 +73,20 @@ export default function FriendActivity() {
             <p className="text-sm">{friend.username}</p>
             {friend.nowPlaying && friend.nowPlaying.album &&
               <>
-                <Link href={`/album/${friend.nowPlaying.album.id}`}><p className="text-sm">{friend.nowPlaying.song.name}</p></Link>
-                {friend.nowPlaying.artist && <Link href={`/artist/${friend.nowPlaying.artist.id}`}><p className="text-sm">{friend.nowPlaying.artist.name}</p></Link>}
+                <Link href={`/album?id=${friend.nowPlaying.album.id}`}><p className="text-sm">{friend.nowPlaying.song.name}</p></Link>
+                {friend.nowPlaying.artist && <Link href={`/artist?id=${friend.nowPlaying.artist.id}`}><p className="text-sm">{friend.nowPlaying.artist.name}</p></Link>}
                 <div className="flex flex-row items-center text-base">
                   <Disc3Icon className="mr-1" size={16} />
-                  <Link href={`/album/${friend.nowPlaying.album.id}`}><p className="truncate">{friend.nowPlaying.album.name}</p></Link>
+                  <Link href={`/album?id=${friend.nowPlaying.album.id}`}>
+                    <p
+                      className="truncate overflow-hidden whitespace-nowrap text-ellipsis"
+                      title={friend.nowPlaying.album.name.length > 20 ? friend.nowPlaying.album.name : ''}
+                    >
+                      {friend.nowPlaying.album.name.length > 20
+                        ? `${friend.nowPlaying.album.name.substring(0, 20)}...`
+                        : friend.nowPlaying.album.name}
+                    </p>
+                  </Link>
                 </div>
               </>
             }

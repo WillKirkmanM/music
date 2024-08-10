@@ -7,15 +7,10 @@
     "lint": "turbo lint",
     "start": "turbo start",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-
-    "generate": "prisma generate",
-    "push": "prisma db push",
-    "studio": "npx prisma studio",
-    "migrate": "prisma migrate dev",
-
     "ui:add": "yarn --filter @music/ui ui:add"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^1.6.0",
     "prettier": "^3.2.5",
     "turbo": "latest"
   },
@@ -26,5 +21,10 @@
   "workspaces": [
     "apps/*",
     "packages/*"
+  ],
+  "trustedDependencies": [
+    "core-js-pure",
+    "electron",
+    "esbuild"
   ]
 }

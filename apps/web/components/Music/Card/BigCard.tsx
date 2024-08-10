@@ -1,14 +1,12 @@
 "use client"
 
+import { useGradientHover } from "@/components/Providers/GradientHoverProvider"
+import { Album, Artist, LibrarySong } from "@music/sdk/types"
+import { FastAverageColor } from "fast-average-color"
 import Image from "next/image"
+import Link from "next/link"
 import { usePlayer } from "../Player/usePlayer"
 import SongContextMenu from "../SongContextMenu"
-import Song from "@/types/Music/Song"
-import Link from "next/link"
-import Artist from "@/types/Music/Artist"
-import Album from "@/types/Music/Album"
-import { useGradientHover } from "@/components/Providers/GradientHoverProvider"
-import { FastAverageColor } from "fast-average-color"
 
 type BigCardProps = {
   imageSrc: string,
@@ -17,7 +15,7 @@ type BigCardProps = {
   songURL: string,
   albumURL: string
   type: string
-  song: Song
+  song: LibrarySong
   album: Album
 }
 
@@ -53,12 +51,12 @@ export default function BigCard({ imageSrc, title, artist, songURL, albumURL, ty
   return (
     <div className="w-44 h-44" onMouseEnter={setDominantGradient}>
       <SongContextMenu song={song} album={album} artist={artist}>
-        <Image src={imageSrc} alt={title + " Image"} height={512} width={512} className="rounded cursor-pointer transition-filter duration-300 hover:brightness-50" onClick={handlePlay}/>
+        <Image src={imageSrc} alt={title + " Image"} height={512} width={512} loading="lazy" className="rounded cursor-pointer transition-filter duration-300 hover:brightness-50" onClick={handlePlay}/>
       </SongContextMenu>
 
       <div className="flex flex-col text-left mt-3">
-        <p className="font-bold text-white overflow-hidden overflow-ellipsis whitespace-nowrap" title={title}><Link href={`/album/${album.id}`}>{title}</Link></p>
-        <p className="text-gray-400">{type} • <Link href={`/artist/${artist.id ?? "0"}`}>{artist.name}</Link></p>
+        <p className="font-bold text-white overflow-hidden overflow-ellipsis whitespace-nowrap" title={title}><Link href={`/album?id=${album.id}`}>{title}</Link></p>
+        <p className="text-gray-400">{type} • <Link href={`/artist?id=${artist.id ?? "0"}`}>{artist.name}</Link></p>
       </div>
     </div>
   )

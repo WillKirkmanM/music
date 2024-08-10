@@ -1,8 +1,8 @@
 "use client"
 
-import { z } from "zod"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
 import { Button } from "@music/ui/components/button"
 import {
@@ -14,7 +14,6 @@ import {
   FormMessage,
 } from "@music/ui/components/form"
 import { Input } from "@music/ui/components/input"
-import { signIn } from "next-auth/react"
 
 const registerSchema = z.object({
   username: z.string().min(1, { message: "Username must be longer than 1 character" }),
@@ -32,7 +31,7 @@ export default function Register() {
  
 async function onSubmit(values: z.infer<typeof registerSchema>) {
   try {
-    const response = await fetch('/api/auth/createUser', {
+    const response = await fetch('/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -44,20 +43,9 @@ async function onSubmit(values: z.infer<typeof registerSchema>) {
     });
 
     if (response.ok) {
-      await signIn("credentials", {
-        username: values.username,
-        password: values.password,
-        redirect: true,
-        callbackUrl: "/"
-      })
-    }
-
-    if (!response.ok) {
+    } else {
       throw new Error('Response was not ok');
     }
-
-    const newUser = await response.json();
-    console.log(newUser);
   } catch (error) {
     console.error(error);
   }
