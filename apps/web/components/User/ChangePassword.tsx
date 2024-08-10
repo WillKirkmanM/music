@@ -1,26 +1,13 @@
 "use client";
 
-import { z } from "zod";
-import { useForm } from "react-hook-form";
+import getSession from "@/lib/Authentication/JWT/getSession";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { changePassword } from "@music/sdk";
 import { Button } from "@music/ui/components/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogClose,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@music/ui/components/dialog";
 import { Input } from "@music/ui/components/input";
 import { Label } from "@music/ui/components/label";
-import { toast } from "sonner";
-import { User } from "@prisma/client";
-import { useSession } from "next-auth/react";
-import ChangePasswordRequest from "@/actions/Authentication/ChangePassword";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@music/ui/components/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const changePasswordSchema = z.object({
   password: z
@@ -32,8 +19,7 @@ const changePasswordSchema = z.object({
 });
 
 export function ChangePassword() {
-  const session = useSession();
-  const username = session.data?.user.username ?? "";
+  const session = getSession()
 
   const form = useForm<z.infer<typeof changePasswordSchema>>({
     resolver: zodResolver(changePasswordSchema),
@@ -45,7 +31,7 @@ export function ChangePassword() {
 
   const onSubmit = async (data: z.infer<typeof changePasswordSchema>) => {
     if (data.password === data.confirmPassword) {
-      await ChangePasswordRequest(username, data.password);
+        await changePassword(session?.username ?? "", data.password, data.confirmPassword);
     } else {
       // handle password mismatch
     }
