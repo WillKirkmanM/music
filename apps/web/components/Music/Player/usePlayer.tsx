@@ -1,23 +1,20 @@
-"use client";
+"use client"
+
+import getBaseURL from "@/lib/Server/getBaseURL";
+;
 
 import {
-  useState,
-  useRef,
-  useEffect,
+  createContext,
   useCallback,
   useContext,
+  useEffect,
+  useRef,
+  useState,
 } from "react";
-import { createContext } from "react";
 
-import type Song from "@/types/Music/Song";
-import Artist from "@/types/Music/Artist";
-import Album from "@/types/Music/Album";
-import imageToBase64 from "@/actions/ImageToBase64";
-import SetNowPlaying from "@/actions/Player/SetNowPlaying";
-import { useSession } from "next-auth/react";
-import getServerIpAddress from "@/actions/System/GetIpAddress";
-import GetPort from "@/actions/System/GetPort";
-import AddSongToHistory from "@/actions/Player/AddSongToHistory";
+import getSession from "@/lib/Authentication/JWT/getSession";
+import { addSongToListenHistory, getRandomSong, setNowPlaying } from "@music/sdk";
+import { Album, Artist, LibrarySong, } from "@music/sdk/types";
 
 const isBrowser = typeof window !== "undefined";
 const audioElement = isBrowser ? new Audio() : null;
@@ -49,14 +46,14 @@ type PlayerContextType = {
   setBufferedTime: Function;
   bufferedTime: number;
   imageSrc: string;
-  song: Song;
+  song: LibrarySong;
   artist: Artist;
   album: Album;
   queue: Queue[];
 };
 
 type Queue = {
-  song: Song;
+  song: LibrarySong;
   album: Album;
   artist: Artist;
 };
@@ -71,23 +68,23 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const audioRef = useRef<HTMLAudioElement>(audioElement);
   const audio = audioRef.current as HTMLAudioElement;
 
-  const user = useSession()
-
   const [imageSrc, setImageSrc] = useState("");
   const [audioSource, setAudioSource] = useState("");
-  const [song, setSong] = useState<Song>({
+  const [song, setSong] = useState<LibrarySong>({
     artist: "",
     contributing_artists: [],
     name: "",
     path: "",
     track_number: 0,
-    id: "",
-    duration: 0
+    id: 0,
+    duration: 0,
+    artist_object: {albums: [], description: "", followers: 0, icon_url: "", id: 0, name: ""},
+    album_object: {cover_url: "", description: "", first_release_date: "", id: 0, musicbrainz_id: "", name: "", primary_type: "", songs: [], wikidata_id: ""},
   });
-  const [artist, setArtist] = useState<Artist>({ albums: [], id: "", name: "", followers: 0, icon_url: "", description: "" });
+  const [artist, setArtist] = useState<Artist>({ albums: [], id: 0, name: "", followers: 0, icon_url: "", description: "" });
   const [album, setAlbum] = useState<Album>({
     cover_url: "",
-    id: "",
+    id: 0,
     name: "",
     description: "",
     first_release_date: "",
@@ -111,33 +108,22 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const [base64Image, setBase64Image] = useState("")
   const [bufferedTime, setBufferedTime] = useState(0)
 
-  const [serverIP, setServerIP] = useState("");
-  const [port, setPort] = useState(0)
-
-  const session = useSession()
-  const bitrate = session.data?.user.bitrate
-
-  useEffect(() => {
-    async function getServerInformation() {
-      const ip = typeof window !== 'undefined' ? window.location.hostname : await getServerIpAddress();
-      setServerIP(ip);
-
-      const port = typeof window !== 'undefined' ? parseInt(window.location.port) : await GetPort();
-      setPort(port);
-    }
-
-    getServerInformation();
-  }, []);
-
   const lastAddedSongIdRef = useRef<string | null>(null);
 
+  let bitrate = 0
+
+  const session = getSession()
+
   useEffect(() => {
-    if (song.id && user.data && lastAddedSongIdRef.current != String(song.id)) {
-      SetNowPlaying(user.data.user.username, String(song.id));
-      AddSongToHistory(user.data.user.username, String(song.id));
-      lastAddedSongIdRef.current = String(song.id)
+    if (song.id && lastAddedSongIdRef.current != String(song.id)) {
+      if (session) {
+        setNowPlaying(Number(session.sub), String(song.id))
+        addSongToListenHistory(Number(session.sub), String(song.id))
+        
+        lastAddedSongIdRef.current = String(song.id)
+      }
     }
-  }, [song.id, user.data]);
+  }, [song.id, session]);
   
   const playAudioSource = useCallback(() => {
     if (audio) {
@@ -157,7 +143,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   }, []);
 
   const setSongCallback = useCallback(
-    async (song: Song, artist: Artist, album: Album) => {
+    async (song: LibrarySong, artist: Artist, album: Album) => {
       setSong(song);
       setArtist(artist);
       setAlbum(album);
@@ -165,37 +151,50 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         setBase64Image("/snf.png");
         setImageSrc("/snf.png");
       } else {
-        imageToBase64(album.cover_url).then((base64) => {
-          const base64Data = `data:image/jpg;base64,${base64}`;
-          setBase64Image(base64Data);
-          setImageSrc(base64Data);
-        });
+        // imageToBase64(album.cover_url).then((base64) => {
+        //   const base64Data = `data:image/jpg;base64,${base64}`;
+        //   setBase64Image(base64Data);
+        // });
+          setImageSrc(`${getBaseURL()}/image/${encodeURIComponent(album.cover_url)}`);
       }
-      setAudioSource(`http://${serverIP}:${port}/server/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`);
+      setAudioSource(`${getBaseURL()}/api/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`);
 
       const index = queueRef.current.findIndex((q) => q.song.id === song.id);
       if (index !== -1) {
         setCurrentSongIndex(index);
       }
     },
-    [setSong, serverIP, bitrate, port]
+    [setSong, bitrate]
   );
 
-  const playNextSong = useCallback(() => {
+  const playNextSong = useCallback(async () => {
     let nextSongIndex = currentSongIndex + 1;
     if (nextSongIndex >= queueRef.current.length) {
       nextSongIndex = 0;
     }
     setCurrentSongIndex(nextSongIndex);
     const next = queueRef.current[nextSongIndex];
+  
     if (next) {
-      const nextSong = next!.song;
-      const nextArtist = next!.artist;
-      const nextAlbum = next!.album;
-      
+      const nextSong = next.song;
+      const nextArtist = next.artist;
+      const nextAlbum = next.album;
+  
       if (nextSong) {
         setSongCallback(nextSong, nextArtist, nextAlbum);
         playAudioSource();
+      }
+    } else {
+      const randomSongs = await getRandomSong(1);
+      if (randomSongs && randomSongs.length > 0) {
+        const randomSong = randomSongs[0];
+        if (randomSong) {
+          const randomArtist = randomSong.artist_object;
+          const randomAlbum = randomSong.album_object;
+      
+          setSongCallback(randomSong, randomArtist, randomAlbum);
+          playAudioSource();
+        }
       }
     }
   }, [currentSongIndex, setSongCallback, playAudioSource]);
@@ -236,28 +235,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       audio.addEventListener("ended", playNextSong);
 
       if ('mediaSession' in navigator) {
-        // This creates a blob url for the artwork. Either base64 directly or a blob url.
-        // const base64Pattern = /^data:image\/[a-z]+;base64,/;
-        // const cleanImageSrc = imageSrc.replace(base64Pattern, "");
-
-        // const byteCharacters = atob(cleanImageSrc);
-        // const byteNumbers = new Array(byteCharacters.length);
-        // for (let i = 0; i < byteCharacters.length; i++) {
-        //   byteNumbers[i] = byteCharacters.charCodeAt(i);
-        // }
-        // const byteArray = new Uint8Array(byteNumbers);
-        // const blob = new Blob([byteArray], { type: "image/jpeg" });
-        // const imageUrl = URL.createObjectURL(blob);
-
         // Normalizing the path is necessary to remove the Windows long path prefix ("\\?\") if present.
         // This prefix allows Windows applications to handle paths longer than the MAX_PATH limit (260 characters),
         // but it's not recognized by web browsers or servers. Removing it ensures the path can be used in URLs
         // More Here:
         // https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
         let normalisedAlbumPath = album.cover_url.startsWith("\\\\?\\") ? album.cover_url.substring(4) : album.cover_url
-        let albumPath = `http://${serverIP}:${port}/server/image/${encodeURIComponent(normalisedAlbumPath)}`
-
-        if (!serverIP || !port) return
+        let albumPath = `${getBaseURL()}/image/${encodeURIComponent(normalisedAlbumPath)}?raw=true`
 
         navigator.mediaSession.metadata = new MediaMetadata({
           title: song.name,
@@ -275,7 +259,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     return () => {
       audio.removeEventListener("ended", playNextSong);
     };
-  }, [audioSource, audio, song, playNextSong, album.name, imageSrc, playPreviousSong, album.cover_url, serverIP, port]);
+  }, [audioSource, audio, song, playNextSong, album.name, imageSrc, playPreviousSong, album.cover_url]);
 
   const removeFromQueue = useCallback((index: number) => {
     const newQueue = [...queueRef.current];
@@ -284,7 +268,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     setQueueState(newQueue);
   }, []);
 
-  const addToQueue = useCallback((song: Song, album: Album, artist: Artist) => {
+  const addToQueue = useCallback((song: LibrarySong, album: Album, artist: Artist) => {
     const newQueue = [...queueRef.current, { song, album, artist }];
     queueRef.current = newQueue;
     setQueueState(newQueue);
