@@ -1,12 +1,12 @@
 "use client"
 
-import { User } from "@prisma/client"
 import { Input } from "@music/ui/components/input"
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
+import getSession from "@/lib/Authentication/JWT/getSession"
 import { Button } from "@music/ui/components/button"
 import {
   Form,
@@ -16,11 +16,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@music/ui/components/form"
-import { useSession } from "next-auth/react"
 
 export default function Username() {
-  const session = useSession()
-  const username = session.data?.user.username
+  const session = getSession()
+  const username = session?.username
 
   const FormSchema = z.object({
     username: z.string()
