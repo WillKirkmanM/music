@@ -1,0 +1,9 @@
+{
+  // "extends": "@music/typescript-config/base.json",
+  "compilerOptions": {
+    "paths": {
+      "@": ["./src/"],
+      "@music/sdk": ["./src/index.ts"]
+    }
+  }
+}
