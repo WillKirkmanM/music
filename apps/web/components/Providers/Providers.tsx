@@ -1,14 +1,12 @@
 import { ReactNode } from 'react';
-import { ThemeProvider } from './ThemeProvider';
-import { PlayerProvider } from '../Music/Player/usePlayer';
-import NextAuthSessionProvider from '@/lib/Authentication/Sessions/SessionProvider';
-import PanelProvider from '../Music/Queue/QueuePanelContext';
+import AIOverlayProvider from '../AI/AIOverlayContext';
 import LyricsOverlayProvider from '../Lyrics/LyricsOverlayContext';
-import RestrictedAppProvider from '@/lib/Authentication/Sessions/RestrictedAppProvider';
+import { PlayerProvider } from '../Music/Player/usePlayer';
+import PanelProvider from '../Music/Queue/QueuePanelContext';
+import { GradientHoverProvider } from './GradientHoverProvider';
 import { ScrollProvider } from './ScrollProvider';
 import SidebarProvider from './SideBarProvider';
-import { GradientHoverProvider } from './GradientHoverProvider';
-import AIOverlayProvider from '../AI/AIOverlayContext';
+import { ThemeProvider } from './ThemeProvider';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -17,25 +15,21 @@ interface ProvidersProps {
 export default function Providers({ children }: ProvidersProps) {
   return (
     <ThemeProvider>
-      <NextAuthSessionProvider>
-        <RestrictedAppProvider>
-          <GradientHoverProvider>
-            <ScrollProvider>
-              <SidebarProvider>
-                <PlayerProvider>
-                  <PanelProvider>
-                    <LyricsOverlayProvider>
-                      <AIOverlayProvider>
-                        {children}
-                      </AIOverlayProvider>
-                    </LyricsOverlayProvider>
-                  </PanelProvider>
-                </PlayerProvider>
-              </SidebarProvider>
-            </ScrollProvider>
-          </GradientHoverProvider>
-        </RestrictedAppProvider>
-      </NextAuthSessionProvider>
+        <GradientHoverProvider>
+          <ScrollProvider>
+            <SidebarProvider>
+              <PlayerProvider>
+                <PanelProvider>
+                  <LyricsOverlayProvider>
+                    <AIOverlayProvider>
+                      {children}
+                    </AIOverlayProvider>
+                  </LyricsOverlayProvider>
+                </PanelProvider>
+              </PlayerProvider>
+            </SidebarProvider>
+          </ScrollProvider>
+        </GradientHoverProvider>
     </ThemeProvider>
   );
 }
