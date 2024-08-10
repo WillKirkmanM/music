@@ -1,7 +1,7 @@
 "use client"
 
-import CreatePlaylist from "@/actions/Playlist/CreatePlaylist"
-import getServerSession from "@/lib/Authentication/Sessions/GetServerSession"
+import getSession from "@/lib/Authentication/JWT/getSession"
+import { createPlaylist } from "@music/sdk"
 import { Button } from "@music/ui/components/button"
 import {
   Dialog,
@@ -19,13 +19,15 @@ import { useState, useTransition } from "react"
 
 type CreatePlaylistDialog = {
   children: React.ReactNode
-  username: string
 }
 
-export default function CreatePlaylistDialog({ children, username}: CreatePlaylistDialog) {
+export default function CreatePlaylistDialog({ children }: CreatePlaylistDialog) {
   const [playlistName, setPlaylistName] = useState("")
   const [openDialog, setOpenDialog] = useState(false)
   const [isPending, startTransition] = useTransition()
+
+  const session = getSession()
+  const username = session?.username
 
   const open = () => setOpenDialog(true)
   const close = () => setOpenDialog(false)
@@ -57,7 +59,7 @@ export default function CreatePlaylistDialog({ children, username}: CreatePlayli
           </div>
         </div>
         <DialogFooter>
-          <Button type="submit" disabled={isPending} onClick={() => startTransition(() => CreatePlaylist(playlistName, username).then(close))}>
+          <Button type="submit" disabled={isPending} onClick={() => createPlaylist(Number(session?.sub), playlistName).then(close)}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
             Create Playlist
           </Button>
