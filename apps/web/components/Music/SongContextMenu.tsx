@@ -1,44 +1,37 @@
 import {
   ContextMenu,
-  ContextMenuCheckboxItem,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuSub,
   ContextMenuSubContent,
   ContextMenuSubTrigger,
-  ContextMenuTrigger,
+  ContextMenuTrigger
 } from "@music/ui/components/context-menu";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from "@music/ui/components/dialog";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
-  TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@music/ui/components/table";
 
 
-import Bars3Left from "../Icons/Bars3Left";
-import Song from "@/types/Music/Song";
-import { useSession } from "next-auth/react";
-import { useState, useEffect, useTransition } from "react";
-import GetPlaylists from "@/actions/Playlist/GetPlaylists";
-import AddSongToPlaylist from "@/actions/Playlist/AddSongToPlaylist";
+import getSession from "@/lib/Authentication/JWT/getSession";
+import { addSongToPlaylist, getPlaylists, PlaylistsResponse } from "@music/sdk";
+import { Album, Artist, LibrarySong } from "@music/sdk/types";
 import { CircleArrowUp, CirclePlus, ExternalLink, ListEnd, Plus, UserRoundSearch } from "lucide-react";
-import { usePlayer } from "./Player/usePlayer";
-import Artist from "@/types/Music/Artist";
-import Album from "@/types/Music/Album";
 import Link from "next/link";
+import { useEffect, useState, useTransition } from "react";
+import Bars3Left from "../Icons/Bars3Left";
+import { usePlayer } from "./Player/usePlayer";
 
 export default function SongContextMenu({
   children,
@@ -47,24 +40,20 @@ export default function SongContextMenu({
   album,
 }: {
   children: React.ReactNode;
-  song: Song;
+  song: LibrarySong;
   artist: Artist;
   album: Album;
 }) {
-  const [playlists, setPlaylists] = useState<
-    { id: string; name: string; createdAt: Date; updatedAt: Date }[] | undefined
-  >(undefined);
-  const session = useSession();
+  const [playlists, setPlaylists] = useState<PlaylistsResponse[] | null>(null);
 
   useEffect(() => {
-    const getPlaylists = async () => {
-      if (session.status != "loading" && session.status == "authenticated") {
-        let playlists = await GetPlaylists(session.data.user.username);
+    const getPlaylistsRequest = async () => {
+        const session = getSession()
+        let playlists = await getPlaylists(Number(session?.sub) ?? 0)
         setPlaylists(playlists);
       }
-    };
-    getPlaylists();
-  }, [session]);
+    getPlaylistsRequest();
+  }, []);
 
   const [isPending, startTransition] = useTransition()
 
@@ -85,7 +74,7 @@ export default function SongContextMenu({
               <ContextMenuSubContent className="w-48">
                 {playlists?.map((playlist) => (
                   <div key={playlist.name}>
-                    <ContextMenuItem onClick={() => startTransition(() => AddSongToPlaylist(String(song.id), playlist.id))}>{playlist.name}</ContextMenuItem>
+                    <ContextMenuItem onClick={() => addSongToPlaylist(playlist.id, song.id)}>{playlist.name}</ContextMenuItem>
                   </div>
                 ))}
               </ContextMenuSubContent>
@@ -104,7 +93,7 @@ export default function SongContextMenu({
 
           <ContextMenuSeparator />
 
-          <Link href={`/artist/${artist.id}`}>
+          <Link href={`/artist?id=${artist.id}`}>
             <ContextMenuItem>
               <UserRoundSearch className="size-5"/>
               <p className="pl-3">Go to Artist</p>
