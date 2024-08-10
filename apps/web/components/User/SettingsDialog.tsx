@@ -1,3 +1,4 @@
+import { invalidateCache } from "@/lib/Caching/cache";
 import { Button } from "@music/ui/components/button";
 import {
   DialogContent,
@@ -5,19 +6,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@music/ui/components/dialog";
-import ChangeBitrate from "./ChangeBitrate";
-import { ChangePassword } from "./ChangePassword";
-import Username from "./Username";
-import { RevalidateAll, RevalidateTag } from "@/actions/Caching/Revalidate";
-import { ScrollArea, ScrollBar } from "@music/ui/components/scroll-area";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@music/ui/components/tabs";
+import ChangeBitrate from "./ChangeBitrate";
+import { ChangePassword } from "./ChangePassword";
+import Username from "./Username";
 
 export default function SettingsDialog() {
+
   return (
     <DialogContent className="text-black overflow-x-auto">
       <DialogHeader>
@@ -34,7 +34,6 @@ export default function SettingsDialog() {
           <TabsTrigger value="audio">Audio</TabsTrigger>
           <TabsTrigger value="cache">Cache</TabsTrigger>
         </TabsList>
-
         <TabsContent value="general">
           <Username />
           <ChangePassword />
@@ -47,53 +46,36 @@ export default function SettingsDialog() {
         <TabsContent value="cache">
           <div className="grid grid-cols-3 gap-4">
             <div className="col-span-3 md:col-span-1 mb-4">
-              <form onSubmit={RevalidateAll}>
+              <form onSubmit={() => {}}>
                 <Button type="submit">Everything</Button>
               </form>
             </div>
 
             <div className="col-span-3 md:col-span-1 mb-4">
-              <form
-                onSubmit={() => {
-                  RevalidateTag("landing-carousel");
-                  RevalidateTag("landing-carousel-songs");
-                }}
-              >
+              <form onSubmit={() => invalidateCache("landingCarousel")}>
                 <Button type="submit">Landing Album</Button>
               </form>
             </div>
 
             <div className="col-span-3 md:col-span-1 mb-4">
-              <form onSubmit={() => RevalidateTag("landing-carousel-songs")}>
-                <Button type="submit">Landing Album Songs</Button>
-              </form>
-            </div>
-
-            <div className="col-span-3 md:col-span-1 mb-4">
-              <form onSubmit={() => RevalidateTag("listen-history")}>
-                <Button type="submit">Listen History</Button>
-              </form>
-            </div>
-
-            <div className="col-span-3 md:col-span-1 mb-4">
-              <form onSubmit={() => RevalidateTag("from-your-library")}>
+              <form onSubmit={() => invalidateCache("fromYourLibrary")}>
                 <Button type="submit">From Your Library</Button>
               </form>
             </div>
 
             <div className="col-span-3 md:col-span-1 mb-4">
-              <form onSubmit={() => RevalidateTag("random-songs")}>
+              <form onSubmit={() => invalidateCache("randomSongs")}>
                 <Button type="submit">Random Songs</Button>
               </form>
             </div>
 
             <div className="col-span-3 md:col-span-1 mb-4">
-              <form onSubmit={() => RevalidateTag("recommended-albums")}>
+              <form onSubmit={() => invalidateCache("recommendedAlbums")}>
                 <Button type="submit">Recommended Albums</Button>
               </form>
             </div>
           </div>
-        </TabsContent>
+          </TabsContent>
       </Tabs>
     </DialogContent>
   );
