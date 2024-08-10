@@ -7,11 +7,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@music/ui/components/select";
-import { useSession } from "next-auth/react";
 
+import getSession from "@/lib/Authentication/JWT/getSession";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { setBitrate } from "@music/sdk";
+import { Button } from "@music/ui/components/button";
 import {
   Form,
   FormControl,
@@ -21,9 +21,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@music/ui/components/form";
-import SetBitrate from "@/actions/Player/SetBitrate";
-import { Button } from "@music/ui/components/button";
-import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const FormSchema = z.object({
   bitrate: z.string({
@@ -32,10 +31,6 @@ const FormSchema = z.object({
 });
 
 export default function ChangeBitrate() {
-  const { data: session, update } = useSession();
-
-  const userBitrate = session?.user.bitrate;
-
   const bitrateMapping: { [key: string]: number } = {
     low: 96,
     normal: 128,
@@ -44,7 +39,7 @@ export default function ChangeBitrate() {
   };
 
   const selectedBitrate = Object.keys(bitrateMapping).find(
-    (key) => bitrateMapping[key] === userBitrate
+    (key) => bitrateMapping[key] === 0
   );
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -66,15 +61,9 @@ export default function ChangeBitrate() {
 
     const newBitrate = bitrateMapping[data.bitrate];
 
-    if (session && newBitrate !== undefined) {
-      SetBitrate(session.user.username, newBitrate);
-      update({
-        ...session,
-        user: {
-          ...session.user,
-          bitrate: newBitrate,
-        },
-      });
+    if (newBitrate !== undefined) {
+      const session = getSession()
+      setBitrate(Number(session?.sub), newBitrate);
     }
   }
 
