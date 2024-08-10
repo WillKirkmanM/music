@@ -13,9 +13,9 @@
       "cache": false,
       "persistent": true
     },
-    "generate": {
-      "dependsOn": [],
-      "outputs": ["@prisma/client"]
+    "electron": {
+      "cache": false,
+      "persistent": true
     },
     "start": {
       "cache": true,
