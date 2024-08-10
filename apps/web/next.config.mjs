@@ -6,28 +6,17 @@ const withPWA = withPWAInit({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = withPWA({
-  output: "standalone",
-  /*
-  typescript: {
-    ignoreBuildErrors: true
-  },
-
-  eslint: {
-    ignoreDuringBuilds: true
-  }
-  */
-  async rewrites() {
-    return [
+  output: "export",
+  trailingSlash: true,
+  transpilePackages: ["@music/sdk"],
+  images: {
+    unoptimized: true,
+    remotePatterns: [
       {
-        source: '/server/:path*',
-        destination: `http://127.0.0.1:${process.env.BACKEND_PORT ?? 3001}/:path*`
-      },
-      {
-        source: '/websocket/:path*',
-        destination: `http://127.0.0.1:${process.env.WEBSOCKET_PORT ?? 3002}/:path*`
+        hostname: "localhost"
       }
     ]
-  }
+  },
 });
 
 export default nextConfig;
