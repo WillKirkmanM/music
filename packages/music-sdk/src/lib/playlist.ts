@@ -36,7 +36,7 @@ export interface PlaylistsResponse {
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
 export async function addSongToPlaylist(playlist_id: number, song_id: number): Promise<string> {
-  const response = await axios().post('/playlist/add_song', { playlist_id, song_id });
+  const response = await axios.post('/playlist/add_song', { playlist_id, song_id });
   return response.data;
 }
 
@@ -47,7 +47,7 @@ export async function addSongToPlaylist(playlist_id: number, song_id: number): P
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
 export async function createPlaylist(user_id: number, name: string): Promise<string> {
-  const response = await axios().post('/playlist/create', { user_id, name });
+  const response = await axios.post('/playlist/create', { user_id, name });
   return response.data;
 }
 
@@ -57,7 +57,7 @@ export async function createPlaylist(user_id: number, name: string): Promise<str
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
 export async function deletePlaylist(playlist_id: number): Promise<string> {
-  const response = await axios().delete('/playlist/delete', {
+  const response = await axios.delete('/playlist/delete', {
     data: { playlist_id },
   });
   return response.data;
@@ -69,7 +69,7 @@ export async function deletePlaylist(playlist_id: number): Promise<string> {
  * @returns {Promise<PlaylistResponse>} - A promise that resolves to the playlist info.
  */
 export async function getPlaylist(playlist_id: number): Promise<PlaylistResponse> {
-  const response = await axios().get(`/playlist/info/${playlist_id}`);
+  const response = await axios.get(`/playlist/info/${playlist_id}`);
   return response.data;
 }
 
@@ -79,6 +79,6 @@ export async function getPlaylist(playlist_id: number): Promise<PlaylistResponse
  * @returns {Promise<PlaylistsResponse[]>} - A promise that resolves to the list of playlists.
  */
 export async function getPlaylists(user_id: number): Promise<PlaylistsResponse[]> {
-  const response = await axios().get(`/playlist/list/${user_id}`);
+  const response = await axios.get(`/playlist/list/${user_id}`);
   return response.data;
 }
