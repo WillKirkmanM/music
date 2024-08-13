@@ -8,7 +8,7 @@ import { Artist } from './types';
  * @returns {Promise<LibraryArtist[]>} - A promise that resolves to an array of random artists.
  */
 export async function getRandomArtist(amount: number): Promise<Artist[]> {
-  const response: AxiosResponse<Artist[]> = await axios().get(`/artist/random/${amount}`);
+  const response: AxiosResponse<Artist[]> = await axios.get(`/artist/random/${amount}`);
   return response.data;
 }
 
@@ -18,6 +18,6 @@ export async function getRandomArtist(amount: number): Promise<Artist[]> {
  * @returns {Promise<LibraryArtist>} - A promise that resolves to the artist information.
  */
 export async function getArtistInfo(id: string): Promise<Artist> {
-  const response: AxiosResponse<Artist> = await axios().get(`/artist/info/${id}`);
+  const response: AxiosResponse<Artist> = await axios.get(`/artist/info/${id}`);
   return response.data;
 }
