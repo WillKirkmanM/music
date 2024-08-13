@@ -38,10 +38,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma
-/prisma/migrations
-/prisma/music.db
-
 # PWA
 /public/sw.js
 /public/sw.js.map
