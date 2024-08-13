@@ -14,7 +14,7 @@ interface Directory {
  * @returns {Promise<Directory[]>} - A promise that resolves to an array of directories.
  */
 export async function listDirectory(path: string): Promise<Directory[]> {
-  const response = await axios().get('/filesystem/list_directory', {
+  const response = await axios.get('/filesystem/list_directory', {
     params: { path },
   });
   return response.data;

@@ -8,7 +8,7 @@ import { LibrarySong } from './types';
  * @returns {Promise<LibrarySong[]>} - A promise that resolves to an array of random songs.
  */
 export async function getRandomSong(amount: number): Promise<LibrarySong[]> {
-  const response: AxiosResponse<LibrarySong[]> = await axios().get(`/song/random/${amount}`);
+  const response: AxiosResponse<LibrarySong[]> = await axios.get(`/song/random/${amount}`);
   return response.data;
 }
 
@@ -18,6 +18,6 @@ export async function getRandomSong(amount: number): Promise<LibrarySong[]> {
  * @returns {Promise<LibrarySong>} - A promise that resolves to the song information.
  */
 export async function getSongInfo(id: string): Promise<LibrarySong> {
-  const response: AxiosResponse<LibrarySong> = await axios().get(`/song/info/${id}`);
+  const response: AxiosResponse<LibrarySong> = await axios.get(`/song/info/${id}`);
   return response.data;
 }

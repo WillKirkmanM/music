@@ -20,7 +20,7 @@ export async function setServerInfo(
   startupWizardCompleted: boolean,
   loginDisclaimer?: string
 ): Promise<string> {
-  const response = await axios().post('/s/server/info', {
+  const response = await axios.post('/s/server/info', {
     local_address: localAddress,
     server_name: serverName,
     version: version,
@@ -36,6 +36,6 @@ export async function setServerInfo(
  * @returns {Promise<ServerInfo>} - A promise that resolves to the server information.
  */
 export async function getServerInfo(): Promise<ServerInfo> {
-  const response: AxiosResponse<ServerInfo> = await axios().get('/s/server/info');
+  const response: AxiosResponse<ServerInfo> = await axios.get('/s/server/info');
   return response.data;
 }

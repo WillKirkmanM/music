@@ -8,6 +8,7 @@ use actix_cors::Cors;
 use actix_files::Files;
 use actix_web::{middleware, web, App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
+use routes::authentication::refresh;
 use tokio::task;
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
@@ -60,9 +61,6 @@ async fn main() -> std::io::Result<()> {
     });
     
     HttpServer::new(move || {
-
-        let cors = Cors::permissive();
-
         let authentication = HttpAuthentication::with_fn(validator);
     
         let protected = web::scope("/api")
@@ -84,13 +82,20 @@ async fn main() -> std::io::Result<()> {
             .configure(config::configure);
         
         App::new()
-            .wrap(cors)
+            .wrap(
+                Cors::default()
+                    .allow_any_origin()
+                    .allow_any_method()
+                    .allow_any_header()
+                    .supports_credentials()
+            )
             .wrap(middleware::Compress::default())
             .wrap(middleware::Logger::default())
             .service(
                 web::scope("/api/auth")
                 .service(login)
                 .service(register)
+                .service(refresh)
             )
             .service(image)
             .route("/ws", web::get().to(ws))

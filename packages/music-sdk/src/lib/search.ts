@@ -67,7 +67,7 @@ interface Song {
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
 export async function addSearchHistory(item: AddSearchHistoryRequest): Promise<string> {
-  const response = await axios().post('/search/add_search_history', item);
+  const response = await axios.post('/search/add_search_history', item);
   return response.data;
 }
 
@@ -77,7 +77,7 @@ export async function addSearchHistory(item: AddSearchHistoryRequest): Promise<s
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
 export async function deleteItemFromSearchHistory(item: DeleteItemFromSearchHistoryRequest): Promise<string> {
-  const response = await axios().delete('/search/delete_item_from_search_history', {
+  const response = await axios.delete('/search/delete_item_from_search_history', {
     data: item,
   });
   return response.data;
@@ -89,7 +89,7 @@ export async function deleteItemFromSearchHistory(item: DeleteItemFromSearchHist
  * @returns {Promise<SearchItemResponse[]>} - A promise that resolves to an array of search items.
  */
 export async function getLastSearchedQueries(query: GetLastSearchedQueriesRequest): Promise<SearchItemResponse[]> {
-  const response = await axios().get('/search/get_last_searched_queries', {
+  const response = await axios.get('/search/get_last_searched_queries', {
     params: query,
   });
   return response.data;
@@ -101,7 +101,7 @@ export async function getLastSearchedQueries(query: GetLastSearchedQueriesReques
  * @returns {Promise<CombinedItem[]>} - A promise that resolves to an array of combined items.
  */
 export async function searchLibrary(query: string): Promise<CombinedItem[]> {
-  const response = await axios().get('/search/library', {
+  const response = await axios.get('/search/library', {
     params: { q: query },
   });
   return response.data;

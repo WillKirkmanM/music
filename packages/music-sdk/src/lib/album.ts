@@ -10,7 +10,7 @@ export type LibraryAlbum = Album & { artist_object: Artist }
  * @returns {Promise<LibraryAlbum[]>} - A promise that resolves to an array of random albums.
  */
 export async function getRandomAlbum(amount: number): Promise<LibraryAlbum[]> {
-  const response: AxiosResponse<LibraryAlbum[]> = await axios().get(`/album/random/${amount}`)
+  const response: AxiosResponse<LibraryAlbum[]> = await axios.get(`/album/random/${amount}`)
   return response.data;
 }
 
@@ -20,6 +20,6 @@ export async function getRandomAlbum(amount: number): Promise<LibraryAlbum[]> {
  * @returns {Promise<LibraryAlbum>} - A promise that resolves to the album information.
  */
 export async function getAlbumInfo(id: string): Promise<LibraryAlbum> {
-  const response: AxiosResponse<LibraryAlbum> = await axios().get(`/album/info/${id}`);
+  const response: AxiosResponse<LibraryAlbum> = await axios.get(`/album/info/${id}`);
   return response.data;
 }

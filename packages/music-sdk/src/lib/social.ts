@@ -7,7 +7,7 @@ import axios from './axios';
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
 export async function follow(followerId: number, followingId: number): Promise<string> {
-  const response = await axios().post('/social/follow', {
+  const response = await axios.post('/social/follow', {
     follower_id: followerId,
     following_id: followingId,
   });
@@ -20,6 +20,6 @@ export async function follow(followerId: number, followingId: number): Promise<s
  * @returns {Promise<number[]>} - A promise that resolves to a list of follower IDs.
  */
 export async function getFollowers(userId: number): Promise<number[]> {
-  const response = await axios().get(`/social/followers/${userId}`);
+  const response = await axios.get(`/social/followers/${userId}`);
   return response.data;
 }
