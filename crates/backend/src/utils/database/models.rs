@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use super::schema::{
-    account, follow, listen_history_item, playlist, search_item, server_info, session, song,
+    follow, listen_history_item, playlist, search_item, server_info, song,
     user, _playlist_to_song, _playlist_to_user,
 };
 
@@ -20,6 +20,7 @@ pub struct User {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub now_playing: Option<String>,
+    pub role: String
 }
 
 #[derive(Insertable)]
@@ -27,6 +28,7 @@ pub struct User {
 pub struct NewUser {
     pub username: String,
     pub password: String,
+    pub role: String,
 }
 
 #[derive(Insertable, Queryable, Associations, Identifiable, Debug)]
@@ -117,35 +119,6 @@ pub struct PlaylistToSong {
     pub a: i32,
     pub b: String,
     pub date_added: NaiveDateTime,
-}
-
-#[derive(Insertable, Queryable, Associations, Identifiable, Debug)]
-#[diesel(table_name = account)]
-#[diesel(belongs_to(User, foreign_key = user_id))]
-pub struct Account {
-    pub id: String,
-    pub user_id: i32,
-    pub provider_type: String,
-    pub provider_id: String,
-    pub provider_account_id: String,
-    pub refresh_token: Option<String>,
-    pub access_token: Option<String>,
-    pub access_token_expires: Option<NaiveDateTime>,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
-}
-
-#[derive(Insertable, Queryable, Associations, Identifiable, Debug)]
-#[diesel(table_name = session)]
-#[diesel(belongs_to(User, foreign_key = user_id))] 
-pub struct Session {
-    pub id: String,
-    pub user_id: i32,
-    pub expires: NaiveDateTime,
-    pub session_token: String,
-    pub access_token: String,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
 }
 
 #[derive(Queryable, Selectable, Serialize, Deserialize, Insertable)]
