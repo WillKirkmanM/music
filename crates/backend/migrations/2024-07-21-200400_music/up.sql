@@ -54,33 +54,7 @@ CREATE TABLE IF NOT EXISTS "_playlist_to_song" (
     CONSTRAINT "_playlist_to_song_a_fkey" FOREIGN KEY ("a") REFERENCES "playlist" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "_playlist_to_song_b_fkey" FOREIGN KEY ("b") REFERENCES "song" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
--- Account Table
-CREATE TABLE IF NOT EXISTS "account" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "user_id" INTEGER NOT NULL,
-    "provider_type" TEXT NOT NULL,
-    "provider_id" TEXT NOT NULL,
-    "provider_account_id" TEXT NOT NULL,
-    "refresh_token" TEXT,
-    "access_token" TEXT,
-    "access_token_expires" DATETIME,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("user_id") REFERENCES "user"("id"),
-    UNIQUE ("provider_id", "provider_account_id")
-);
 
--- Session Table
-CREATE TABLE IF NOT EXISTS "session" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "user_id" INTEGER NOT NULL,
-    "expires" DATETIME NOT NULL,
-    "session_token" TEXT NOT NULL UNIQUE,
-    "access_token" TEXT NOT NULL UNIQUE,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY ("user_id") REFERENCES "user"("id")
-);
 
 -- User Table
 CREATE TABLE IF NOT EXISTS "user" (
@@ -92,7 +66,8 @@ CREATE TABLE IF NOT EXISTS "user" (
     "bitrate" INTEGER NOT NULL DEFAULT 0,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "now_playing" TEXT 
+    "now_playing" TEXT,
+    "role" TEXT NOT NULL DEFAULT 'user'
 );
 
 -- Server Info Table
