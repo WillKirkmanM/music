@@ -10,7 +10,7 @@ import { User } from "./types";
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
 export async function changePassword(username: string, currentPassword: string, newPassword: string): Promise<string> {
-  const response = await axios().post('/user/change_password', {
+  const response = await axios.post('/user/change_password', {
     username,
     current_password: currentPassword,
     new_password: newPassword,
@@ -24,7 +24,7 @@ export async function changePassword(username: string, currentPassword: string, 
  * @returns {Promise<any[]>} - A promise that resolves to the listen history.
  */
 export async function getListenHistory(userId: number): Promise<any[]> {
-  const response = await axios().get('/user/get_listen_history', {
+  const response = await axios.get('/user/get_listen_history', {
     params: { user_id: userId },
   });
   return response.data;
@@ -37,7 +37,7 @@ export async function getListenHistory(userId: number): Promise<any[]> {
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
 export async function addSongToListenHistory(userId: number, songId: string): Promise<string> {
-  const response = await axios().post('/user/add_song_to_listen_history', {
+  const response = await axios.post('/user/add_song_to_listen_history', {
     user_id: userId,
     song_id: songId,
   });
@@ -51,7 +51,7 @@ export async function addSongToListenHistory(userId: number, songId: string): Pr
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
 export async function setBitrate(userId: number, bitrate: number): Promise<string> {
-  const response = await axios().post('/user/set_bitrate', {
+  const response = await axios.post('/user/set_bitrate', {
     user_id: userId,
     bitrate,
   });
@@ -65,7 +65,7 @@ export async function setBitrate(userId: number, bitrate: number): Promise<strin
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
 export async function setNowPlaying(userId: number, nowPlaying: string): Promise<string> {
-  const response = await axios().post('/user/set_now_playing', {
+  const response = await axios.post('/user/set_now_playing', {
     user_id: userId,
     now_playing: nowPlaying,
   });
@@ -78,7 +78,7 @@ export async function setNowPlaying(userId: number, nowPlaying: string): Promise
  * @returns {Promise<{ now_playing: number | null }>} - A promise that resolves to the now playing song.
  */
 export async function getNowPlaying(userId: number): Promise<{ now_playing: number | null }> {
-  const response = await axios().get('/user/get_now_playing', {
+  const response = await axios.get('/user/get_now_playing', {
     params: { user_id: userId },
   });
   return response.data;
@@ -90,7 +90,7 @@ export async function getNowPlaying(userId: number): Promise<{ now_playing: numb
  * @returns {Promise<User>} - A promise that resolves to the user information.
  */
 export async function getUserInfo(username: string): Promise<User> {
-  const response: AxiosResponse<User> = await axios().get(`/user/info_by_username/${username}`);
+  const response: AxiosResponse<User> = await axios.get(`/user/info_by_username/${username}`);
   return response.data;
 }
 
@@ -100,6 +100,6 @@ export async function getUserInfo(username: string): Promise<User> {
  * @returns {Promise<User>} - A promise that resolves to the user information.
  */
 export async function getUserInfoById(id: number): Promise<User> {
-  const response: AxiosResponse<User> = await axios().get(`/user/info_by_id/${id}`);
+  const response: AxiosResponse<User> = await axios.get(`/user/info_by_id/${id}`);
   return response.data;
 }
