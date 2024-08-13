@@ -1,11 +1,12 @@
-use std::{env, error::Error};
+use std::env;
 
-use actix_web::{cookie::Cookie, dev::ServiceRequest, http::header, post, web, HttpResponse, Responder};
+use actix_web::{cookie::{Cookie, SameSite}, dev::ServiceRequest, http::header, post, web, HttpRequest, HttpResponse, Responder};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+use chrono::Utc;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use dotenvy::dotenv;
 use futures::future::{ready, Ready};
@@ -19,7 +20,9 @@ pub struct Claims {
     pub sub: String,
     pub exp: usize,
     pub username: String,
-    pub bitrate: i32
+    pub bitrate: i32,
+    pub token_type: String,
+    pub role: String
 }
 
 #[derive(Serialize, Deserialize)]
@@ -31,58 +34,50 @@ pub struct AuthData {
 #[derive(Serialize, Deserialize)]
 pub struct ResponseAuthData {
     pub status: bool,
-    pub token: String,
+    pub access_token: String,
+    pub refresh_token: String,
     pub message: Option<String>,
 }
 
-
-#[post("/register")]
-pub async fn register(form: web::Json<AuthData>) -> Result<impl Responder, Box<dyn Error>> {
-    use crate::utils::database::schema::user::dsl::*;
-    dotenv().ok();
-
-    let hashed_password = hash_password(&form.password).map_err(|e| return HttpResponse::InternalServerError().body(format!("Failed to hash password: {}", e))).unwrap();
-
-    let new_user = NewUser {
-        username: form.username.clone(),
-        password: hashed_password
-    };
-
-    let mut connection = establish_connection().get().unwrap();
-
-    diesel::insert_into(user)
-        .values(&new_user)
-        .execute(&mut connection)
-        .expect("There was an error creating the new user!");
-
-
-    let user_id = user
-        .filter(username.eq(&form.username))
-        .select(id)
-        .first::<i32>(&mut connection)
-        .expect("Error loading user");
-
+fn generate_access_token(user_id: i32, username: &str, bitrate: i32, role: &String) -> String {
     let expiration = chrono::Utc::now()
-        .checked_add_signed(chrono::Duration::days(1))
-        .ok_or("Invalid timestamp")?
+        .checked_add_signed(chrono::Duration::minutes(15))
+        .expect("valid timestamp")
         .timestamp() as usize;
 
     let claims = Claims {
-        sub: user_id.to_owned().to_string(),
+        sub: user_id.to_string(),
         exp: expiration,
-        username: (*form.username).to_string(),
-        bitrate: 0,
+        username: username.to_string(),
+        bitrate,
+        token_type: "access".to_string(),
+        role: role.to_string(),
     };
 
     let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-    let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_ref()))
-        .map_err(|e| return HttpResponse::InternalServerError().body(format!("Token encoding failed: {}", e))).unwrap();
+    encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_ref())).expect("Token encoding failed")
+}
 
-    Ok(web::Json(ResponseAuthData {
-        status: true,
-        token,
-        message: None
-    }))
+fn generate_refresh_token(user_id: i32, username: &str, role: &String) -> String {
+    let expiration = Utc::now()
+        .checked_add_signed(chrono::Duration::days(30))
+        .expect("valid timestamp")
+        .timestamp() as usize;
+
+    let claims = Claims {
+        sub: user_id.to_string(),
+        exp: expiration,
+        username: username.to_string(),
+        bitrate: 0,
+        token_type: "refresh".to_string(),
+        role: role.to_string(),
+    };
+
+    let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    let mut header = Header::default();
+    header.alg = jsonwebtoken::Algorithm::HS256;
+
+    encode(&header, &claims, &EncodingKey::from_secret(secret.as_ref())).expect("Token encoding failed")
 }
 
 #[post("/login")]
@@ -90,46 +85,235 @@ pub async fn login(form: web::Json<AuthData>) -> impl Responder {
     use crate::utils::database::schema::user::dsl::*;
     dotenv().ok();
 
-    let mut connection = establish_connection().get().unwrap();
+    let mut connection = match establish_connection().get() {
+        Ok(conn) => conn,
+        Err(_) => {
+            return HttpResponse::InternalServerError().json(ResponseAuthData {
+                status: false,
+                access_token: String::new(),
+                refresh_token: String::new(),
+                message: Some(String::from("Failed to establish database connection")),
+            });
+        }
+    };
 
     let result = user
         .filter(username.eq(&form.username))
-        .select((password, id, bitrate))
-        .first::<(String, i32, i32)>(&mut connection);
+        .select((password, id, bitrate, role))
+        .first::<(String, i32, i32, String)>(&mut connection);
 
     match result {
-        Ok((stored_password_hash, user_id, user_bitrate)) => {
+        Ok((stored_password_hash, user_id, user_bitrate, user_role)) => {
             if verify_password(&form.password, &stored_password_hash) {
-                let expiration = chrono::Utc::now().checked_add_signed(chrono::Duration::days(1)).expect("valid timestamp").timestamp() as usize;
-                let claims = Claims {
-                    sub: user_id.to_string(),
-                    exp: expiration,
-                    username: (*form.username).to_string(),
-                    bitrate: user_bitrate
-                };
+                let generated_access_token = generate_access_token(user_id, &form.username, user_bitrate, &user_role);
+                let generated_refresh_token = generate_refresh_token(user_id, &form.username, &user_role);
 
-                let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-                let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_ref())).expect("Token encoding failed");
-
-                web::Json(ResponseAuthData {
+                let mut response = HttpResponse::Ok().json(ResponseAuthData {
                     status: true,
-                    token,
-                    message: None
-                })
+                    access_token: generated_access_token.clone(),
+                    refresh_token: generated_refresh_token.clone(),
+                    message: None,
+                });
+
+                if let Err(_) = response.add_cookie(
+                    &Cookie::build("refreshToken", generated_refresh_token)
+                        .http_only(true)
+                        .secure(true)
+                        .same_site(SameSite::Lax)
+                        .path("/")
+                        .finish(),
+                ) {
+                    return HttpResponse::InternalServerError().json(ResponseAuthData {
+                        status: false,
+                        access_token: String::new(),
+                        refresh_token: String::new(),
+                        message: Some(String::from("Failed to set refresh token cookie")),
+                    });
+                }
+
+                if let Err(_) = response.add_cookie(
+                    &Cookie::build("accessToken", generated_access_token)
+                        .secure(true)
+                        .same_site(SameSite::Lax)
+                        .path("/")
+                        .finish(),
+                ) {
+                    return HttpResponse::InternalServerError().json(ResponseAuthData {
+                        status: false,
+                        access_token: String::new(),
+                        refresh_token: String::new(),
+                        message: Some(String::from("Failed to set access token cookie")),
+                    });
+                }
+
+                response
             } else {
-                web::Json(ResponseAuthData {
+                HttpResponse::Ok().json(ResponseAuthData {
                     status: false,
-                    token: String::new(),
-                    message: Some(String::from("Invalid Username or Password!"))
+                    access_token: String::new(),
+                    refresh_token: String::new(),
+                    message: Some(String::from("Invalid Username or Password!")),
                 })
             }
         },
         Err(_) => {
-            web::Json(ResponseAuthData { 
-                status: false, token: String::new(), message: Some(String::from("Invalid Username or Password!"))
+            HttpResponse::Ok().json(ResponseAuthData { 
+                status: false, 
+                access_token: String::new(), 
+                refresh_token: String::new(), 
+                message: Some(String::from("Invalid Username or Password!")),
             })
         }
+    }
+}
 
+#[derive(Deserialize)]
+pub struct RegisterData {
+    pub username: String,
+    pub password: String,
+    pub role: String,
+}
+
+#[post("/register")]
+pub async fn register(form: web::Json<RegisterData>, req: HttpRequest) -> impl Responder {
+    use crate::utils::database::schema::user::dsl::*;
+    dotenv().ok();
+
+    let mut connection = match establish_connection().get() {
+        Ok(conn) => conn,
+        Err(_) => {
+            return HttpResponse::InternalServerError().json(ResponseAuthData {
+                status: false,
+                access_token: String::new(),
+                refresh_token: String::new(),
+                message: Some(String::from("Failed to establish database connection")),
+            });
+        }
+    };
+
+    let existing_users_count: i64 = user.count().get_result(&mut connection).unwrap_or(0);
+
+    let new_user_role = if existing_users_count == 0 {
+        "admin".to_string()
+    }     else {
+        let token = req
+            .cookie("accessToken")
+            .map(|cookie| cookie.value().to_string());
+        if let Some(token) = token {
+            let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+            match decode::<Claims>(&token, &DecodingKey::from_secret(jwt_secret.as_ref()), &Validation::default()) {
+                Ok(token_data) => {
+                    let claims = token_data.claims;
+                    if claims.role.contains(&"admin".to_string()) {
+                        form.role.clone()
+                    } else {
+                        return HttpResponse::Forbidden().json(ResponseAuthData {
+                            status: false,
+                            access_token: String::new(),
+                            refresh_token: String::new(),
+                            message: Some(String::from("Only admins can create admin users")),
+                        });
+                    }
+                }
+                Err(_) => {
+                    return HttpResponse::Unauthorized().json(ResponseAuthData {
+                        status: false,
+                        access_token: String::new(),
+                        refresh_token: String::new(),
+                        message: Some(String::from("Invalid authorization token")),
+                    });
+                }
+            }
+        } else {
+            return HttpResponse::Unauthorized().json(ResponseAuthData {
+                status: false,
+                access_token: String::new(),
+                refresh_token: String::new(),
+                message: Some(String::from("Authorization token is missing")),
+            });
+        }
+    };
+
+    let new_user = NewUser {
+        username: form.username.clone(),
+        password: hash_password(&form.password).expect("Failed to hash password"),
+        role: new_user_role,
+    };
+
+    diesel::insert_into(user)
+        .values(&new_user)
+        .execute(&mut connection)
+        .expect("Error saving new user");
+
+    HttpResponse::Ok().json(ResponseAuthData {
+        status: true,
+        access_token: String::new(),
+        refresh_token: String::new(),
+        message: Some(String::from("User registered successfully")),
+    })
+}
+
+#[post("/refresh")]
+pub async fn refresh(req: HttpRequest) -> impl Responder {
+    dotenv().ok();
+
+    let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+
+    let refresh_token = match req.cookie("refreshToken") {
+        Some(cookie) => cookie.value().to_string(),
+        None => {
+            return HttpResponse::Unauthorized().json(ResponseAuthData {
+                status: false,
+                access_token: String::new(),
+                refresh_token: String::new(),
+                message: Some(String::from("Refresh token not found")),
+            });
+        }
+    };
+
+    let token_data = decode::<Claims>(&refresh_token, &DecodingKey::from_secret(secret.as_ref()), &Validation::new(Algorithm::HS256));
+
+    match token_data {
+        Ok(data) => {
+            if data.claims.token_type == "refresh" {
+                let new_access_token = generate_access_token(
+                    data.claims.sub.parse().unwrap(),
+                    &data.claims.username,
+                    data.claims.bitrate,
+                    &data.claims.role.clone()
+                );
+
+                HttpResponse::Ok()
+                    .cookie(
+                        Cookie::build("accessToken", new_access_token.clone())
+                            .secure(true)
+                            .same_site(SameSite::Lax)
+                            .path("/")
+                            .finish()
+                    )
+                    .json(ResponseAuthData {
+                        status: true,
+                        access_token: new_access_token,
+                        refresh_token: refresh_token.clone(),
+                        message: None,
+                    })
+            } else {
+                HttpResponse::Unauthorized().json(ResponseAuthData {
+                    status: false,
+                    access_token: String::new(),
+                    refresh_token: String::new(),
+                    message: Some(String::from("Invalid token type")),
+                })
+            }
+        },
+        Err(_) => {
+            HttpResponse::Unauthorized().json(ResponseAuthData {
+                status: false,
+                access_token: String::new(),
+                refresh_token: String::new(),
+                message: Some(String::from("Invalid token")),
+            })
+        }
     }
 }
 
@@ -141,16 +325,17 @@ pub fn validator(
 
     let token = if let Some(cookie_header) = req.headers().get(header::COOKIE) {
         if let Ok(cookie_str) = cookie_header.to_str() {
-            Cookie::parse_encoded(cookie_str)
-                .ok()
-                .and_then(|cookie| if cookie.name() == "music_jwt" { Some(cookie.value().to_string()) } else { None })
+            cookie_str.split(';')
+                .filter_map(|cookie| Cookie::parse_encoded(cookie.trim()).ok())
+                .find(|cookie| cookie.name() == "accessToken")
+                .map(|cookie| cookie.value().to_string())
         } else {
             None
         }
     } else {
         credentials.map(|creds| creds.token().to_string())
     };
-    
+
     if token.is_none() {
         let actix_err = actix_web::Error::from(actix_web::error::ErrorUnauthorized("Access denied: No valid authentication provided"));
         return ready(Err((actix_err, req)))
@@ -162,7 +347,66 @@ pub fn validator(
 
     let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
     match decode::<Claims>(&token.unwrap(), &DecodingKey::from_secret(secret.as_ref()), &validation) {
-        Ok(_) => ready(Ok(req)),
+        Ok(data) => {
+            if data.claims.token_type == "access" {
+                ready(Ok(req))
+            } else {
+                let actix_err = actix_web::Error::from(actix_web::error::ErrorUnauthorized("Invalid token type"));
+                ready(Err((actix_err, req)))
+            }
+        },
+        Err(_) => {
+            let actix_err = actix_web::Error::from(actix_web::error::ErrorUnauthorized("Invalid token"));
+            ready(Err((actix_err, req)))
+        },
+    }
+}
+
+pub fn admin_guard(
+    req: ServiceRequest, 
+    credentials: Option<BearerAuth>
+) -> Ready<Result<ServiceRequest, (actix_web::Error, ServiceRequest)>> {
+    dotenv().ok();
+
+    const ADMIN_ROLE: &str = "admin";
+
+    let token = if let Some(cookie_header) = req.headers().get(header::COOKIE) {
+        if let Ok(cookie_str) = cookie_header.to_str() {
+            cookie_str.split(';')
+                .filter_map(|cookie| Cookie::parse_encoded(cookie.trim()).ok())
+                .find(|cookie| cookie.name() == "accessToken")
+                .map(|cookie| cookie.value().to_string())
+        } else {
+            None
+        }
+    } else {
+        credentials.map(|creds| creds.token().to_string())
+    };
+
+    if token.is_none() {
+        let actix_err = actix_web::Error::from(actix_web::error::ErrorUnauthorized("Access denied: No valid authentication provided"));
+        return ready(Err((actix_err, req)))
+    }
+
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.leeway = 60;
+    validation.validate_exp = true;
+
+    let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    match decode::<Claims>(&token.unwrap(), &DecodingKey::from_secret(secret.as_ref()), &validation) {
+        Ok(data) => {
+            if data.claims.token_type == "access" {
+                if data.claims.role.contains(&ADMIN_ROLE.to_string()) {
+                    ready(Ok(req))
+                } else {
+                    let actix_err = actix_web::Error::from(actix_web::error::ErrorUnauthorized("Insufficient permissions"));
+                    ready(Err((actix_err, req)))
+                }
+            } else {
+                let actix_err = actix_web::Error::from(actix_web::error::ErrorUnauthorized("Invalid token type"));
+                ready(Err((actix_err, req)))
+            }
+        },
         Err(_) => {
             let actix_err = actix_web::Error::from(actix_web::error::ErrorUnauthorized("Invalid token"));
             ready(Err((actix_err, req)))
