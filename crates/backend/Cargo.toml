@@ -6,38 +6,39 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix-web = "4"
 actix-cors = "0.7.0"
-actix-session = { version = "0.9.0", features = ["cookie-session"]}
-actix-ws = "0.2.5"
-actix-rt = "2.10.0"
-actix-identity = "0.7.1"
-actix-web-httpauth = "0.8.2"
 actix-files = "0.6.6"
+actix-identity = "0.7.1"
+actix-rt = "2.10.0"
+actix-session = { version = "0.9.0", features = ["cookie-session"]}
+actix-web = "4"
+actix-web-httpauth = "0.8.2"
+actix-ws = "0.2.5"
 argon2 = "0.5.3"
-jsonwebtoken = "9.3.0"
 audiotags = "0.5"
 chrono = { version = "0.4.38", features = ["serde"] }
-dotenvy = "0.15.0"
 diesel = { version = "2.1.0", features = ["chrono", "numeric", "r2d2"]}
 diesel-async = { version = "0.5.0", features = ["sqlite"] }
+dotenvy = "0.15.0"
 fancy-regex = "0.13.0"
+futures = "*"
 image = "0.25.1"
-webp = "0.3.0"
-ravif = "0.11.9"
+jsonwebtoken = "9.3.0"
+lazy_static = "1.5.0"
 lofty = "0.18.2"
-rayon = "1.8.0"
+meilisearch-sdk = "0.27.0"
 rand = "0.8.5"
+ravif = "0.11.9"
+rayon = "1.8.0"
 regex = "1.10.3"
 reqwest = { version = "0.12.3", features = ["json"] }
-lazy_static = "1.5.0"
-meilisearch-sdk = "0.27.0"
 serde = { version = "1.0.190", features = ["derive"] }
 serde_json = "1.0.107"
 tokio = { version = "1.36.0", features = ["full"] }
-uuid = { version = "1.10.0", features = ["v4", "fast-rng", "macro-diagnostics", "serde"] }
-futures = "*"
 tokio-util = "*"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.17", features = ["registry", "env-filter"] }
+uuid = { version = "1.10.0", features = ["v4", "fast-rng", "macro-diagnostics", "serde"] }
 walkdir = "2.4.0"
+webp = "0.3.0"
+# openssl = { version = "0.10.59", features = ["vendored"] }
