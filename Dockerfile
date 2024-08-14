@@ -1,94 +1,88 @@
 # Stage 1: Build the Rust backend
-FROM rust:1-alpine as backend-builder
+FROM rust:slim-buster AS backend-builder
 WORKDIR /usr/src
-# Copy your source code
-COPY ./apps/web/backend /usr/src/backend
-WORKDIR /usr/src/backend
-RUN apk add --no-cache libressl-dev musl-dev
-# Build the application
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    sqlite3 libsqlite3-dev wget make build-essential pkg-config libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget https://www.nasm.us/pub/nasm/releasebuilds/2.16/nasm-2.16.tar.gz \
+    && tar xzf nasm-2.16.tar.gz \
+    && cd nasm-2.16 \
+    && ./configure \
+    && make \
+    && make install \
+    && cd .. \
+    && rm -rf nasm-2.16 nasm-2.16.tar.gz
+    
+RUN cargo install diesel_cli --no-default-features --features sqlite
+
+COPY ./crates/backend /usr/src/crates/backend
+COPY ./diesel.toml /usr/src/diesel.toml
+
+WORKDIR /usr/src/crates/backend
+
+ENV DATABASE_URL=sqlite:///usr/src/crates/backend/music.db
+
+RUN diesel migration run --config-file /usr/src/diesel.toml
+
 RUN cargo build --release
 
 # Stage 2: Build the React frontend
-FROM node:18-alpine as frontend-builder
+FROM oven/bun:alpine AS frontend-builder
 RUN apk update
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache nodejs npm
 WORKDIR /app
 COPY . .
 
-RUN if [[ $(uname -m) == "aarch64" ]] ; then \
-    wget https://raw.githubusercontent.com/squishyu/alpine-pkg-glibc-aarch64-bin/master/glibc-2.26-r1.apk ; \
-    apk add --no-cache --allow-untrusted --force-overwrite glibc-2.26-r1.apk ; \
-    rm glibc-2.26-r1.apk ; \
-    else \
-    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.28-r0/glibc-2.28-r0.apk ; \
-    wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub ; \
-    apk add --no-cache --force-overwrite glibc-2.28-r0.apk ; \
-    rm glibc-2.28-r0.apk ; \
-    fi
-RUN npm install -g bun turbo@^2
-
-# RUN yarn install
-# RUN yarn global add turbo@^2
-
-RUN bun install
+RUN bun install --ignore-scripts
+RUN bun install -g turbo yarn
 RUN turbo prune music --docker
 
 # Stage 3: Install dependencies and build the project
-FROM node:18-alpine as installer
-RUN apk update
-RUN apk add --no-cache libc6-compat
+FROM oven/bun:alpine AS installer
 WORKDIR /app
-COPY --from=frontend-builder /app/out/json/ .
+COPY --from=frontend-builder /app/out/json/ . 
 COPY --from=frontend-builder /app/out/yarn.lock ./yarn.lock
-# RUN yarn install
 
-RUN if [[ $(uname -m) == "aarch64" ]] ; then \
-    wget https://raw.githubusercontent.com/squishyu/alpine-pkg-glibc-aarch64-bin/master/glibc-2.26-r1.apk ; \
-    apk add --no-cache --allow-untrusted --force-overwrite glibc-2.26-r1.apk ; \
-    rm glibc-2.26-r1.apk ; \
-    else \
-    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.28-r0/glibc-2.28-r0.apk ; \
-    wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub ; \
-    apk add --no-cache --force-overwrite glibc-2.28-r0.apk ; \
-    rm glibc-2.28-r0.apk ; \
-    fi
+RUN bun install --ignore-scripts
+COPY --from=frontend-builder /app/out/full/ . 
+COPY ./package.json ./package.json
+COPY ./bun.lockb ./bun.lockb
+COPY ./bunfig.toml ./bunfig.toml
+COPY ./yarn.lock ./yarn.lock
 
-RUN npm install -g bun
-RUN bun install
-COPY --from=frontend-builder /app/out/full/ .
-RUN yarn run push 
-RUN yarn run generate
-RUN yarn turbo run build --filter=music
+WORKDIR /app/apps/web
+RUN bun run build
 
 # Stage 4: Create the final image
-FROM node:18-alpine as runner
+FROM debian:bullseye-slim AS runner
 WORKDIR /app
 
-RUN if [[ $(uname -m) == "aarch64" ]] ; then \
-    wget https://raw.githubusercontent.com/squishyu/alpine-pkg-glibc-aarch64-bin/master/glibc-2.26-r1.apk ; \
-    apk add --no-cache --allow-untrusted --force-overwrite glibc-2.26-r1.apk ; \
-    rm glibc-2.26-r1.apk ; \
-    else \
-    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.28-r0/glibc-2.28-r0.apk ; \
-    wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub ; \
-    apk add --no-cache --force-overwrite glibc-2.28-r0.apk ; \
-    rm glibc-2.28-r0.apk ; \
-    fi
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libssl1.1 \
+    sqlite3 \
+    libsqlite3-dev \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g bun
+RUN wget --no-check-certificate https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-linux-amd64 \
+    && chmod +x meilisearch-linux-amd64 \
+    && mv meilisearch-linux-amd64 /usr/local/bin/meilisearch
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
-USER nextjs
-COPY --from=installer /app/apps/web/next.config.mjs .
-COPY --from=installer /app/apps/web/package.json .
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/prisma ./apps/web/prisma
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/websocket ./apps/web/websocket
-COPY --from=backend-builder /usr/src/backend/target/release/music-backend /usr/local/bin/music-backend
 
-ENV PORT=80
+# Change ownership of the /app directory to the nextjs user
+RUN chown -R nextjs:nodejs /app
+
+USER nextjs
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/out ./apps/web/out
+COPY --from=backend-builder /usr/src/crates/backend/target/release/music-backend /usr/local/bin/music-backend
+COPY --from=backend-builder /usr/src/crates/backend/music.db /usr/src/crates/backend/music.db
+
 EXPOSE 80
-CMD ["sh", "-c", "/usr/local/bin/music-backend & node apps/web/server.js --port 80"]
+EXPOSE 7700
+
+# Run both Meilisearch and music-backend
+CMD ["/bin/sh", "-c", "/usr/local/bin/meilisearch --http-addr 0.0.0.0:7700 & /usr/local/bin/music-backend --port 80"]
