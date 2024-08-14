@@ -79,25 +79,37 @@ switch (command) {
       runCommand('bun install');
     }
     runCommand(`bunx turbo build --log-order=stream --filter ${project} --force`);
-    runCommand("cargo build -p music-backend --release");
+    if (project === 'music') {
+      runCommand("cargo build -p music-backend --release");
+    }
     break;
   case 'run':
     if (!nodeModulesExists) {
       runCommand('bun install');
     }
-    ensureMeilisearch((meilisearchBinary) => {
-      runCommand(meilisearchBinary);
+    if (project === 'music') {
+      ensureMeilisearch((meilisearchBinary) => {
+        runCommand(meilisearchBinary);
+        if (action === 'dev') {
+          runCommand(`bunx turbo dev --log-order=stream --filter ${project}`);
+          runCommand('cargo run -p music-backend');
+        } else if (action === 'electron') {
+          runCommand(`bunx turbo electron --log-order=stream --filter ${project}`);
+          runCommand('cargo run -p music-backend');
+        } else if (action === 'tauri') {
+          runCommand(`bunx turbo tauri --log-order=stream --filter ${project}`);
+          runCommand('cargo run -p music-backend');
+        } else {
+          runCommand('cargo run -p music-backend --release');
+        }
+      });
+    } else {
       if (action === 'dev') {
         runCommand(`bunx turbo dev --log-order=stream --filter ${project}`);
-        runCommand('cargo run -p music-backend');
-      }
-      else if (action === "electron") {
-        runCommand(`bunx turbo electron --log-order=stream --filter ${project}`);
-        runCommand('cargo run -p music-backend');
       } else {
-        runCommand('cargo run -p music-backend --release');
+        runCommand(`bunx turbo start --log-order=stream --filter ${project}`);
       }
-    });
+    }
     break;
   default:
     console.log('Invalid command');
