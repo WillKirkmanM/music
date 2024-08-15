@@ -6,7 +6,7 @@ import axios from './axios';
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
 export async function indexLibrary(pathToLibrary: string): Promise<string> {
-  const response = await axios.post('/library/index', {
+  const response = await axios.post('/admin/library/index', {
 	path_to_library: pathToLibrary,
   });
   return response.data;
