@@ -1,4 +1,3 @@
-import type { Config } from "tailwindcss"
 import { fontFamily } from "tailwindcss/defaultTheme"
 
 const config = {
@@ -37,12 +36,17 @@ const config = {
           '50%': { transform: 'translateX(-25%)' },
           '100%': { transform: 'translateX(0%)' },
         },
+        backgroundFade: {
+          '0%': { opacity: "1" },
+          '100%': { opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "marquee": 'marquee 50s linear infinite alternate',
         "shine": "shine 8s ease-in-out infinite",
+        "background-fade": "backgroundFade 3s ease-in-out infinite alternate",
       },
       "shine": {
         from: { backgroundPosition: '200% 0' },
@@ -51,6 +55,6 @@ const config = {
     },
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
-} satisfies Config
+}
 
 export default config
