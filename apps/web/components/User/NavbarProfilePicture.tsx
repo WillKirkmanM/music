@@ -1,25 +1,25 @@
 "use client"
 
 import {
-  LogOut,
-  Settings,
-  User,
+    LogOut,
+    Settings,
+    User,
 } from "lucide-react"
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuShortcut,
+    DropdownMenuTrigger,
 } from "@music/ui/components/dropdown-menu"
 
 import {
-  Dialog,
-  DialogTrigger,
+    Dialog,
+    DialogTrigger,
 } from "@music/ui/components/dialog"
  
 import { Avatar, AvatarFallback, AvatarImage } from "@music/ui/components/avatar"
