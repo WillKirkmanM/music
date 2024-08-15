@@ -2,22 +2,22 @@
 
 import getBaseURL from "@/lib/Server/getBaseURL";
 
-import { useState } from 'react';
-import { setCookie } from 'cookies-next';
-import { useRouter } from 'next/navigation';
-import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { Button } from '@music/ui/components/button';
 import {
   Form,
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormControl,
   FormMessage,
 } from "@music/ui/components/form";
-import { Button } from '@music/ui/components/button';
 import { Input } from '@music/ui/components/input';
+import { setCookie } from 'cookies-next';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import * as z from 'zod';
 
 const schema = z.object({
   username: z.string().min(1, { message: 'Username is required' }),
@@ -35,29 +35,28 @@ export default function Login() {
 
   const { handleSubmit } = form;
 
-  const onSubmit: SubmitHandler<FormData> = async (data) => {
-    try {
-      const response = await fetch(`${getBaseURL()}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (result.status && result.token) {
-        setCookie('music_jwt', result.token);
-        router.push("/");
-      } else {
-        setErrorMessage(result.message || 'Authentication failed');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      setErrorMessage('An error occurred during login');
-    }
-  };
+    const onSubmit: SubmitHandler<FormData> = async (data) => {
+        try {
+          const response = await fetch(`${getBaseURL()}/api/auth/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+            credentials: 'include'
+          });
+    
+          if (response.ok) {
+            router.push("/");
+          } else {
+            const errorMessage = await response.text();
+            setErrorMessage(errorMessage || 'Authentication failed');
+          }
+        } catch (error) {
+          console.error('Login error:', error);
+          setErrorMessage('An error occurred during login');
+        }
+    };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900">
