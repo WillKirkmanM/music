@@ -1,10 +1,10 @@
 import "@music/ui/globals.css"
 import { Inter as FontSans } from "next/font/google"
 
+import pl from "@/assets/pl-tp.png"
 import { cn } from "@music/ui/lib/utils"
 import { Metadata } from "next"
 import Image from "next/image"
-import pl from "@/assets/pl-tp.png"
 
 const fontSans = FontSans({
   subsets: ["latin"],
