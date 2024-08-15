@@ -1,25 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
 import pl from "@/assets/pl-tp.png";
-import { Loader2Icon } from "lucide-react";
-import { getServerInfo, setServerInfo } from "@music/sdk";
 import getSession from "@/lib/Authentication/JWT/getSession";
-import { useRouter } from "next/navigation";
-import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { getServerInfo } from "@music/sdk";
+import { Button } from '@music/ui/components/button';
 import {
   Form,
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormControl,
   FormMessage,
 } from "@music/ui/components/form";
-import { Button } from '@music/ui/components/button';
 import { Input } from '@music/ui/components/input';
+import { Loader2Icon } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { SubmitHandler, useForm } from 'react-hook-form';
+import * as z from 'zod';
 
 const schema = z.object({
   serverUrl: z.string().url({ message: 'Invalid URL' }).min(1, { message: 'Server URL is required' }),
@@ -59,24 +59,31 @@ export default function MainPage() {
 
   const { handleSubmit } = form;
 
-  const onSubmit: SubmitHandler<FormData> = async (data) => {
-    setLoading(true);
-
-    localStorage.setItem("server", JSON.stringify({ local_address: data.serverUrl }))
-    let serverInfo = await getServerInfo()
-    if (serverInfo.product_name) {
-      localStorage.setItem("server", JSON.stringify(serverInfo))
-
-      const session = getSession();
-      if (session) {
-        push("/home");
-      } else {
-        push("/login");
+    const onSubmit: SubmitHandler<FormData> = async (data) => {
+      setLoading(true);
+  
+      try {
+          localStorage.setItem("server", JSON.stringify({ local_address: data.serverUrl }));
+          let serverInfo = await getServerInfo();
+          
+          if (serverInfo.product_name) {
+              localStorage.setItem("server", JSON.stringify(serverInfo));
+  
+              const session = getSession();
+              if (session) {
+                push("/home");
+              } else {
+                push("/login");
+              }
+          } else {
+            push("/setup");
+          }
+      } catch (error) {
+        push("/setup")
+      } finally {
+          setLoading(false);
       }
-    } else {
-      push("/setup")
-    }
-  };
+  };;
 
   if (loading) {
     return (
