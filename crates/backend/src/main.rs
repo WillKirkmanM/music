@@ -8,6 +8,7 @@ use actix_cors::Cors;
 use actix_files::Files;
 use actix_web::{middleware, web, App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
+use routes::authentication::admin_guard;
 use routes::authentication::refresh;
 use tokio::task;
 use tracing::{info, Level};
@@ -30,6 +31,7 @@ use routes::song;
 use routes::user;
 
 use utils::config;
+use utils::library::index_library;
 use utils::websocket::ws;
 
 #[actix_web::main]
@@ -62,11 +64,11 @@ async fn main() -> std::io::Result<()> {
     
     HttpServer::new(move || {
         let authentication = HttpAuthentication::with_fn(validator);
+        let admin = HttpAuthentication::with_fn(admin_guard);
     
         let protected = web::scope("/api")
             .wrap(authentication)
             .service(songs_list)
-            .service(process_library)
             .service(test)
             .service(stream_song)
             .service(format_contributing_artists_route)
@@ -80,6 +82,11 @@ async fn main() -> std::io::Result<()> {
             .configure(social::configure)
             .configure(playlist::configure)
             .configure(config::configure);
+
+        let admin_routes = web::scope("/admin")
+            .wrap(admin)
+            .service(process_library);
+
         
         App::new()
             .wrap(
@@ -104,6 +111,7 @@ async fn main() -> std::io::Result<()> {
                 .configure(server::configure)
             )
             .service(protected)
+            .service(admin_routes)
             .service(Files::new("/", "./apps/web/out").index_file("index.html"))
     })
     .workers(8)
