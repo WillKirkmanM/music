@@ -191,8 +191,6 @@ async fn get_user_info_by_id(path: web::Path<i32>) -> Result<impl Responder, Box
     Ok(HttpResponse::Ok().json(recieved_user))
 }
 
-
-
 pub fn configure(cfg: &mut web::ServiceConfig) {
   cfg.service(
       web::scope("/user")
