@@ -15,21 +15,21 @@ interface ProvidersProps {
 export default function Providers({ children }: ProvidersProps) {
   return (
     <ThemeProvider>
-        <GradientHoverProvider>
-          <ScrollProvider>
-            <SidebarProvider>
-              <PlayerProvider>
-                <PanelProvider>
-                  <LyricsOverlayProvider>
-                    <AIOverlayProvider>
-                      {children}
-                    </AIOverlayProvider>
-                  </LyricsOverlayProvider>
-                </PanelProvider>
-              </PlayerProvider>
-            </SidebarProvider>
-          </ScrollProvider>
-        </GradientHoverProvider>
+      <GradientHoverProvider>
+        <ScrollProvider>
+          <SidebarProvider>
+            <PlayerProvider>
+              <PanelProvider>
+                <LyricsOverlayProvider>
+                  <AIOverlayProvider>
+                    {children}
+                  </AIOverlayProvider>
+                </LyricsOverlayProvider>
+              </PanelProvider>
+            </PlayerProvider>
+          </SidebarProvider>
+        </ScrollProvider>
+      </GradientHoverProvider>
     </ThemeProvider>
   );
 }
