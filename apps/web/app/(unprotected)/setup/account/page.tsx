@@ -1,10 +1,11 @@
 "use client"
 
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { ArrowRight } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { ArrowRight } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
+import { register } from "@music/sdk"
 import { Button } from "@music/ui/components/button"
 import {
   Form,
@@ -16,9 +17,7 @@ import {
 } from "@music/ui/components/form"
 import { Input } from "@music/ui/components/input"
 import Link from "next/link"
-import { login, register } from "@music/sdk"
 import { useRouter } from "next/navigation"
-import { setCookie } from "cookies-next"
 
 const registerSchema = z.object({
   username: z.string().min(1, { message: "Username must be longer than 1 character" }),
@@ -37,9 +36,7 @@ export default function Register() {
 const { push } = useRouter()
  
 async function onSubmit(values: z.infer<typeof registerSchema>) {
-  let loginData = await register({ username: values.username, password: values.password })
-  setCookie("music_jwt", loginData.token)
-
+  let loginData = await register({ username: values.username, password: values.password, role: "admin" })
   push("/setup/library")
 }
 
