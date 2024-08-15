@@ -44,8 +44,8 @@ pub async fn songs_list(path: web::Path<String>) -> impl Responder {
     HttpResponse::Ok().body(message)
 }
 
-#[get("/library/index/{pathToLibrary}")]
-async fn process_library(path_to_library: web::Path<String>) -> impl Responder {
+#[get("/index/{pathToLibrary}")]
+pub async fn process_library(path_to_library: web::Path<String>) -> impl Responder {
     info!("Indexing library...");
     log_to_ws("Indexing library...".to_string()).await.unwrap();
 
