@@ -15,6 +15,8 @@ use crate::{
     utils::websocket::log_to_ws,
 };
 
+use super::config::{get_cover_art_path, get_icon_art_path};
+
 #[derive(Debug, Deserialize)]
 struct SearchResponse {
   best_match: BestMatch,
@@ -104,7 +106,6 @@ async fn get_artist_metadata(client: &Client, artist_name: &str, access_token: S
 }
 
 pub async fn process_artist(client: &Client, artist: &mut Artist, access_token: String) {
-  // let icon_path_formatted = format!("missing_icon_art/{}.jpg", artist.id);
   // let icon_path = Path::new(&icon_path_formatted);
 
   let client1 = client.clone();
@@ -167,8 +168,9 @@ async fn download_and_store_icon_art(client: &Client, image_url: &str, artist_id
   let image_response = client.get(image_url).send().await.unwrap();
   let image_bytes = image_response.bytes().await.unwrap();
 
-  fs::create_dir_all("missing_icon_art").await?;
-  let icon_url_file_path = format!("missing_icon_art/{}.jpg", artist_id);
+  let icon_art_path = get_icon_art_path();
+  let icon_url_path = icon_art_path.join(format!("{}.jpg", artist_id));
+  let icon_url_file_path = icon_url_path.to_str().map(|s| s.to_owned()).unwrap();
   fs::write(&icon_url_file_path, image_bytes).await?;
 
   let absolute_path = fs::canonicalize(&icon_url_file_path).await?;
@@ -183,9 +185,11 @@ async fn fetch_album_metadata(client: &Client, artist_name: &str, album_name: &s
   let query_with_status = format!("artist:\"{}\" AND release:\"{}\" {}", artist_name, album_name, status);
   let query_without_status = format!("artist:\"{}\" AND release:\"{}\"", artist_name, album_name);
 
-  let cover_url_path_formatted = format!("missing_cover_art/{}.jpg", album_id);
-  let cover_url_path = Path::new(&cover_url_path_formatted);
+  let cover_art_path = get_cover_art_path();
+  let cover_url_path = cover_art_path.join(format!("{}.jpg", album_id));
+  let cover_url_path = Path::new(&cover_url_path);
   let cover_art_already_downloaded = cover_url_path.exists();
+
 
   let url_with_status = format!("https://musicbrainz.org/ws/2/release-group/?query={}&fmt=json&limit=10", query_with_status);
   let url_without_status = format!("https://musicbrainz.org/ws/2/release-group/?query={}&fmt=json&limit=10", query_without_status);
@@ -299,101 +303,118 @@ impl Default for AlbumMetadata {
   }
 }
 
-async fn fetch_musicbrainz_metadata(client: &Client, url: &str, cover_art_already_downloaded: bool, album_id: &str) -> Result<AlbumMetadata, Box<dyn std::error::Error>> {
-  let response = client.get(url).send().await?;
-  let body = response.text().await?;
-  let v: serde_json::Value = serde_json::from_str(&body)?;
+async fn fetch_musicbrainz_metadata(
+    client: &Client,
+    url: &str,
+    cover_art_already_downloaded: bool,
+    album_id: &str,
+) -> Result<AlbumMetadata, Box<dyn std::error::Error>> {
+    let response = client.get(url).send().await?;
+    let body = response.text().await?;
+    let v: serde_json::Value = serde_json::from_str(&body)?;
 
-  let empty_vec = Vec::new();
-  let release_groups = if v["release-groups"].is_array() {
-    v["release-groups"].as_array().unwrap()
-  } else if v["releases"].is_array() {
-    v["releases"].as_array().unwrap()
-  } else {
-    &empty_vec
-  };
-
-
-  for release in release_groups {
-    let id = release["id"].as_str().unwrap_or("");
-    let is_release_group = url.contains("release-group");
-
-    let cover_url = if !cover_art_already_downloaded {
-      let cover_art_url = if is_release_group {
-          format!("http://coverartarchive.org/release-group/{}", id)
-      } else {
-          format!("http://coverartarchive.org/release/{}", id)
-      };
-
-      sleep(Duration::from_secs(1)).await;
-
-      let cover_art_response = client.get(&cover_art_url).send().await?;
-      let cover_art_body = if cover_art_response.status().is_success() {
-          cover_art_response.text().await?
-      } else {
-          "".to_string()
-      };
-      let cover_art: serde_json::Value = serde_json::from_str(&cover_art_body)?;
-      let images = cover_art["images"].as_array().unwrap_or(&empty_vec);
-      let first_image = images.get(0).unwrap_or(&serde_json::Value::Null).clone();
-      first_image["image"].as_str().unwrap_or("").to_string()
-  } else { format!("missing_cover_art/{}.jpg", album_id) };
-
-    let release_url = if is_release_group {
-      format!("https://musicbrainz.org/ws/2/release-group/{}?inc=aliases+artist-credits+releases+url-rels&fmt=json", id)
+    let empty_vec = Vec::new();
+    let release_groups = if v["release-groups"].is_array() {
+        v["release-groups"].as_array().unwrap()
+    } else if v["releases"].is_array() {
+        v["releases"].as_array().unwrap()
     } else {
-      format!("https://musicbrainz.org/ws/2/release/{}?inc=aliases+artist-credits+releases+url-rels&fmt=json", id)
-    };
-    let release_response = client.get(&release_url).send().await?;
-    let release_body = release_response.text().await?;
-    let release: serde_json::Value = serde_json::from_str(&release_body)?;
-
-    let first_release_date = if is_release_group {
-      release["first-release-date"].as_str().unwrap_or("")
-    } else {
-      release["date"].as_str().unwrap_or("")
-    };
-    let primary_type = if is_release_group {
-      release["primary-type"].as_str().unwrap_or("")
-    } else {
-      release["status"].as_str().unwrap_or("")
+        &empty_vec
     };
 
-    let wikidata_id = release["relations"].as_array()
-      .and_then(|relations| {
-        relations.iter().find_map(|relation| {
-          if relation["type"].as_str() == Some("wikidata") {
-            relation["url"]["resource"].as_str()
-              .and_then(|wikidata_url| wikidata_url.split('/').last())
-              .map(|id| id.to_string())
-          } else {
-            None
-          }
-        })
-      })
-      .unwrap_or("".to_string());
+    for release in release_groups {
+        let id = release["id"].as_str().unwrap_or("");
+        let is_release_group = url.contains("release-group");
 
-    return Ok(AlbumMetadata {
-      cover_url: cover_url.to_string(),
-      first_release_date: first_release_date.to_string(),
-      musicbrainz_id: id.to_string(),
-      wikidata_id: Some(wikidata_id),
-      primary_type: primary_type.to_string(),
-    });
-  }
+        let cover_url = if !cover_art_already_downloaded {
+            let cover_art_url = if is_release_group {
+                format!("http://coverartarchive.org/release-group/{}", id)
+            } else {
+                format!("http://coverartarchive.org/release/{}", id)
+            };
 
-  Ok(AlbumMetadata {
-    cover_url: "".to_string(),
-    first_release_date: "".to_string(),
-    musicbrainz_id: "".to_string(),
-    wikidata_id: Some("".to_string()),
-    primary_type: "".to_string(),
-  })
+            sleep(Duration::from_secs(1)).await;
+
+            let cover_art_response = client.get(&cover_art_url).send().await?;
+            let cover_art_body = if cover_art_response.status().is_success() {
+                cover_art_response.text().await?
+            } else {
+                "".to_string()
+            };
+            let cover_art: serde_json::Value = serde_json::from_str(&cover_art_body)?;
+            let images = cover_art["images"].as_array().unwrap_or(&empty_vec);
+            let first_image = images.get(0).unwrap_or(&serde_json::Value::Null).clone();
+            first_image["image"].as_str().unwrap_or("").to_string()
+        } else {
+            let cover_art_path = get_icon_art_path();
+            let cover_url_path = cover_art_path.join(format!("{}.jpg", album_id));
+            cover_url_path.to_str().map(|s| s.to_owned()).unwrap_or_else(|| "".to_string())
+        };
+
+        let release_url = if is_release_group {
+            format!(
+                "https://musicbrainz.org/ws/2/release-group/{}?inc=aliases+artist-credits+releases+url-rels&fmt=json",
+                id
+            )
+        } else {
+            format!(
+                "https://musicbrainz.org/ws/2/release/{}?inc=aliases+artist-credits+releases+url-rels&fmt=json",
+                id
+            )
+        };
+        let release_response = client.get(&release_url).send().await?;
+        let release_body = release_response.text().await?;
+        let release: serde_json::Value = serde_json::from_str(&release_body)?;
+
+        let first_release_date = if is_release_group {
+            release["first-release-date"].as_str().unwrap_or("")
+        } else {
+            release["date"].as_str().unwrap_or("")
+        };
+        let primary_type = if is_release_group {
+            release["primary-type"].as_str().unwrap_or("")
+        } else {
+            release["status"].as_str().unwrap_or("")
+        };
+
+        let wikidata_id = release["relations"]
+            .as_array()
+            .and_then(|relations| {
+                relations.iter().find_map(|relation| {
+                    if relation["type"].as_str() == Some("wikidata") {
+                        relation["url"]["resource"]
+                            .as_str()
+                            .and_then(|wikidata_url| wikidata_url.split('/').last())
+                            .map(|id| id.to_string())
+                    } else {
+                        None
+                    }
+                })
+            })
+            .unwrap_or("".to_string());
+
+        return Ok(AlbumMetadata {
+            cover_url: cover_url.to_string(),
+            first_release_date: first_release_date.to_string(),
+            musicbrainz_id: id.to_string(),
+            wikidata_id: Some(wikidata_id),
+            primary_type: primary_type.to_string(),
+        });
+    }
+
+    Ok(AlbumMetadata {
+        cover_url: "".to_string(),
+        first_release_date: "".to_string(),
+        musicbrainz_id: "".to_string(),
+        wikidata_id: Some("".to_string()),
+        primary_type: "".to_string(),
+    })
 }
 
 async fn download_and_store_cover_art(client: &Client, image_url: &str, album_id: &str) -> Result<String, io::Error> {
-  let cover_url_file_path = format!("missing_cover_art/{}.jpg", album_id);
-  let cover_url_path = Path::new(&cover_url_file_path);
+  let cover_art_path = get_cover_art_path();
+  let cover_url_path = cover_art_path.join(format!("{}.jpg", album_id));
+  let cover_url_file_path = cover_url_path.to_str().map(|s| s.to_owned()).unwrap();
 
   if cover_url_path.exists() {
       // warn!("Cover art already downloaded for album: {}", album_id);
@@ -424,11 +445,6 @@ async fn download_and_store_cover_art(client: &Client, image_url: &str, album_id
   let image_bytes = image_response.bytes().await.map_err(|e| {
       warn!("Failed to read response body as bytes: {}", e);
       io::Error::new(io::ErrorKind::Other, e)
-  })?;
-
-  fs::create_dir_all("missing_cover_art").await.map_err(|e| {
-      warn!("Failed to create directory 'missing_cover_art': {}", e);
-      e
   })?;
 
   fs::write(&cover_url_file_path, image_bytes).await.map_err(|e| {
