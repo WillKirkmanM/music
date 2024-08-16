@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::{env, error::Error, fs, path::Path};
 
 use actix_web::web::{self, Json};
@@ -38,41 +39,42 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
 }
 
 pub async fn get_config() -> Result<String, Box<dyn Error>> {
-  let env = env::var("NODE_ENV").unwrap_or_else(|_| String::from("development"));
-  let deployment_type = env::var("DEPLOYMENT_TYPE").unwrap_or_else(|_| {
-    if is_docker() { "docker" } else { "containerless" }.to_string()
-  });
+    let deployment_type = env::var("DEPLOYMENT_TYPE").unwrap_or_else(|_| {
+        if is_docker() { "docker" } else { "containerless" }.to_string()
+    });
 
-  if !["production", "development"].contains(&env.as_str()) {
-    return Err(format!("Invalid NODE_ENV: {}", env).into());
-  }
+    if !["docker", "containerless"].contains(&deployment_type.as_str()) {
+        return Err(format!("Invalid DEPLOYMENT_TYPE: {}", deployment_type).into());
+    }
 
-  if !["docker", "containerless"].contains(&deployment_type.as_str()) {
-    return Err(format!("Invalid DEPLOYMENT_TYPE: {}", deployment_type).into());
-  }
+    let config_path = get_config_path().await;
 
-  let config_path = match deployment_type.as_str() {
-    "docker" => Path::new("/Config/music.json"),
-    _ => Path::new("./Config/music.json"),
-  };
+    let mut file = File::open(config_path).await?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).await?;
 
-  let mut file = File::open(config_path).await?;
-  let mut contents = String::new();
-  file.read_to_string(&mut contents).await?;
-
-  Ok(contents)
+    Ok(contents)
 }
 
-pub async fn get_config_path() -> std::path::PathBuf {
-  let deployment_type = env::var("DEPLOYMENT_TYPE").unwrap_or_else(|_| {
-    if is_docker() { "docker" } else { "containerless" }.to_string()
-  });
-  let config_path = match deployment_type.as_str() {
-    "docker" => Path::new("/Config/music.json"),
-    _ => Path::new("./Config/music.json"),
-  };
+pub async fn get_config_path() -> PathBuf {
+    let deployment_type = if is_docker() { "docker" } else { "containerless" }.to_string();
 
-  config_path.to_path_buf()
+    let config_path = match deployment_type.as_str() {
+        "docker" => Path::new("/Config/music.json").to_path_buf(),
+        _ => {
+            let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
+            path.push("ParsonLabs");
+            path.push("Music");
+            path.push("Config");
+            if let Err(e) = fs::create_dir_all(&path) {
+                eprintln!("Failed to create directories: {}", e);
+            }
+            path.push("music.json");
+            path
+        },
+    };
+
+    config_path
 }
 
 pub async fn save_config(indexed_json: &String) -> std::io::Result<()> {
@@ -97,4 +99,27 @@ pub async fn save_config(indexed_json: &String) -> std::io::Result<()> {
   file.write_all(indexed_json.as_bytes()).await?;
 
   Ok(())
+}
+
+
+pub fn get_icon_art_path() -> PathBuf {
+    let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
+    path.push("ParsonLabs");
+    path.push("Music");
+    path.push("Artist Icons");
+    if let Err(e) = fs::create_dir_all(&path) {
+        eprintln!("Failed to create directories: {}", e);
+    }
+    path
+}
+
+pub fn get_cover_art_path() -> PathBuf {
+    let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
+    path.push("ParsonLabs");
+    path.push("Music");
+    path.push("Album Covers");
+    if let Err(e) = fs::create_dir_all(&path) {
+        eprintln!("Failed to create directories: {}", e);
+    }
+    path
 }
