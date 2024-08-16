@@ -1,6 +1,14 @@
 use std::collections::HashSet;
 use std::error::Error;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+use std::process::Command;
+use std::io::Write;
+use std::fs::File;
+use reqwest::get;
+use dirs;
+
 
 use actix_web::{delete, get, post, web, HttpResponse, Responder};
 use chrono::NaiveDateTime;
@@ -362,4 +370,77 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .service(get_last_searched_queries)
             .service(populate_search)
     );
+}
+
+pub fn get_meilisearch_path() -> PathBuf {
+    let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
+    path.push("ParsonLabs");
+    path.push("Music");
+    path.push("Meilisearch");
+    if let Err(e) = fs::create_dir_all(&path) {
+        eprintln!("Failed to create directories: {}", e);
+    }
+    path
+}
+
+pub async fn ensure_meilisearch_is_installed() -> Result<(), Box<dyn std::error::Error>> {
+    let base_dir = get_meilisearch_path();
+    let (meilisearch_binary, url) = match std::env::consts::OS {
+        "windows" => (
+            base_dir.join("meilisearch-windows-amd64.exe"),
+            "https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-windows-amd64.exe",
+        ),
+        "macos" => {
+            if std::env::consts::ARCH == "aarch64" {
+                (
+                    base_dir.join("meilisearch-macos-apple-silicon"),
+                    "https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-macos-apple-silicon",
+                )
+            } else {
+                (
+                    base_dir.join("meilisearch-macos-amd64"),
+                    "https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-macos-amd64",
+                )
+            }
+        }
+        "linux" => {
+            if std::env::consts::ARCH == "aarch64" {
+                (
+                    base_dir.join("meilisearch-linux-aarch64"),
+                    "https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-linux-aarch64",
+                )
+            } else {
+                (
+                    base_dir.join("meilisearch-linux-amd64"),
+                    "https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-linux-amd64",
+                )
+            }
+        }
+        _ => {
+            eprintln!("Unsupported platform");
+            return Err("Unsupported platform".into());
+        }
+    };
+
+    if !meilisearch_binary.exists() {
+        println!("Downloading Meilisearch from {}...", url);
+        download_file(url, &meilisearch_binary).await?;
+    }
+
+    run_meilisearch(&meilisearch_binary).await;
+    Ok(())
+}
+
+async fn download_file(url: &str, dest: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let response = get(url).await?;
+    let bytes = response.bytes().await?;
+    let mut file = File::create(dest)?;
+    file.write_all(&bytes)?;
+    Ok(())
+}
+
+async fn run_meilisearch(meilisearch_binary: &Path) {
+    if let Err(e) = Command::new(meilisearch_binary).spawn() {
+        eprintln!("Failed to run Meilisearch: {}", e);
+    }
 }
