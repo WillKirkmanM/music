@@ -11,6 +11,7 @@
 
 ![home-plm](https://github.com/user-attachments/assets/996d0285-cf17-4e07-98fc-f6bf482308f1)
 ![profile](https://github.com/user-attachments/assets/71a8a3c0-4069-4617-b2fc-518fb095a05c)
+![search](https://github.com/user-attachments/assets/0fa243ad-da6a-4e46-a561-71636ad7a712)
 ![showcase-home](https://github.com/user-attachments/assets/9adbd8df-2020-4fb3-8757-1d45f27c0159)
 ![lyrics-showcase](https://github.com/WillKirkmanM/music/assets/98240335/7aa78513-03c9-4ee0-912c-f5dfc816247b)
 ![music-album-showcase](https://github.com/WillKirkmanM/music/assets/98240335/9c5c5276-1351-47f2-85dc-eaf55c921696)
