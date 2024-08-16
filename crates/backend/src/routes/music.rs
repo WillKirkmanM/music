@@ -57,8 +57,12 @@ pub async fn process_library(path_to_library: web::Path<String>) -> impl Respond
         .build()
         .unwrap();
 
-    let mut current_library: Vec<Artist> =
-        serde_json::from_str(get_config().await.unwrap_or("".to_string()).as_str()).unwrap();
+    let config_data = get_config().await.unwrap_or("".to_string());
+    let mut current_library: Vec<Artist> = if config_data.is_empty() {
+        Vec::new()
+    } else {
+        serde_json::from_str(&config_data).unwrap_or_else(|_| Vec::new())
+    };
 
     if current_library.is_empty() {
         let mut library_guard = library.lock().unwrap();
