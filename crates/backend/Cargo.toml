@@ -13,6 +13,7 @@ actix-rt = "2.10.0"
 actix-session = { version = "0.9.0", features = ["cookie-session"]}
 actix-web = "4"
 actix-web-httpauth = "0.8.2"
+actix-web-rust-embed-responder = "2.2.3"
 actix-ws = "0.2.5"
 argon2 = "0.5.3"
 audiotags = "0.5"
@@ -32,6 +33,7 @@ ravif = "0.11.9"
 rayon = "1.8.0"
 regex = "1.10.3"
 reqwest = { version = "0.12.3", features = ["json"] }
+rust-embed = "8.5.0"
 serde = { version = "1.0.190", features = ["derive"] }
 serde_json = "1.0.107"
 tokio = { version = "1.36.0", features = ["full"] }
@@ -41,4 +43,3 @@ tracing-subscriber = { version = "0.3.17", features = ["registry", "env-filter"]
 uuid = { version = "1.10.0", features = ["v4", "fast-rng", "macro-diagnostics", "serde"] }
 walkdir = "2.4.0"
 webp = "0.3.0"
-# openssl = { version = "0.10.59", features = ["vendored"] }
