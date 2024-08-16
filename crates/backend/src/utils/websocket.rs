@@ -22,8 +22,8 @@ pub async fn log_to_ws(message: impl Into<String>) -> Result<(), Box<dyn std::er
     if let Some(session) = session_lock.as_mut() {
         session.text(&message).await?;
     } else {
-        eprintln!("No active session found");
-        return Err("No active session found".into());
+        info!("No active session found, message not sent");
+        return Ok(());
     }
     Ok(())
 }
