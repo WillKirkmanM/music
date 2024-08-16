@@ -5,8 +5,7 @@ mod utils;
 use std::env;
 
 use actix_cors::Cors;
-use actix_files::Files;
-use actix_web::{middleware, web, App, HttpServer};
+use actix_web::{middleware, web, App, HttpServer, route};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use routes::authentication::admin_guard;
 use routes::authentication::refresh;
@@ -31,8 +30,33 @@ use routes::song;
 use routes::user;
 
 use utils::config;
-use utils::library::index_library;
 use utils::websocket::ws;
+
+use rust_embed::RustEmbed;
+use actix_web_rust_embed_responder::{EmbedResponse, IntoResponse};
+use rust_embed::EmbeddedFile;
+
+#[derive(RustEmbed)]
+#[folder = "../../apps/web/out"]
+struct Embed;
+
+#[route("/{path:.*}", method = "GET", method = "HEAD")]
+async fn serve_assets(path: web::Path<String>) -> EmbedResponse<EmbeddedFile> {
+    let mut path = if path.is_empty() {
+        "index.html".to_string()
+    } else {
+        path.to_string()
+    };
+
+    if Embed::get(&path).is_none() && !path.ends_with(".html") {
+        let new_path = format!("{}/index.html", path);
+        if Embed::get(&new_path).is_some() {
+            path = new_path;
+        }
+    }
+
+    Embed::get(&path).into_response()
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -83,7 +107,7 @@ async fn main() -> std::io::Result<()> {
             .configure(playlist::configure)
             .configure(config::configure);
 
-        let admin_routes = web::scope("/admin")
+        let admin_routes = web::scope("/api/admin")
             .wrap(admin)
             .service(process_library);
 
@@ -112,7 +136,7 @@ async fn main() -> std::io::Result<()> {
             )
             .service(protected)
             .service(admin_routes)
-            .service(Files::new("/", "./apps/web/out").index_file("index.html"))
+            .service(serve_assets)
     })
     .workers(8)
     .bind(("0.0.0.0", port))?
