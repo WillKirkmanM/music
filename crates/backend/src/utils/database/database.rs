@@ -1,10 +1,16 @@
+use std::fs;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
 use diesel::connection::SimpleConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
+use diesel::RunQueryDsl;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenvy::dotenv;
+use diesel::sqlite::SqliteConnection;
+use std::error::Error;
 
 #[derive(Debug)]
 pub struct ConnectionOptions {
@@ -36,7 +42,7 @@ pub type DbPool = Arc<r2d2::Pool<ConnectionManager<SqliteConnection>>>;
 pub fn establish_connection() -> DbPool {
     dotenv().ok();
 
-    let database_url = "sqlite://music.db?mode=rwc";
+    let database_url = get_database_path().to_str().unwrap().to_string();
     let manager = ConnectionManager::<SqliteConnection>::new(database_url);
     let pool = r2d2::Pool::builder()
         .max_size(16)
@@ -49,4 +55,42 @@ pub fn establish_connection() -> DbPool {
         .expect("Failed to create pool.");
 
     Arc::new(pool)
+}
+
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
+
+pub fn run_migrations() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    let database_url = get_database_path().to_str().unwrap().to_string();
+    let mut conn = SqliteConnection::establish(&database_url)
+        .expect("Failed to establish a database connection.");
+
+    conn.run_pending_migrations(MIGRATIONS)?;
+
+    Ok(())
+}
+
+pub fn migrations_ran() -> bool {
+    let pool = establish_connection();
+    let mut conn = pool.get().expect("Failed to get a connection from the pool");
+    diesel::sql_query("SELECT 1 FROM diesel_schema_migrations LIMIT 1")
+        .execute(&mut conn)
+        .is_ok()
+}
+
+pub fn get_database_path() -> PathBuf {
+    let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
+    path.push("ParsonLabs");
+    path.push("Music");
+    path.push("Database");
+    if let Err(e) = fs::create_dir_all(&path) {
+        eprintln!("Failed to create directories: {}", e);
+    }
+    path.push("music.db");
+    if !path.exists() {
+        if let Err(e) = fs::File::create(&path) {
+            eprintln!("Failed to create database file: {}", e);
+        }
+    }
+    path
 }
