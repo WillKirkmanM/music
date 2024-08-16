@@ -9,6 +9,7 @@ use actix_web::{middleware, web, App, HttpServer, route};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use routes::authentication::admin_guard;
 use routes::authentication::refresh;
+use routes::search::ensure_meilisearch_is_installed;
 use tokio::task;
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
@@ -30,7 +31,11 @@ use routes::song;
 use routes::user;
 
 use utils::config;
+use utils::database::database::establish_connection;
+use utils::database::database::migrations_ran;
+use utils::database::database::run_migrations;
 use utils::websocket::ws;
+use utils::globals::GLOBAL_SESSION;
 
 use rust_embed::RustEmbed;
 use actix_web_rust_embed_responder::{EmbedResponse, IntoResponse};
@@ -80,7 +85,17 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting server on port {}", port); 
 
-    task::spawn(async {
+    task::spawn(async move {
+        if let Err(e) = ensure_meilisearch_is_installed().await {
+            eprintln!("Failed to ensure Meilisearch is installed: {}", e);
+        }
+    
+        if !migrations_ran() {
+            if let Err(e) = run_migrations() {
+                eprintln!("Failed to run migrations: {}", e);
+            }
+        }
+    
         if let Err(e) = populate_search_data().await {
             eprintln!("Failed to populate search data: {}", e);
         }
@@ -107,10 +122,9 @@ async fn main() -> std::io::Result<()> {
             .configure(playlist::configure)
             .configure(config::configure);
 
-        let admin_routes = web::scope("/api/admin")
+        let admin_routes = web::scope("/library")
             .wrap(admin)
             .service(process_library);
-
         
         App::new()
             .wrap(
