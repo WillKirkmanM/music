@@ -113,7 +113,7 @@ export default function UsernameComponent() {
 
   return (
     <div className="text-center min-h-screen">
-      <div className="flex items-center space-x-4 pt-20 justify-center">
+      <div className="flex items-center space-x-4 pt-32 justify-center">
         {user.image ? (
           <Image src={user.image} alt="" className="w-32 h-32 rounded-full" />
         ) : (
@@ -124,8 +124,7 @@ export default function UsernameComponent() {
           </Avatar>
         )}
         <div className="flex flex-col">
-          <p className="text-lg">{user.name}</p>
-          <p>@{user.username}</p>
+          <p className="text-lg">@{user.username}</p>
           {user.username !== session?.username && (
             <FollowButton userIDToFollow={user.id} />
           )}

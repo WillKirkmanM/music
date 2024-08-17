@@ -31,11 +31,9 @@ use routes::song;
 use routes::user;
 
 use utils::config;
-use utils::database::database::establish_connection;
 use utils::database::database::migrations_ran;
 use utils::database::database::run_migrations;
 use utils::websocket::ws;
-use utils::globals::GLOBAL_SESSION;
 
 use rust_embed::RustEmbed;
 use actix_web_rust_embed_responder::{EmbedResponse, IntoResponse};
