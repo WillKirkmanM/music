@@ -1,7 +1,10 @@
 [package]
-name = "music-backend"
+name = "music-server"
+description = "ParsonLabs Music is the Self Hosted Audio streaming alternative to YouTube Music, Spotify & Apple Music, providing Unrestricted Access to your library in Uncompressed, Lossless Quality"
 version = "0.1.0"
 edition = "2021"
+authors = ["WillKirkmanM <will@parsonlabs.com>"]
+license = "GPL-3.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
