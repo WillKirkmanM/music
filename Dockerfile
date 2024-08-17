@@ -78,11 +78,10 @@ RUN chown -R nextjs:nodejs /app
 
 USER nextjs
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/out ./apps/web/out
-COPY --from=backend-builder /usr/src/crates/backend/target/release/music-backend /usr/local/bin/music-backend
+COPY --from=backend-builder /usr/src/crates/backend/target/release/music-server /usr/local/bin/music-server
 COPY --from=backend-builder /usr/src/crates/backend/music.db /usr/src/crates/backend/music.db
 
 EXPOSE 80
 EXPOSE 7700
 
-# Run both Meilisearch and music-backend
-CMD ["/bin/sh", "-c", "/usr/local/bin/meilisearch --http-addr 0.0.0.0:7700 & /usr/local/bin/music-backend --port 80"]
+CMD ["/bin/sh", "-c", "/usr/local/bin/meilisearch --http-addr 0.0.0.0:7700 & /usr/local/bin/music-server --port 80"]
