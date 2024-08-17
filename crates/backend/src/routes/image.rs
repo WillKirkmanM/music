@@ -4,7 +4,7 @@ use std::fs::read;
 
 use actix_web::{get, web, Error, HttpRequest, HttpResponse, Responder, Result};
 use actix_web::http::header::{CacheControl, CacheDirective};
-use ::image::{io::Reader, imageops::FilterType};
+use ::image::{ImageReader, imageops::FilterType};
 use ravif::{Encoder, Img, RGBA8};
 use webp::Encoder as WebpEncoder;
 
@@ -27,7 +27,7 @@ pub async fn image(req: HttpRequest, path: web::Path<String>) -> Result<impl Res
             Err(_) => Ok(HttpResponse::NotFound().body("Image not found")),
         }
     } else {
-        let img = match Reader::open(&file_path)?.decode() {
+        let img = match ImageReader::open(&file_path)?.decode() {
             Ok(img) => img,
             Err(_) => return serve_raw_image(&file_path),
         };
