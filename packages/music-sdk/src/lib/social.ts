@@ -23,3 +23,13 @@ export async function getFollowers(userId: number): Promise<number[]> {
   const response = await axios.get(`/social/followers/${userId}`);
   return response.data;
 }
+
+/**
+ * Get the users that a user is following.
+ * @param {number} userId - The ID of the user whose following list is to be retrieved.
+ * @returns {Promise<number[]>} - A promise that resolves to a list of following IDs.
+ */
+export async function getFollowing(userId: number): Promise<number[]> {
+  const response = await axios.get(`/social/following/${userId}`);
+  return response.data;
+}
