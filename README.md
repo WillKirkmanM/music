@@ -7,6 +7,12 @@
   <img src="https://www.pwa-shields.com/1.0.0/series/certified/purple.svg" alt="PWA Shields" height="20">
 </p>
 
+<h4 align="center">
+  <a href="#get-started">Install</a>
+  ·
+  <a href="https://docs.parsonlabs.com/">Documentation</a>
+</h4>
+
 <p align="center">ParsonLabs Music is the Self Hosted Audio streaming alternative to YouTube Music, Spotify & Apple Music, providing Unrestricted Access to your library in Uncompressed, Lossless Quality</p>
 
 ![home-plm](https://github.com/user-attachments/assets/996d0285-cf17-4e07-98fc-f6bf482308f1)
@@ -27,4 +33,57 @@
 ![music-playlist](https://github.com/WillKirkmanM/music/assets/98240335/ee6319a1-1b7d-4896-86b6-5a886234e2b5)
 
 ## Get Started
-Everything you need can be found in the Documentation https://docs.parsonlabs.com
+
+### One Liner
+```
+git clone https://github.com/WillKirkmanM/music && cd music && OS=$(uname -s) && if [ "$OS" = "Linux" ]; then if [ -f /etc/debian_version ]; then sudo apt-get update && sudo apt-get install -y --no-install-recommends sqlite3 libsqlite3-dev wget make build-essential pkg-config libssl-dev unzip && wget https://www.nasm.us/pub/nasm/releasebuilds/2.16/nasm-2.16.tar.gz && tar xzf nasm-2.16.tar.gz && cd nasm-2.16 && ./configure && make && sudo make install && cd .. && rm -rf nasm-2.16 nasm-2.16.tar.gz && sudo apt-get install -y libssl1.1 && rm -rf /var/lib/apt/lists/* && curl -fsSL https://bun.sh/install | bash && export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH" && bun install --global yarn; elif [ -f /etc/arch-release ]; then sudo pacman -Syu --noconfirm sqlite wget make base-devel pkgconf openssl nasm unzip && curl -fsSL https://bun.sh/install | bash && export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH" && bun install --global yarn; elif [ -f /etc/fedora-release ]; then sudo dnf install -y sqlite sqlite-devel wget make gcc gcc-c++ kernel-devel pkgconf-pkg-config openssl-devel nasm unzip && curl -fsSL https://bun.sh/install | bash && export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH" && bun install --global yarn; elif [ -f /etc/gentoo-release ]; then sudo emerge --sync && sudo emerge --ask sqlite wget make gcc pkgconfig openssl nasm unzip && curl -fsSL https://bun.sh/install | bash && export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH" && bun install --global yarn; else echo "Unsupported Linux distribution" && exit 1; fi; else echo "Unsupported OS" && exit 1; fi && bun run build --filter music && cargo build --package music-server --release && cargo run --package music-server --release
+```
+
+### Clone the Repository
+```
+git clone https://github.com/WillKirkmanM/music
+```
+
+### Install Dependencies
+#### Ubuntu
+```
+sudo apt-get update && apt-get install -y --no-install-recommends sqlite3 libsqlite3-dev wget make build-essential pkg-config libssl-dev unzip && wget https://www.nasm.us/pub/nasm/releasebuilds/2.16/nasm-2.16.tar.gz && tar xzf nasm-2.16.tar.gz && cd nasm-2.16 && ./configure && make && make install && cd .. && rm -rf nasm-2.16 nasm-2.16.tar.gz && apt-get install -y libssl1.1 && rm -rf /var/lib/apt/lists/* && curl -fsSL https://bun.sh/install | bash && export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH" && bun install --global yarn
+```
+#### Arch Linux
+```
+sudo pacman -Syu --noconfirm sqlite wget make base-devel pkgconf openssl nasm unzip && curl -fsSL https://bun.sh/install | bash && export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH" && bun install --global yarn
+```
+#### Fedora
+```
+sudo dnf install -y sqlite sqlite-devel wget make gcc gcc-c++ kernel-devel pkgconf-pkg-config openssl-devel nasm unzip && curl -fsSL https://bun.sh/install | bash && export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH" && bun install --global yarn
+```
+
+#### Gentoo
+```
+sudo emerge --sync && sudo emerge --ask sqlite wget make gcc pkgconfig openssl nasm unzip && curl -fsSL https://bun.sh/install | bash && export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH" && bun install --global yarn
+```
+
+### Build the Website
+```
+bun run build --filter music 
+```
+### Build the Server
+```
+cargo build --package music-server --release
+```
+
+> [!TIP]
+> The authentication is handled by [JWT Tokens](https://jwt.io/)), they require a special `JWT_SECRET` in order to safely protect your accounts against third parties.
+> It is reccommended to `cp .env.example .env` and edit the `JWT_SECRET=` value to something secret, alternatively, you can use openssl to generate a random secret: `openssl rand -base64 48`.
+
+### Run ParsonLabs Music
+```
+cargo run --package music-server --release
+```
+
+> [!NOTE]  
+> **Done! 🥳**.
+> Head to [http://localhost:3001/](http://localhost:3001/) and setup your music library.
+
+## Documentation
+Any additional troubleshooting information can be found in the Documentation https://docs.parsonlabs.com.
