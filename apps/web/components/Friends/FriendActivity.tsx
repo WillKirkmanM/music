@@ -1,7 +1,7 @@
 "use client"
 
 import getSession from "@/lib/Authentication/JWT/getSession";
-import { getFollowers, getNowPlaying, getSongInfo, getUserInfoById } from "@music/sdk";
+import { getFollowing, getNowPlaying, getSongInfo, getUserInfoById } from "@music/sdk";
 import { Album, Artist, LibrarySong as Song, User } from "@music/sdk/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@music/ui/components/avatar";
 import { Disc3Icon } from 'lucide-react';
@@ -19,12 +19,12 @@ type Friend = User & {
 export default function FriendActivity() {
   const [friends, setFriends] = useState<Friend[]>([])
 
-    useEffect(() => {
+  useEffect(() => {
     const session = getSession();
     async function getActivity() {
       if (session) {
-        const followerIDs = await getFollowers(Number(session?.sub) ?? "");
-        const friends = await Promise.all(followerIDs.map(async (id: number) => {
+        const followingIDs = await getFollowing(Number(session?.sub) ?? "");
+        const friends = await Promise.all(followingIDs.map(async (id: number) => {
           const friend = await getUserInfoById(id);
           const nowPlayingSongID = await getNowPlaying(id);
           
@@ -59,8 +59,7 @@ export default function FriendActivity() {
     };
   }, []);
 
-  
-  return friends &&  (
+  return friends && (
     <>
       {friends.length !== 0 && <h3 className="font-heading text-white font-semibold text-xl">Friend Activity</h3>}
       {friends.map((friend) => (
