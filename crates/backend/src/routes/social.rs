@@ -40,11 +40,26 @@ async fn get_followers(path: web::Path<i32>) -> Result<impl Responder, Box<dyn E
     Ok(HttpResponse::Ok().json(results))
 }
 
+#[get("/following/{user_id}")]
+async fn get_following(path: web::Path<i32>) -> Result<impl Responder, Box<dyn Error>> {
+    use crate::utils::database::schema::follow::dsl::*;
+
+    let user_id = path.into_inner();
+    let mut connection = establish_connection().get().unwrap();
+
+    let results = follow
+        .filter(follower_id.eq(user_id))
+        .select(following_id)
+        .load::<i32>(&mut connection)?;
+
+    Ok(HttpResponse::Ok().json(results))
+}
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
   cfg.service(
     web::scope("/social")
     .service(follow)
     .service(get_followers)
+    .service(get_following)
   );
 }
