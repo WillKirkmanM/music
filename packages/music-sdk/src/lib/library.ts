@@ -6,9 +6,15 @@ import axios from './axios';
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
 export async function indexLibrary(pathToLibrary: string): Promise<string> {
+  let localAddress = '';
+  if (typeof window !== 'undefined') {
+    const server = JSON.parse(window.localStorage.getItem('server') || '{}');
+    localAddress = server.local_address || window.location.origin;
+  }
+
   const encodedPath = encodeURIComponent(pathToLibrary);
   const response = await axios.get(`/library/index/${encodedPath}`, {
-    baseURL: ''
+    baseURL: localAddress
   });
   return response.data;
 }
