@@ -103,3 +103,33 @@ export async function getUserInfoById(id: number): Promise<User> {
   const response: AxiosResponse<User> = await axios.get(`/user/info_by_id/${id}`);
   return response.data;
 }
+
+/**
+ * Get the profile picture for a user.
+ * @param {number} userId - The ID of the user.
+ * @returns {Promise<Blob>} - A promise that resolves to the profile picture blob.
+ */
+export async function getProfilePicture(userId: number): Promise<Blob> {
+  const response = await axios.get(`/user/profile_picture/${userId}`, {
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
+/**
+ * Upload a profile picture for a user.
+ * @param {number} userId - The ID of the user.
+ * @param {File} file - The profile picture file to upload.
+ * @returns {Promise<string>} - A promise that resolves to a success message.
+ */
+export async function uploadProfilePicture(userId: number, file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('picture', file);
+
+  const response = await axios.post(`/user/profile_picture/${userId}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+}
