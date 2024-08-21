@@ -1,5 +1,3 @@
-use std::env;
-
 use actix_web::{cookie::{Cookie, SameSite}, dev::ServiceRequest, http::header, post, web, HttpRequest, HttpResponse, Responder};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use argon2::{
@@ -13,7 +11,7 @@ use futures::future::{ready, Ready};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::utils::database::{database::establish_connection, models::NewUser};
+use crate::utils::{config::get_jwt_secret, database::{database::establish_connection, models::NewUser}};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -54,7 +52,7 @@ fn generate_access_token(user_id: i32, username: &str, bitrate: i32, role: &Stri
         role: role.to_string(),
     };
 
-    let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    let secret = get_jwt_secret();
     encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_ref())).expect("Token encoding failed")
 }
 
@@ -73,7 +71,7 @@ fn generate_refresh_token(user_id: i32, username: &str, role: &String) -> String
         role: role.to_string(),
     };
 
-    let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    let secret = get_jwt_secret();
     let mut header = Header::default();
     header.alg = jsonwebtoken::Algorithm::HS256;
 
@@ -200,7 +198,7 @@ pub async fn register(form: web::Json<RegisterData>, req: HttpRequest) -> impl R
             .cookie("accessToken")
             .map(|cookie| cookie.value().to_string());
         if let Some(token) = token {
-            let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+            let jwt_secret = get_jwt_secret();
             match decode::<Claims>(&token, &DecodingKey::from_secret(jwt_secret.as_ref()), &Validation::default()) {
                 Ok(token_data) => {
                     let claims = token_data.claims;
@@ -257,7 +255,7 @@ pub async fn register(form: web::Json<RegisterData>, req: HttpRequest) -> impl R
 pub async fn refresh(req: HttpRequest) -> impl Responder {
     dotenv().ok();
 
-    let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    let secret = get_jwt_secret();
 
     let refresh_token = match req.cookie("refreshToken") {
         Some(cookie) => cookie.value().to_string(),
@@ -345,7 +343,7 @@ pub fn validator(
     validation.leeway = 60;
     validation.validate_exp = true;
 
-    let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    let secret = get_jwt_secret();
     match decode::<Claims>(&token.unwrap(), &DecodingKey::from_secret(secret.as_ref()), &validation) {
         Ok(data) => {
             if data.claims.token_type == "access" {
@@ -392,7 +390,7 @@ pub fn admin_guard(
     validation.leeway = 60;
     validation.validate_exp = true;
 
-    let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    let secret = get_jwt_secret();
     match decode::<Claims>(&token.unwrap(), &DecodingKey::from_secret(secret.as_ref()), &validation) {
         Ok(data) => {
             if data.claims.token_type == "access" {
