@@ -136,9 +136,6 @@ files.par_iter().for_each(|entry| {
   });
   
   let mut library = library.lock().unwrap();
-  library.par_iter_mut().for_each(|artist| {
-      artist.albums.retain(|album| album.songs.len() > 2);
-  });
   library.sort_by(|a, b| a.name.cmp(&b.name));
 
   Ok(Arc::clone(&library_clone))
