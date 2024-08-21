@@ -6,6 +6,7 @@ use actix_web::{get, Responder};
 use serde_json::{json, Value};
 use tokio::fs::File;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tracing::error;
 
 pub fn is_docker() -> bool {
   if Path::new("/.dockerenv").exists() {
@@ -39,14 +40,6 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
 }
 
 pub async fn get_config() -> Result<String, Box<dyn Error>> {
-    let deployment_type = env::var("DEPLOYMENT_TYPE").unwrap_or_else(|_| {
-        if is_docker() { "docker" } else { "containerless" }.to_string()
-    });
-
-    if !["docker", "containerless"].contains(&deployment_type.as_str()) {
-        return Err(format!("Invalid DEPLOYMENT_TYPE: {}", deployment_type).into());
-    }
-
     let config_path = get_config_path().await;
 
     let mut file = File::open(config_path).await?;
@@ -57,24 +50,19 @@ pub async fn get_config() -> Result<String, Box<dyn Error>> {
 }
 
 pub async fn get_config_path() -> PathBuf {
-    let deployment_type = if is_docker() { "docker" } else { "containerless" }.to_string();
+    if is_docker() {
+        return Path::new("/ParsonLabsMusic/Config/music.json").to_path_buf()
+    }
 
-    let config_path = match deployment_type.as_str() {
-        "docker" => Path::new("/Config/music.json").to_path_buf(),
-        _ => {
-            let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
-            path.push("ParsonLabs");
-            path.push("Music");
-            path.push("Config");
-            if let Err(e) = fs::create_dir_all(&path) {
-                eprintln!("Failed to create directories: {}", e);
-            }
-            path.push("music.json");
-            path
-        },
-    };
-
-    config_path
+    let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
+    path.push("ParsonLabs");
+    path.push("Music");
+    path.push("Config");
+    if let Err(e) = fs::create_dir_all(&path) {
+        eprintln!("Failed to create directories: {}", e);
+    }
+    path.push("music.json");
+    path
 }
 
 pub async fn save_config(indexed_json: &String) -> std::io::Result<()> {
@@ -84,11 +72,11 @@ pub async fn save_config(indexed_json: &String) -> std::io::Result<()> {
   let config_extension = config_path.extension().unwrap().to_str().unwrap();
 
   let mut backup_number = 1;
-  let mut backup_path = config_dir.join(format!("{}_{}.{}", config_filename, backup_number, config_extension));
+  let mut backup_path = config_dir.join(format!("{}_{} (Backup).{}", config_filename, backup_number, config_extension));
 
   while backup_path.exists() {
     backup_number += 1;
-    backup_path = config_dir.join(format!("{}_{}.{}", config_filename, backup_number, config_extension));
+    backup_path = config_dir.join(format!("{}_{} (Backup).{}", config_filename, backup_number, config_extension));
   }
 
   if config_path.exists() {
@@ -101,25 +89,54 @@ pub async fn save_config(indexed_json: &String) -> std::io::Result<()> {
   Ok(())
 }
 
-
 pub fn get_icon_art_path() -> PathBuf {
-    let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
-    path.push("ParsonLabs");
-    path.push("Music");
-    path.push("Artist Icons");
-    if let Err(e) = fs::create_dir_all(&path) {
-        eprintln!("Failed to create directories: {}", e);
+    if is_docker() {
+        Path::new("/ParsonLabsMusic/Artist Icons").to_path_buf()
+    } else {
+        let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
+        path.push("ParsonLabs");
+        path.push("Music");
+        path.push("Artist Icons");
+        if let Err(e) = fs::create_dir_all(&path) {
+            eprintln!("Failed to create directories: {}", e);
+        }
+        path
     }
-    path
 }
 
 pub fn get_cover_art_path() -> PathBuf {
-    let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
-    path.push("ParsonLabs");
-    path.push("Music");
-    path.push("Album Covers");
-    if let Err(e) = fs::create_dir_all(&path) {
-        eprintln!("Failed to create directories: {}", e);
+    if is_docker() {
+        Path::new("/ParsonLabsMusic/Album Covers").to_path_buf()
+    } else {
+        let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
+        path.push("ParsonLabs");
+        path.push("Music");
+        path.push("Album Covers");
+        if let Err(e) = fs::create_dir_all(&path) {
+            eprintln!("Failed to create directories: {}", e);
+        }
+        path
     }
-    path
+}
+
+pub fn get_jwt_secret() -> String {
+    if let Ok(secret) = env::var("JWT_SECRET") {
+        return secret;
+    }
+
+    let args: Vec<String> = env::args().collect();
+    for i in 0..args.len() {
+        if args[i] == "-s" || args[i] == "--jwt-secret" {
+            if i + 1 < args.len() {
+                return args[i + 1].clone();
+            } else {
+                eprintln!("Error: No JWT secret provided after {}", args[i]);
+                break;
+            }
+        }
+    }
+
+    error!("A JWT Secret was not found! It is highly recommended to set it using -s or --jwt-secret or the JWT_SECRET environment variable.");
+
+    "secret".to_string()
 }
