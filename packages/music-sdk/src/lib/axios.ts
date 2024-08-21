@@ -12,9 +12,10 @@ const axiosInstance = axios.create({
   baseURL: `${localAddress}/api`,
   withCredentials: true,
 });
-  
+
 interface CustomAxiosRequestConfig extends AxiosRequestConfig {
   _retry?: boolean;
+  _retryCount?: number;
 }
 
 const setupInterceptors = (instance: AxiosInstance): void => {
@@ -28,29 +29,39 @@ const setupInterceptors = (instance: AxiosInstance): void => {
     }
     return config;
   });
-  
+
   instance.interceptors.response.use(
     (response: AxiosResponse): AxiosResponse => response,
     async (error: AxiosError): Promise<any> => {
       const originalRequest = error.config as CustomAxiosRequestConfig;
-      
-      if (error.response && error.response.status === 401 && originalRequest && !originalRequest._retry) {
-        originalRequest._retry = true;
-        
-        try {
-          const response = await refreshToken();
-          
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${response.token}`;
+
+      if (error.response && error.response.status === 401 && originalRequest) {
+        if (!originalRequest._retry) {
+          originalRequest._retry = true;
+          originalRequest._retryCount = 0;
+        }
+
+        if (originalRequest._retryCount! < 10) {
+          originalRequest._retryCount! += 1;
+
+          try {
+            const response = await refreshToken();
+
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${response.token}`;
+            }
+
+            return axiosInstance(originalRequest);
+          } catch (refreshError) {
+            deleteCookie("accessToken");
+            return Promise.reject(refreshError);
           }
-          
-          return axiosInstance(originalRequest);
-        } catch (refreshError) {
+        } else {
           deleteCookie("accessToken");
-          return Promise.reject(refreshError);
+          return Promise.reject(error);
         }
       }
-      
+
       return Promise.reject(error);
     }
   );
