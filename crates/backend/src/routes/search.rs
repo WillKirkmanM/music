@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::error::Error;
-use std::fs;
+use std::{env, fs};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::process::Command;
@@ -440,6 +440,13 @@ async fn download_file(url: &str, dest: &Path) -> Result<(), Box<dyn std::error:
 }
 
 async fn run_meilisearch(meilisearch_binary: &Path) {
+    let base_dir = get_meilisearch_path();
+
+    if let Err(e) = env::set_current_dir(&base_dir) {
+        eprintln!("Failed to change directory to Meilisearch path: {}", e);
+        return;
+    }
+
     if let Err(e) = Command::new(meilisearch_binary).spawn() {
         eprintln!("Failed to run Meilisearch: {}", e);
     }
