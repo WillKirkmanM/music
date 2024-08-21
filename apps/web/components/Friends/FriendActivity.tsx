@@ -7,13 +7,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@music/ui/components/avatar
 import { Disc3Icon } from 'lucide-react';
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { getProfilePicture } from "@music/sdk";
 
 type Friend = User & {
   nowPlaying: {
     artist: Artist,
     album: Album,
     song: Song,
-  } | null
+  } | null,
+  profilePicture: string | null
 }
 
 export default function FriendActivity() {
@@ -27,6 +29,8 @@ export default function FriendActivity() {
         const friends = await Promise.all(followingIDs.map(async (id: number) => {
           const friend = await getUserInfoById(id);
           const nowPlayingSongID = await getNowPlaying(id);
+          const profilePicBlob = await getProfilePicture(id);
+          const profilePicture = profilePicBlob ? URL.createObjectURL(profilePicBlob) : null;
           
           if (nowPlayingSongID) {
             const songResponse = await getSongInfo(String(nowPlayingSongID.now_playing) ?? 0);
@@ -36,12 +40,14 @@ export default function FriendActivity() {
                 artist: songResponse.artist_object,
                 album: songResponse.album_object,
                 song: songResponse,
-              }
+              },
+              profilePicture
             };
           } else {
             return {
               ...friend,
-              nowPlaying: null
+              nowPlaying: null,
+              profilePicture
             };
           }
         }));
@@ -65,8 +71,11 @@ export default function FriendActivity() {
       {friends.map((friend) => (
         <div key={friend.id} className="flex items-center">
           <Avatar className="cursor-pointer">
-            <AvatarImage src="" alt="usr" className="bg-gray-600"/>
-            <AvatarFallback>{friend.username?.substring(0, 2).toUpperCase()}</AvatarFallback>
+            {friend.profilePicture ? (
+              <AvatarImage src={friend.profilePicture} alt="User Profile Picture" className="bg-gray-600" />
+            ) : (
+              <AvatarFallback>{friend.username?.substring(0, 2).toUpperCase()}</AvatarFallback>
+            )}
           </Avatar>
           <div className="ml-4">
             <p className="text-sm">{friend.username}</p>
