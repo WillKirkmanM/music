@@ -3,10 +3,11 @@ use std::{env, error::Error, fs, path::Path};
 
 use actix_web::web::{self, Json};
 use actix_web::{get, Responder};
+use dotenvy::dotenv;
 use serde_json::{json, Value};
 use tokio::fs::File;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tracing::error;
+use tracing::{error, info};
 
 pub fn is_docker() -> bool {
   if Path::new("/.dockerenv").exists() {
@@ -119,7 +120,24 @@ pub fn get_cover_art_path() -> PathBuf {
     }
 }
 
+pub fn get_profile_picture_path() -> PathBuf {
+    if is_docker() {
+        Path::new("/ParsonLabsMusic/Profile Pictures").to_path_buf()
+    } else {
+        let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
+        path.push("ParsonLabs");
+        path.push("Music");
+        path.push("Profile Pictures");
+        if let Err(e) = fs::create_dir_all(&path) {
+            eprintln!("Failed to create directories: {}", e);
+        }
+        path
+    }
+}
+
 pub fn get_jwt_secret() -> String {
+    dotenv().ok();
+
     if let Ok(secret) = env::var("JWT_SECRET") {
         return secret;
     }
