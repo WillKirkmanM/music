@@ -32,6 +32,7 @@ import { deleteCookie } from "cookies-next"
 import { Inter as FontSans } from "next/font/google"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { cn } from "@music/ui/lib/utils"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -92,12 +93,12 @@ export default function NavbarProfilePicture() {
               </DropdownMenuItem>
             </Link>
 
-            <DialogTrigger asChild>
+            <Link href={`/settings`}>
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
-            </DialogTrigger>
+            </Link>
           </DropdownMenuGroup>
 
           <DropdownMenuSeparator/>
