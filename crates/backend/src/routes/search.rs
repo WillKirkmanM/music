@@ -442,6 +442,14 @@ async fn download_file(url: &str, dest: &Path) -> Result<(), Box<dyn std::error:
 async fn run_meilisearch(meilisearch_binary: &Path) {
     let base_dir = get_meilisearch_path();
 
+    let original_dir = match env::current_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            eprintln!("Failed to get current directory: {}", e);
+            return;
+        }
+    };
+
     if let Err(e) = env::set_current_dir(&base_dir) {
         eprintln!("Failed to change directory to Meilisearch path: {}", e);
         return;
@@ -449,5 +457,9 @@ async fn run_meilisearch(meilisearch_binary: &Path) {
 
     if let Err(e) = Command::new(meilisearch_binary).spawn() {
         eprintln!("Failed to run Meilisearch: {}", e);
+    }
+
+    if let Err(e) = env::set_current_dir(&original_dir) {
+        eprintln!("Failed to restore original directory: {}", e);
     }
 }
