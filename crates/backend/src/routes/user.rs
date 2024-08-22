@@ -1,11 +1,16 @@
 use std::error::Error;
+use std::fs;
+use std::io::Write;
 
+use actix_multipart::Multipart;
 use actix_web::{get, post, web, HttpResponse, Responder};
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use dotenvy::dotenv;
+use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 
 use crate::routes::authentication::{hash_password, verify_password};
+use crate::utils::config::get_profile_picture_path;
 use crate::utils::database::database::establish_connection;
 use crate::utils::database::models::{ListenHistoryItem, NewListenHistoryItem, User};
 
@@ -191,6 +196,40 @@ async fn get_user_info_by_id(path: web::Path<i32>) -> Result<impl Responder, Box
     Ok(HttpResponse::Ok().json(recieved_user))
 }
 
+#[get("/profile_picture/{id}")]
+async fn get_profile_picture(path: web::Path<i32>) -> Result<impl Responder, Box<dyn Error>> {
+    let user_id = path.into_inner();
+    let mut profile_picture_path = get_profile_picture_path();
+    profile_picture_path.push(format!("{}.jpg", user_id));
+
+    if profile_picture_path.exists() {
+        let image_data = fs::read(profile_picture_path)?;
+        Ok(HttpResponse::Ok().content_type("image/jpeg").body(image_data))
+    } else {
+        Ok(HttpResponse::NotFound().body("Profile picture not found"))
+    }
+}
+
+#[post("/profile_picture/{id}")]
+async fn upload_profile_picture(mut payload: Multipart, path: web::Path<i32>) -> Result<impl Responder, Box<dyn Error>> {
+    let user_id = path.into_inner();
+    let mut profile_picture_path = get_profile_picture_path();
+    profile_picture_path.push(format!("{}.jpg", user_id));
+
+    while let Some(item) = payload.next().await {
+        let mut field = item?;
+        let profile_picture_path_clone = profile_picture_path.clone();
+        let mut file = web::block(move || std::fs::File::create(&profile_picture_path_clone)).await??;
+
+        while let Some(chunk) = field.next().await {
+            let data = chunk?;
+            file = web::block(move || file.write_all(&data).map(|_| file)).await??;
+        }
+    }
+
+    Ok(HttpResponse::Ok().body("Profile picture uploaded successfully"))
+}
+
 pub fn configure(cfg: &mut web::ServiceConfig) {
   cfg.service(
       web::scope("/user")
@@ -202,5 +241,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
           .service(set_now_playing)
           .service(get_user_info)
           .service(get_user_info_by_id)
+          .service(get_profile_picture)
+          .service(upload_profile_picture)
   );
 }
