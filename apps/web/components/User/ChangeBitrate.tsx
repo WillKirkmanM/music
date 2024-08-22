@@ -73,45 +73,45 @@ export default function ChangeBitrate() {
   }
 
   return (
-    <div className="text-black bg-white">
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <Form {...form}>
-          <FormField
-            control={form.control}
-            name="bitrate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Audio Quality</FormLabel>
-                <Select
-                  value={form.watch("bitrate")}
-                  onValueChange={onBitrateChange}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select a bitrate" />
-                    </SelectTrigger>
-                  </FormControl>
-
-                  <SelectContent className="bg-white text-black">
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="lossless">Lossless</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Set the audio quality when streaming, Low = 96kbps, Normal =
-                  128kbps, High = 256kbps...
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-            <Button type="submit" className="w-1/3 mt-4">
+      <div className="text-white bg-gray-900 rounded-md">
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <Form {...form}>
+            <FormField
+              control={form.control}
+              name="bitrate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="block text-2xl font-medium text-white">Audio Quality</FormLabel>
+                  <Select
+                    value={form.watch("bitrate")}
+                    onValueChange={onBitrateChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-[180px] bg-gray-800 border border-gray-600 text-white">
+                        <SelectValue placeholder="Select a bitrate" />
+                      </SelectTrigger>
+                    </FormControl>
+  
+                    <SelectContent className="bg-gray-800 text-white">
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="lossless">Lossless</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription className="text-sm text-gray-400">
+                    Set the audio quality when streaming, Low = 96kbps, Normal =
+                    128kbps, High = 256kbps...
+                  </FormDescription>
+                  <FormMessage className="text-sm text-red-600" />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-1/3 mt-4 px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
               Change Quality
             </Button>
-        </Form>
-      </form>
-    </div>
-  );
+          </Form>
+        </form>
+      </div>
+    );;
 }
