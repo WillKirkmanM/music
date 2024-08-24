@@ -79,12 +79,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     id: 0,
     duration: 0,
     artist_object: {albums: [], description: "", followers: 0, icon_url: "", id: 0, name: ""},
-    album_object: {cover_url: "", description: "", first_release_date: "", id: 0, musicbrainz_id: "", name: "", primary_type: "", songs: [], wikidata_id: ""},
+    album_object: {cover_url: "", description: "", first_release_date: "", id: "0", musicbrainz_id: "", name: "", primary_type: "", songs: [], wikidata_id: ""},
   });
   const [artist, setArtist] = useState<Artist>({ albums: [], id: 0, name: "", followers: 0, icon_url: "", description: "" });
   const [album, setAlbum] = useState<Album>({
     cover_url: "",
-    id: 0,
+    id: "0",
     name: "",
     description: "",
     first_release_date: "",
