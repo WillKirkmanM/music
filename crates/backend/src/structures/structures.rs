@@ -11,6 +11,8 @@ pub struct Album {
     pub wikidata_id: Option<String>,
     pub primary_type: String,
     pub description: String,
+    pub release_album: Option<ReleaseAlbum>,
+    pub release_group_album: Option<ReleaseGroupAlbum>
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -34,8 +36,9 @@ pub struct Song {
     pub duration: f64,
 }
 
+
 #[derive(Serialize, Deserialize, Clone)]
-pub struct ReleaseAlbum {
+pub struct ReleaseGroupAlbum {
     pub rating: Rating,
     pub artist_credit: Vec<CreditArtist>,
     pub relationships: Vec<Relationship>,
@@ -45,12 +48,14 @@ pub struct ReleaseAlbum {
     pub title: String,
     pub aliases: Vec<Alias>,
     pub primary_type_id: String,
-    pub annotation: String
+    pub annotation: String,
+    pub tags: Vec<Tag>,
+    pub genres: Vec<Genre>,
 }
 
-impl Default for ReleaseAlbum {
+impl Default for ReleaseGroupAlbum {
     fn default() -> Self {
-        ReleaseAlbum {
+        ReleaseGroupAlbum {
             rating: Rating::default(),
             artist_credit: Vec::new(),
             relationships: Vec::new(),
@@ -61,25 +66,43 @@ impl Default for ReleaseAlbum {
             aliases: Vec::new(),
             primary_type_id: String::new(),
             annotation: String::new(),
+            tags: vec![Tag::default()],
+            genres: vec![Genre::default()]
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct ReleaseGroupAlbum {
+pub struct ReleaseAlbum {
     pub information: Information,
     pub tracks: Vec<Track>,
     pub labels: Vec<Label>,
-    pub purchase_relationships: Vec<Relationship>
+    pub relationships: Vec<Relationship>,
+    pub musicbrainz_id: String,
+    pub first_release_date: String,
+    pub title: String,
+    pub aliases: Vec<Alias>,
+    pub primary_type_id: String,
+    pub annotation: String,
+    pub tags: Vec<Tag>,
+    pub genres: Vec<Genre>
 }
 
-impl Default for ReleaseGroupAlbum {
+impl Default for ReleaseAlbum {
     fn default() -> Self {
-        ReleaseGroupAlbum {
+        ReleaseAlbum {
             information: Information::default(),
             tracks: Vec::new(),
             labels: Vec::new(),
-            purchase_relationships: Vec::new(),
+            relationships: vec![Relationship::default()],
+            musicbrainz_id: String::default(),
+            first_release_date: String::default(),
+            title: String::default(),
+            aliases: Vec::new(),
+            primary_type_id: String::default(),
+            annotation: String::default(),
+            tags: Vec::new(),
+            genres: Vec::new(),
         }
     }
 }
@@ -248,7 +271,14 @@ pub struct Collection {
     pub editor: String,
     pub release_count: u64,
     pub id: String,
-    pub collection_type: String
+    pub collection_type: String,
+    pub secondary_type_ids: Vec<String>,
+    pub tags: Vec<Tag>,
+    pub artist_credit: Vec<CreditArtist>,
+    pub aliases: Vec<String>,
+    pub secondary_types: Vec<String>,
+    pub disambiguation: String,
+    pub first_release_date: String,
 }
 
 impl Default for Collection {
@@ -261,6 +291,13 @@ impl Default for Collection {
             release_count: 0,
             id: String::new(),
             collection_type: String::new(),
+            secondary_type_ids: Vec::new(),
+            tags: Vec::new(),
+            artist_credit: vec![CreditArtist::default()],
+            aliases: Vec::new(),
+            secondary_types: Vec::new(),
+            disambiguation: String::new(),
+            first_release_date: String::new(),
         }
     }
 }
@@ -268,7 +305,7 @@ impl Default for Collection {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Track {
     pub length: u64,
-    pub artist_credit: Vec<Artist>,
+    pub artist_credit: Vec<CreditArtist>,
     pub track_name: String,
     pub position: u16,
     pub video: bool,
@@ -283,14 +320,14 @@ pub struct Track {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Rating {
     pub votes_count: u64,
-    pub value: u8
+    pub value: f64
 }
 
 impl Default for Rating {
     fn default() -> Self {
         Rating {
             votes_count: 0,
-            value: 0,
+            value: 0.0,
         }
     }
 }
@@ -318,8 +355,6 @@ pub struct Label {
     pub sort_name: String,
     pub label_type: String,
     pub id: String,
-    pub tags: Vec<Tag>,
-    pub genre: Vec<Genre>,
     pub aliases: Vec<Alias>
 }
 
@@ -332,8 +367,6 @@ impl Default for Label {
             sort_name: String::new(),
             label_type: String::new(),
             id: String::new(),
-            tags: Vec::new(),
-            genre: Vec::new(),
             aliases: Vec::new(),
         }
     }
