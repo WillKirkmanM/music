@@ -81,7 +81,7 @@ files.par_iter().for_each(|entry| {
       let album = if let Some(album_position) = album_position {
           &mut artist.albums[album_position]
       } else {
-          let mut new_album = Album { id: hash_album(&album_name_without_cd.clone(), &artist_name), name: album_name_without_cd.clone(), songs: Vec::new(), cover_url: String::new(), primary_type: String::new(), description: String::new(), first_release_date: String::new(), musicbrainz_id: String::new(), wikidata_id: None };
+          let mut new_album = Album { id: hash_album(&album_name_without_cd.clone(), &artist_name), name: album_name_without_cd.clone(), songs: Vec::new(), cover_url: String::new(), primary_type: String::new(), description: String::new(), first_release_date: String::new(), musicbrainz_id: String::new(), wikidata_id: None, release_album: None, release_group_album: None };
 
           new_album.songs.push(song.clone());
 
