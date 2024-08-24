@@ -1,22 +1,12 @@
-"use client"
-
-import getBaseURL from "@/lib/Server/getBaseURL";
-
-import PlaylistCard from "@/components/Music/Playlist/PlaylistCard";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@music/ui/components/table";
-import { } from "@tanstack/react-table";
-
+import { distance } from 'fastest-levenshtein';
 import { usePlayer } from "@/components/Music/Player/usePlayer";
 import getSession from "@/lib/Authentication/JWT/getSession";
 import { Album, Artist, LibrarySong } from "@music/sdk/types";
 import SongContextMenu from "../SongContextMenu";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@music/ui/components/table";
+import { useEffect, useState } from 'react';
+import getBaseURL from '@/lib/Server/getBaseURL';
+import PlaylistCard from '../Playlist/PlaylistCard';
 
 type PlaylistTableProps = {
   songs: LibrarySong[]
@@ -24,11 +14,62 @@ type PlaylistTableProps = {
   artist: Artist
 }
 
-export default function AlbumTable({ songs, album, artist }: PlaylistTableProps) {
-  const { setImageSrc, setSong, setAudioSource, setArtist, setAlbum, addToQueue } = usePlayer()
+// Function to normalize strings (e.g., convert to lowercase, remove special characters)
+function normalizeString(str: string): string {
+  return str.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+}
 
-  const session = getSession()
-  const bitrate = session?.bitrate ?? 0
+// Function to check similarity using Levenshtein distance
+function isSimilarLevenshtein(apiTrack: string, userTrack: string): boolean {
+  const normalizedApiTrack = normalizeString(apiTrack);
+  const normalizedUserTrack = normalizeString(userTrack);
+  const levenshteinDistance = distance(normalizedApiTrack, normalizedUserTrack);
+  const maxLength = Math.max(normalizedApiTrack.length, normalizedUserTrack.length);
+  const similarity = 1 - (levenshteinDistance / maxLength);
+  return similarity > 0.6; // Adjust the threshold as needed
+}
+
+export default function AlbumTable({ songs, album, artist }: PlaylistTableProps) {
+  const { setImageSrc, setSong, setAudioSource, setArtist, setAlbum, addToQueue } = usePlayer();
+  const [orderedSongs, setOrderedSongs] = useState<LibrarySong[]>([]);
+
+  const session = getSession();
+  const bitrate = session?.bitrate ?? 0;
+
+  useEffect(() => {
+    if (album.release_album) {
+      const apiTracks = album.release_album.tracks.map(track => track.track_name);
+      const userTracks = songs.map(song => song.name);
+
+      const categorizedTracks = apiTracks.map(apiTrack => {
+        const similarTracks = userTracks.filter(userTrack => isSimilarLevenshtein(apiTrack, userTrack));
+        return {
+          apiTrack,
+          similarTracks
+        };
+      });
+
+      const ordered: any[] = [];
+      const remaining = [...songs];
+
+      categorizedTracks.forEach(({ apiTrack, similarTracks }) => {
+        similarTracks.forEach(similarTrack => {
+          const song = songs.find(song => song.name === similarTrack);
+          if (song) {
+            ordered.push(song);
+            const index = remaining.indexOf(song);
+            if (index > -1) {
+              remaining.splice(index, 1);
+            }
+          }
+        });
+      });
+
+      setOrderedSongs([...ordered, ...remaining]);
+    } else {
+      setOrderedSongs(songs);
+    }
+  }, [songs, album]);
 
   const handlePlay = async (coverURL: string, song: LibrarySong, songURL: string, artist: Artist) => {
     setImageSrc(`${getBaseURL()}/image/${encodeURIComponent(album.cover_url)}`);
@@ -36,9 +77,9 @@ export default function AlbumTable({ songs, album, artist }: PlaylistTableProps)
     setAlbum(album);
     setSong(song);
     setAudioSource(songURL);
-  
+
     let track_number = song.track_number;
-  
+
     const songsToQueue = album.songs.filter((s) => s.track_number >= track_number);
     songsToQueue.forEach((s) => {
       addToQueue(s, album, artist);
@@ -66,7 +107,7 @@ export default function AlbumTable({ songs, album, artist }: PlaylistTableProps)
           </TableRow>
         </TableHeader>
 
-        {songs.map(song => (
+        {orderedSongs.map(song => (
           <SongContextMenu song={song} album={album} artist={artist} key={song.id}>
             <TableBody key={song.id} >
               <TableRow id={sanitizeSongName(song.name)} onClick={() => handlePlay(album.cover_url, song, `${getBaseURL()}/api/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`, artist)}>
