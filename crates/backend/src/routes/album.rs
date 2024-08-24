@@ -2,7 +2,7 @@ use actix_web::{get, web, HttpResponse};
 use rand::seq::{IteratorRandom, SliceRandom};
 use serde::{Deserialize, Serialize};
 
-use crate::structures::structures::{Artist, Song};
+use crate::structures::structures::{Artist, ReleaseAlbum, ReleaseGroupAlbum, Song};
 use crate::utils::config::get_config;
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -17,6 +17,8 @@ pub struct ResponseAlbum {
     pub primary_type: String,
     pub description: String,
     pub artist_object: Artist,
+    pub release_album: Option<ReleaseAlbum>,
+    pub release_group_album: Option<ReleaseGroupAlbum>
 }
 
 pub async fn fetch_random_albums(amount: usize) -> Result<Vec<ResponseAlbum>, ()> {
@@ -57,6 +59,8 @@ pub async fn fetch_random_albums(amount: usize) -> Result<Vec<ResponseAlbum>, ()
                 primary_type: album.primary_type.clone(),
                 description: album.description.clone(),
                 artist_object: valid_artist.unwrap().to_owned().clone(),
+                release_album: album.release_album.clone(),
+                release_group_album: album.release_group_album.clone()
             });
         }
     }
@@ -82,6 +86,8 @@ pub async fn fetch_album_info(album_id: String) -> Result<ResponseAlbum, ()> {
                     primary_type: album.primary_type.clone(),
                     description: album.description.clone(),
                     artist_object: artist.clone(),
+                    release_album: album.release_album.clone(),
+                    release_group_album: album.release_group_album.clone()
                 });
             }
         }
