@@ -104,15 +104,17 @@ export interface Artist {
 }
 
 export interface Album {
-  id: number, 
-  name: string
-  cover_url: string
-  description: string
-  songs: LibrarySong[]
-  first_release_date: string
-  musicbrainz_id: string
-  wikidata_id: string | null
-  primary_type: string
+	id: string;
+	name: string;
+	cover_url: string;
+	songs: LibrarySong[];
+	first_release_date: string;
+	musicbrainz_id: string;
+	wikidata_id: string | null;
+	primary_type: string;
+	description: string;
+	release_album?: ReleaseAlbum;
+	release_group_album?: ReleaseGroupAlbum;
 }
 
 export interface LibrarySong {
@@ -166,4 +168,161 @@ export interface ServerInfo {
   product_name: string;
   startup_wizard_completed: boolean;
   login_disclaimer: string;
+}
+
+export interface ReleaseGroupAlbum {
+    rating: Rating;
+    artist_credit: CreditArtist[];
+    relationships: Relationship[];
+    releases: Information[];
+    musicbrainz_id: string;
+    first_release_date: string;
+    title: string;
+    aliases: Alias[];
+    primary_type_id: string;
+    annotation: string;
+    tags: Tag[];
+    genres: Genre[];
+}
+
+export interface ReleaseAlbum {
+    information: Information;
+    tracks: Track[];
+    labels: Label[];
+    relationships: Relationship[];
+    musicbrainz_id: string;
+    first_release_date: string;
+    title: string;
+    aliases: Alias[];
+    primary_type_id: string;
+    annotation: string;
+    tags: Tag[];
+    genres: Genre[];
+}
+
+export interface Information {
+    date: string;
+    country: string;
+    status_id: string;
+    title: string;
+    barcode: string;
+    quality: string;
+    packaging: string;
+    disambiguation: string;
+    release_type: string;
+    asin: string;
+    music_brainz_id: string;
+    packaging_id: string;
+    status: string;
+    tags: Tag[];
+    genres: Genre[];
+    cover_art_status: CoverArtStatus;
+    collections: Collection[];
+    artist_credits: CreditArtist[];
+}
+
+export interface TextRepresentation {
+    script: string;
+    language: string;
+}
+
+export interface CoverArtStatus {
+    count: number;
+    front: string;
+    darkened: string;
+    artwork: string;
+    back: string;
+}
+
+export interface CreditArtist {
+    name: string;
+    join_phrase: string;
+    musicbrainz_id: string;
+    artist_type: string;
+    disambiguation: string;
+    genres: Genre[];
+    aliases: Alias[];
+}
+
+export interface Genre {
+    musicbrainz_id: string;
+    disambiguation: string;
+    name: string;
+    count: number;
+}
+
+export interface Alias {
+    begin: string;
+    alias_type: string;
+    sort_name: string;
+    name: string;
+    end: string;
+    locale: string;
+    ended: boolean;
+    type_id: string;
+    primary: string;
+}
+
+export interface Collection {
+    entity_type: string;
+    type_id: string;
+    name: string;
+    editor: string;
+    release_count: number;
+    id: string;
+    collection_type: string;
+    secondary_type_ids: string[];
+    tags: Tag[];
+    artist_credit: CreditArtist[];
+    aliases: string[];
+    secondary_types: string[];
+    disambiguation: string;
+    first_release_date: string;
+}
+
+export interface Track {
+    length: number;
+    artist_credit: CreditArtist[];
+    track_name: string;
+    position: number;
+    video: boolean;
+    first_release_date: string;
+    number: string;
+    musicbrainz_id: string;
+    rating: Rating;
+    tags: Tag[];
+}
+
+export interface Rating {
+    votes_count: number;
+    value: number;
+}
+
+export interface Tag {
+    count: number;
+    name: string;
+}
+
+export interface Label {
+    catalog_number: string;
+    type_id: string;
+    name: string;
+    sort_name: string;
+    label_type: string;
+    id: string;
+    aliases: Alias[];
+}
+
+export interface Relationship {
+    direction: string;
+    type_id: string;
+    ended: boolean;
+    begin: string;
+    purchase_relationship_type: string;
+    musicbrainz_id: string;
+    target_credit: string;
+    source_credit: string;
+    target_type: string;
+    end: string;
+    url: string;
 }
