@@ -26,7 +26,7 @@ export default function PlaylistTable({ songsWithMetadata }: PlaylistTableProps)
 
   const session = getSession()
 
-  const handlePlay = async (coverURL: string, song: Song, songURL: string, artist: Artist, album: Album) => {
+  const handlePlay = async (coverURL: string, song: LibrarySong, songURL: string, artist: Artist, album: Album) => {
     setImageSrc(`${getBaseURL()}/image/${encodeURIComponent(coverURL)}`)
     setArtist(artist)
     setAlbum(album)
