@@ -35,7 +35,7 @@ export interface PlaylistsResponse {
  * @param {number} song_id - The ID of the song.
  * @returns {Promise<string>} - A promise that resolves to a success message.
  */
-export async function addSongToPlaylist(playlist_id: number, song_id: number): Promise<string> {
+export async function addSongToPlaylist(playlist_id: number, song_id: string): Promise<string> {
   const response = await axios.post('/playlist/add_song', { playlist_id, song_id });
   return response.data;
 }
