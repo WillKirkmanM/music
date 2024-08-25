@@ -297,11 +297,6 @@ export default function AlbumComponent() {
                       </Button>
                     </Link>
                   ))}
-                  {album.release_group_album?.aliases.map((alias) => (
-                    <p key={alias.name} className="mb-2">
-                      {alias.name}
-                    </p>
-                  ))}
                 </div>
               </div>
             </div>
