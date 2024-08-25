@@ -54,13 +54,14 @@ files.par_iter().for_each(|entry| {
       let duration = tagged_file.properties().duration().as_secs_f64();
 
       let song = Song {
-          name: song_name,
-          id,
-          artist: artist_name.clone(),
-          contributing_artists,
-          track_number,
-          path: path.to_str().unwrap().to_string(),
-          duration
+            name: song_name,
+            id,
+            artist: artist_name.clone(),
+            contributing_artists,
+            track_number,
+            path: path.to_str().unwrap().to_string(),
+            duration,
+            music_video: None,
       };
       
       let mut library = library.lock().unwrap();
