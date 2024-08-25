@@ -22,7 +22,8 @@ pub struct Artist {
     pub icon_url: String,
     pub followers: u64,
     pub albums: Vec<Album>,
-    pub description: String
+    pub description: String,
+    pub tadb_music_videos: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
