@@ -21,7 +21,7 @@ use crate::utils::compare::compare;
 use crate::utils::config::{get_config, save_config};
 use crate::utils::format::format_contributing_artists;
 use crate::utils::library::index_library;
-use crate::utils::metadata::{get_access_token, process_album, process_albums, process_artist, process_artists};
+use crate::utils::metadata::{get_access_token, process_album, process_albums, process_artist, process_artists, refresh_audio_db_info};
 use crate::utils::websocket::log_to_ws;
 
 #[get("/songs/list/{path}")]
@@ -57,19 +57,19 @@ pub async fn process_library(path_to_library: web::Path<String>) -> impl Respond
         .build()
         .unwrap();
 
-    let config_data = get_config().await.unwrap_or("".to_string());
+        let config_data = get_config().await.unwrap_or("".to_string());
     let mut current_library: Vec<Artist> = if config_data.is_empty() {
         Vec::new()
     } else {
         serde_json::from_str(&config_data).unwrap_or_else(|_| Vec::new())
     };
-
+    
     if current_library.is_empty() {
         let mut library_guard = library.lock().unwrap();
         process_artists(&client, &mut *library_guard).await;
         process_albums(&client, &mut *library_guard).await;
     }
-
+    
     if let Ok((mut new_artist_entries, mut new_album_entries, _new_song_entries)) =
         compare(&library).await
     {
@@ -84,7 +84,7 @@ pub async fn process_library(path_to_library: web::Path<String>) -> impl Respond
             );
             info!(log);
             log_to_ws(log).await.unwrap();
-
+    
             match get_access_token().await {
                 Ok(access_token) => {
                     for artist in new_artist_entries.iter_mut() {
@@ -95,7 +95,7 @@ pub async fn process_library(path_to_library: web::Path<String>) -> impl Respond
                 Err(e) => warn!("Failed to get access token. Error: {}", e),
             }
         }
-
+    
         if !new_album_entries.is_empty() {
             let albums_without_cover_count = new_album_entries
                 .iter()
@@ -107,7 +107,7 @@ pub async fn process_library(path_to_library: web::Path<String>) -> impl Respond
             );
             info!(log);
             log_to_ws(log).await.unwrap();
-
+    
             for modified_album in new_album_entries.iter_mut() {
                 process_album(
                     &client,
@@ -127,6 +127,8 @@ pub async fn process_library(path_to_library: web::Path<String>) -> impl Respond
                         Some(existing_album) => *existing_album = modified_album.album.clone(),
                         None => artist.albums.push(modified_album.album.clone()),
                     }
+
+                    refresh_audio_db_info(artist);
                 }
             }
         }
