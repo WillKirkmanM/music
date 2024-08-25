@@ -1708,6 +1708,7 @@ async fn fetch_audio_db_info(client: &Client, artist: &mut Artist) -> Result<(),
                     let api_res = client.get(&api_url).send().await?;
 
                     let api_body = api_res.text().await?;
+                    artist.tadb_music_videos = Some(api_body.clone());
 
                     let root: Value = serde_json::from_str(&api_body)?;
 
@@ -1737,4 +1738,31 @@ async fn fetch_audio_db_info(client: &Client, artist: &mut Artist) -> Result<(),
     }
 
     Ok(())
+}
+
+pub fn refresh_audio_db_info(artist: &mut Artist) {
+    if let Some(tadb_music_videos) = &artist.tadb_music_videos {
+        let root: Value = serde_json::from_str(tadb_music_videos).unwrap();
+
+        for album in &mut artist.albums {
+            for song in &mut album.songs {
+                if let Some(mvids) = root["mvids"].as_array() {
+                    for mvid in mvids {
+                        let distance = levenshtein(&song.name, mvid["strTrack"].as_str().unwrap_or(""));
+                        if distance < 3 {
+                            song.music_video = Some(MusicVideo {
+                                url: mvid["strMusicVid"].as_str().unwrap_or("").to_string(),
+                                thumbnail_url: mvid["strTrackThumb"].as_str().map(|s| s.to_string()),
+                                tadb_track_id: mvid["idTrack"].as_str().unwrap_or("").to_string(),
+                                tadb_album_id: mvid["idAlbum"].as_str().unwrap_or("").to_string(),
+                                description: mvid["strDescriptionEN"].as_str().unwrap_or("").to_string(),
+                                musicbrainz_recording_id: mvid["strMusicBrainzID"].as_str().unwrap_or("").to_string(),
+                            });
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
