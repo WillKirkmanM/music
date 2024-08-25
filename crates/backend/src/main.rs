@@ -3,9 +3,11 @@ mod structures;
 mod utils;
 
 use std::env;
+use std::error::Error;
 
 use actix_cors::Cors;
-use actix_web::{middleware, web, App, HttpServer, route};
+use actix_web::HttpResponse;
+use actix_web::{middleware, web, App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use routes::authentication::admin_guard;
 use routes::authentication::refresh;
@@ -33,32 +35,47 @@ use routes::user;
 use utils::config;
 use utils::database::database::migrations_ran;
 use utils::database::database::run_migrations;
+// use utils::update::check_for_updates;
 use utils::websocket::ws;
 
 use rust_embed::RustEmbed;
-use actix_web_rust_embed_responder::{EmbedResponse, IntoResponse};
-use rust_embed::EmbeddedFile;
 
 #[derive(RustEmbed)]
 #[folder = "../../apps/web/out"]
-struct Embed;
+struct Asset;
 
-#[route("/{path:.*}", method = "GET", method = "HEAD")]
-async fn serve_assets(path: web::Path<String>) -> EmbedResponse<EmbeddedFile> {
-    let mut path = if path.is_empty() {
-        "index.html".to_string()
-    } else {
-        path.to_string()
-    };
+async fn serve_embedded_file(path: web::Path<String>) -> Result<HttpResponse, Box<dyn Error>> {
+    let mut file_path = path.into_inner();
 
-    if Embed::get(&path).is_none() && !path.ends_with(".html") {
-        let new_path = format!("{}/index.html", path);
-        if Embed::get(&new_path).is_some() {
-            path = new_path;
-        }
+    if let Some(content) = Asset::get(&file_path) {
+        let body = content.data.into_owned();
+        let mime_type = mime_guess::from_path(&file_path).first_or_octet_stream();
+        return Ok(HttpResponse::Ok()
+            .content_type(mime_type.as_ref())
+            .body(body));
     }
 
-    Embed::get(&path).into_response()
+    if file_path.is_empty() {
+        file_path = "index.html".to_string();
+    } else {
+        if !file_path.ends_with('/') {
+            file_path.push('/');
+        }
+        file_path.push_str("index.html");
+    }
+
+    match Asset::get(&file_path) {
+        Some(content) => {
+            let body = content.data.into_owned();
+            let mime_type = mime_guess::from_path(&file_path).first_or_octet_stream();
+            Ok(HttpResponse::Ok()
+                .content_type(mime_type.as_ref())
+                .body(body))
+        }
+        None => {
+            Ok(HttpResponse::NotFound().body("404 Not Found!"))
+        }
+    }
 }
 
 #[actix_web::main]
@@ -68,6 +85,15 @@ async fn main() -> std::io::Result<()> {
         .finish();
     tracing::subscriber::set_global_default(subscriber)
         .expect("setting default subscriber failed");
+
+    // let update_result = task::spawn_blocking(|| check_for_updates())
+    //     .await
+    //     .expect("Checking for Updates Failed! Are you connected to the internet?");
+
+    // if let Err(e) = update_result {
+    //     eprintln!("[ERROR] {}", e);
+    //     std::process::exit(1);
+    // }
 
     let mut port = 3001;
 
@@ -98,7 +124,7 @@ async fn main() -> std::io::Result<()> {
             eprintln!("Failed to populate search data: {}", e);
         }
     });
-    
+
     HttpServer::new(move || {
         let authentication = HttpAuthentication::with_fn(validator);
         let admin = HttpAuthentication::with_fn(admin_guard);
@@ -148,7 +174,7 @@ async fn main() -> std::io::Result<()> {
             )
             .service(protected)
             .service(admin_routes)
-            .service(serve_assets)
+            .route("/{filename:.*}", web::get().to(serve_embedded_file))
     })
     .workers(8)
     .bind(("0.0.0.0", port))?
