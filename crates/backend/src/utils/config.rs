@@ -7,7 +7,7 @@ use dotenvy::dotenv;
 use serde_json::{json, Value};
 use tokio::fs::File;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tracing::{error, info};
+use tracing::error;
 
 pub fn is_docker() -> bool {
   if Path::new("/.dockerenv").exists() {
