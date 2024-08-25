@@ -1,7 +1,6 @@
 "use client"
 
 import getBaseURL from "@/lib/Server/getBaseURL";
-
 import getSession from "@/lib/Authentication/JWT/getSession";
 import setCache, { getCache } from "@/lib/Caching/cache";
 import { getListenHistory, getSongInfo } from "@music/sdk";
@@ -12,36 +11,43 @@ import BigCard from "../Music/Card/BigCard";
 import ScrollButtons from "./ScrollButtons";
 
 export default function ListenAgain() {
-  const [listenHistorySongs, setListenHistorySongs] = useState<LibrarySong[]>([])
+  const [listenHistorySongs, setListenHistorySongs] = useState<LibrarySong[]>([]);
 
   useEffect(() => {
     const fetchListenHistory = async () => {
       const cachedData = getCache("listenAgain");
-  
+
       if (cachedData) {
         setListenHistorySongs(cachedData);
       } else {
         const session = getSession();
-        if (session) {
-          const listenHistoryItems = await getListenHistory(Number(session.sub));
-          const uniqueListenHistoryItems = Array.from(new Set(listenHistoryItems.map(item => item.song_id)));
-          const songDetailsPromises = uniqueListenHistoryItems.reverse().slice(0, 30).map(song_id => getSongInfo(song_id));
-          const songDetails = await Promise.all(songDetailsPromises);
-          
-          setListenHistorySongs(songDetails);
-          setCache("listenAgain", songDetails, 3600000);
+        if (session && session.sub) {
+          const userId = Number(session.sub);
+          if (!isNaN(userId) && userId > 0) {
+            const listenHistoryItems = await getListenHistory(userId);
+            const uniqueListenHistoryItems = Array.from(new Set(listenHistoryItems.map(item => item.song_id)));
+            const songDetailsPromises = uniqueListenHistoryItems.reverse().slice(0, 30).map(song_id => getSongInfo(song_id));
+            const songDetails = await Promise.all(songDetailsPromises);
+
+            setListenHistorySongs(songDetails);
+            setCache("listenAgain", songDetails, 3600000);
+          } else {
+            console.error("Invalid user ID:", userId);
+          }
+        } else {
+          console.error("Invalid session or session.sub:", session);
         }
       }
     };
-  
+
     fetchListenHistory();
   }, []);
 
-  if (!(listenHistorySongs[0]) || listenHistorySongs.length === 0) return null
+  if (!(listenHistorySongs[0]) || listenHistorySongs.length === 0) return null;
 
   const albumCoverSrc = listenHistorySongs[0].album_object.cover_url.length === 0
     ? "/snf.png"
-    : `${getBaseURL()}/image/${encodeURIComponent(listenHistorySongs[0].album_object.cover_url)}`
+    : `${getBaseURL()}/image/${encodeURIComponent(listenHistorySongs[0].album_object.cover_url)}`;
 
   return listenHistorySongs && (
     <>
@@ -69,5 +75,5 @@ export default function ListenAgain() {
         </div>
       </ScrollButtons>
     </>
-  )
+  );
 }
