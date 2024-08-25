@@ -109,8 +109,8 @@ export default function AlbumComponent() {
                   <Image
                     src={albumCoverURL}
                     alt={`${album.name} Image`}
-                    height={288}
-                    width={288}
+                    height={400}
+                    width={400}
                     className="w-full h-full object-fill rounded"
                   />
                 </div>
