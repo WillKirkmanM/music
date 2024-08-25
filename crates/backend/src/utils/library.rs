@@ -72,7 +72,7 @@ files.par_iter().for_each(|entry| {
       let artist = if let Some(artist_position) = artist_position {
           &mut library[artist_position]
       } else {
-          let new_artist = Artist { id: hash_artist(&artist_name), name: artist_name.clone(), albums: Vec::new(), icon_url: String::new(), followers: 0, description: String::new() };
+          let new_artist = Artist { id: hash_artist(&artist_name), name: artist_name.clone(), albums: Vec::new(), icon_url: String::new(), followers: 0, description: String::new(), tadb_music_videos: None };
           library.push(new_artist);
           library.last_mut().unwrap()
       };
