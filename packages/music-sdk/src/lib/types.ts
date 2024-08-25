@@ -95,39 +95,49 @@ export type Session = {
 };
 
 export interface Artist {
-  id: number 
-  name: string
-  icon_url: string
-  followers: number
-  albums: Album[]
-  description: string
+  id: string;
+  name: string;
+  icon_url: string;
+  followers: number;
+  albums: Album[];
+  description: string;
 }
 
 export interface Album {
-	id: string;
-	name: string;
-	cover_url: string;
-	songs: LibrarySong[];
-	first_release_date: string;
-	musicbrainz_id: string;
-	wikidata_id: string | null;
-	primary_type: string;
-	description: string;
-	release_album?: ReleaseAlbum;
-	release_group_album?: ReleaseGroupAlbum;
+    id: string;
+    name: string;
+    cover_url: string;
+    songs: LibrarySong[];
+    first_release_date: string;
+    musicbrainz_id: string;
+    wikidata_id: string | null;
+    primary_type: string;
+    description: string;
+    release_album?: ReleaseAlbum;
+    release_group_album?: ReleaseGroupAlbum;
 }
 
 export interface LibrarySong {
-    id: number;
+    id: string;
     name: string;
     artist: string;
     contributing_artists: string[];
     track_number: number;
     path: string;
     duration: number;
-    album_object: Album;
     artist_object: Artist;
-};
+    album_object: Album;
+    music_video?: MusicVideo;
+}
+
+export interface MusicVideo {
+    url: string;
+    thumbnail_url?: string;
+    tadb_track_id: string;
+    tadb_album_id: string;
+    description: string;
+    musicbrainz_recording_id: string;
+}
 
 export interface ArtistInfo {
 	id: string;
