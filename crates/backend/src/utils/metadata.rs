@@ -1,19 +1,21 @@
-use std::{error::Error, path::Path, time::Duration};
+use std::{collections::HashMap, error::Error, path::Path, sync::{Arc, Mutex}, time::Duration};
 
 use regex::Regex;
 use reqwest::{
     header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE, USER_AGENT},
     Client,
 };
+use levenshtein::levenshtein;
+use scraper::{Html, Selector};
 use serde::Deserialize;
 use serde_json::Value;
 use tokio::{fs, io, time::sleep};
 use tracing::{info, warn};
+use std::error::Error as StdError;
 
 use crate::{
     structures::structures::{
-        Album, Alias, Artist, Collection, CoverArtStatus, CreditArtist, Genre, Information, Label,
-        Rating, Relationship, ReleaseAlbum, ReleaseGroupAlbum, Tag, Track,
+        Album, Alias, Artist, Collection, CoverArtStatus, CreditArtist, Genre, Information, Label, MusicVideo, Rating, Relationship, ReleaseAlbum, ReleaseGroupAlbum, Tag, Track
     },
     utils::websocket::log_to_ws,
 };
@@ -160,6 +162,39 @@ pub async fn process_artist(client: &Client, artist: &mut Artist, access_token: 
         let log = format!("Icon art not found for Artist: {}", artist.name);
         warn!(log);
         log_to_ws(log).await.unwrap();
+    }
+
+    let client3 = client.clone();
+    let artist_clone = Arc::new(Mutex::new(artist.clone()));
+    let artist_clone_for_task = Arc::clone(&artist_clone);
+    
+    let audio_db_future = tokio::task::spawn_blocking(move || {
+        tokio::runtime::Handle::current().block_on(async move {
+            let mut artist_clone_locked = artist_clone_for_task.lock().unwrap();
+            fetch_audio_db_info(&client3, &mut artist_clone_locked).await
+        })
+    });
+    
+    match audio_db_future.await {
+        Ok(inner_result) => match inner_result {
+            Ok(()) => {
+                let artist_clone_locked = artist_clone.lock().unwrap();
+                *artist = artist_clone_locked.clone();
+                let log = format!("Audio DB info processed for Artist: {}", artist.name);
+                info!("{}", log);
+                log_to_ws(log).await.unwrap();
+            }
+            Err(e) => {
+                let log = format!("Failed to process Audio DB info for Artist: {}: {}", artist.name, e);
+                warn!("{}", log);
+                log_to_ws(log).await.unwrap();
+            }
+        },
+        Err(e) => {
+            let log = format!("Failed to join audio DB task for Artist: {}: {:?}", artist.name, e);
+            warn!("{}", log);
+            log_to_ws(log).await.unwrap();
+        }
     }
 
     sleep(Duration::from_secs(1)).await;
@@ -1645,4 +1680,61 @@ fn map_to_release_group_album(
         tags,
         genres,
     })
+}
+
+async fn fetch_audio_db_info(client: &Client, artist: &mut Artist) -> Result<(), Box<dyn StdError + Send + Sync>> {
+    let mut params = HashMap::new();
+    params.insert("search", &artist.name);
+
+    let res = client.post("https://www.theaudiodb.com/browse.php")
+        .form(&params)
+        .send()
+        .await?;
+
+    let body = res.text().await?;
+
+    let document = Html::parse_document(&body);
+    let selector = Selector::parse("div.col-sm-3 a")
+        .map_err(|e: scraper::error::SelectorErrorKind| Box::<dyn StdError + Send + Sync>::from(e.to_string()))?;
+
+    for element in document.select(&selector) {
+        if let Some(href) = element.value().attr("href") {
+            if href.contains("/artist/") {
+                let parts: Vec<&str> = href.split('/').collect();
+                if parts.len() > 2 {
+                    let artist_id = parts[2].split('-').next().unwrap();
+
+                    let api_url = format!("https://www.theaudiodb.com/api/v1/json/2/mvid.php?i={}", artist_id);
+                    let api_res = client.get(&api_url).send().await?;
+
+                    let api_body = api_res.text().await?;
+
+                    let root: Value = serde_json::from_str(&api_body)?;
+
+                    for album in &mut artist.albums {
+                        for song in &mut album.songs {
+                            if let Some(mvids) = root["mvids"].as_array() {
+                                for mvid in mvids {
+                                    let distance = levenshtein(&song.name, mvid["strTrack"].as_str().unwrap_or(""));
+                                    if distance < 3 {
+                                        song.music_video = Some(MusicVideo {
+                                            url: mvid["strMusicVid"].as_str().unwrap_or("").to_string(),
+                                            thumbnail_url: mvid["strTrackThumb"].as_str().map(|s| s.to_string()),
+                                            tadb_track_id: mvid["idTrack"].as_str().unwrap_or("").to_string(),
+                                            tadb_album_id: mvid["idAlbum"].as_str().unwrap_or("").to_string(),
+                                            description: mvid["strDescriptionEN"].as_str().unwrap_or("").to_string(),
+                                            musicbrainz_recording_id: mvid["strMusicBrainzID"].as_str().unwrap_or("").to_string(),
+                                        });
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
 }
