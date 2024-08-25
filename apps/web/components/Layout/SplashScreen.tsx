@@ -39,40 +39,39 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ children }) => {
   const { push } = useRouter();
 
   useEffect(() => {
+    const checkServerUrl = async () => {
+      const storedServer = localStorage.getItem("server");
+      const response = await fetch(
+        `${storedServer && JSON.parse(storedServer).local_address || window.location.origin}/api/s/server/info`
+      );
+  
+      if (response.ok) {
+        const session = getSession();
+        if (session) {
+          push("/home");
+          setLoading(false);
+          setItemWithExpiry("loading", "false", 3600000); 
+        } else {
+          push("/login");
+          setLoading(false);
+          setItemWithExpiry("loading", "false", 3600000);
+        }
+      } else {
+        setLoading(false);
+        setItemWithExpiry("loading", "false", 3600000); 
+      }
+    };
+  
+    checkServerUrl();
+  }, [push]);
+
+  useEffect(() => {
     const storedLoading = getItemWithExpiry("loading");
     if (storedLoading === "false") {
       setLoading(false);
       return;
     }
-
-    const timeoutId = setTimeout(() => {
-      const checkServerUrl = async () => {
-        const storedServer = localStorage.getItem("server");
-        const response = await fetch(
-          `${storedServer && JSON.parse(storedServer).local_address || window.location.origin}/api/s/server/info`
-        );
-
-        if (response.ok) {
-          const session = getSession();
-          if (session) {
-            push("/home");
-            setLoading(false);
-            setItemWithExpiry("loading", "false", 3600000); 
-          } else {
-            push("/login");
-            setLoading(false);
-            setItemWithExpiry("loading", "false", 3600000);
-          }
-        } else {
-          setLoading(false);
-          setItemWithExpiry("loading", "false", 3600000); 
-        }
-      };
-
-      checkServerUrl();
-    }, 1000);
-
-    return () => clearTimeout(timeoutId);
+    
   }, [push]);
 
   if (loading) {
