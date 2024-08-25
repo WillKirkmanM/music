@@ -77,7 +77,7 @@ export default function AddToPlaylistDropdown({ children }: AddToPlaylistDropdow
         <ScrollArea>
           {playlists && playlists.map((playlist) => (
             <DropdownMenuItem key={playlist.id} onClick={() => {
-              addSongToPlaylist(song.id, playlist.id)
+              addSongToPlaylist(playlist.id, song.id)
               setPlaylistAddedNow(String(playlist.id))
             }}>
               {playlist.name}
