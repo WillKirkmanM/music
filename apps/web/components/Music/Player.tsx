@@ -22,6 +22,7 @@ import SpeakerXMark from "../Icons/SpeakerXMark";
 import { LyricsContext } from "../Lyrics/LyricsOverlayContext";
 import { useGradientHover } from "../Providers/GradientHoverProvider";
 import { usePlayer } from "./Player/usePlayer";
+import VideoPlayerDialog from "./Player/VideoPlayerDialog";
 import { PanelContext } from "./Queue/QueuePanelContext";
 
 export default function Player() {
@@ -133,8 +134,9 @@ export default function Player() {
               <Image
                 alt={song.name + "Image"}
                 src={imageSrc}
-                width={334}
-                height={332}
+                height={400}
+                width={400}
+                className="w-full h-full object-fill rounded"
               />
             </div>
             <div className="w-32 md:overflow-hidden">
@@ -195,6 +197,8 @@ export default function Player() {
         <button onClick={toggleLyrics}>
           <MicVocal />
         </button>
+
+        {song.music_video?.url && <VideoPlayerDialog url={song.music_video.url} /> }
 
         {process.env.NEXT_PUBLIC_AI_URL && (
           <button onClick={toggleAI}>
