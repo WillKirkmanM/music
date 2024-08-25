@@ -34,8 +34,31 @@ pub struct Song {
     pub track_number: u16,
     pub path: String,
     pub duration: f64,
+    pub music_video: Option<MusicVideo>
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct MusicVideo {
+    pub url: String,
+    pub thumbnail_url: Option<String>,
+    pub tadb_track_id: String,
+    pub tadb_album_id: String,
+    pub description: String,
+    pub musicbrainz_recording_id: String,
+}
+
+impl Default for MusicVideo {
+    fn default() -> Self {
+        MusicVideo {
+            url: String::from(""),
+            thumbnail_url: None,
+            tadb_track_id: String::from(""),
+            tadb_album_id: String::from(""),
+            description: String::from(""),
+            musicbrainz_recording_id: String::from(""),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ReleaseGroupAlbum {
