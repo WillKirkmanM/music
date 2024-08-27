@@ -4,6 +4,7 @@ import pl from "@/assets/pl-tp.png";
 import getSession from "@/lib/Authentication/JWT/getSession";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getServerInfo } from "@music/sdk";
+import { ServerInfo } from "@music/sdk/types";
 import { Button } from '@music/ui/components/button';
 import {
   Form,
@@ -36,8 +37,9 @@ export default function MainPage() {
     const checkServerUrl = async () => {
       const storedServer = localStorage.getItem("server");
       const response = await fetch(`${storedServer && JSON.parse(storedServer).local_address || window.location.origin}/api/s/server/info`);
+      let JSONResponse: ServerInfo = await response.json()
           
-      if (response.ok) {
+      if (response.ok && JSONResponse.startup_wizard_completed) {
         const session = getSession();
         if (session) {
           push("/home");
