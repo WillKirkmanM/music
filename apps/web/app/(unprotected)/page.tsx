@@ -35,23 +35,29 @@ export default function MainPage() {
 
   useEffect(() => {
     const checkServerUrl = async () => {
-      const storedServer = localStorage.getItem("server");
-      const response = await fetch(`${storedServer && JSON.parse(storedServer).local_address || window.location.origin}/api/s/server/info`);
-      let JSONResponse: ServerInfo = await response.json()
-          
-      if (response.ok && JSONResponse.startup_wizard_completed) {
-        const session = getSession();
-        if (session) {
-          push("/home");
+      try {
+        const storedServer = localStorage.getItem("server");
+        const response = await fetch(`${storedServer && JSON.parse(storedServer).local_address || window.location.origin}/api/s/server/info`);
+        let JSONResponse: ServerInfo = await response.json();
+  
+        if (storedServer || (response.ok && JSONResponse.startup_wizard_completed)) {
+          const session = getSession();
+          if (session) {
+            push("/home");
+          } else {
+            push("/login");
+          }
         } else {
-          push("/login");
+          setShowServerURLInput(true);
         }
-      } else {
+      } catch (error) {
+        console.error("Error checking server URL:", error);
         setShowServerURLInput(true);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
-
+  
     checkServerUrl();
   }, [push]);
 
