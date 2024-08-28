@@ -24,16 +24,23 @@ async function getRandomAlbumAndSongs(): Promise<{ album: Album & { artist_objec
   return { album, songs };
 }
 
-function shuffleSongs(array: LibrarySong[]) {
+function shuffleSongs(array: any[]) {
   for (let i = array.length - 1; i > 0; i--) {
-    let j;
-    do {
-      j = Math.floor(Math.random() * (i + 1));
-    } while (i > 0 && array[i]?.name === array[j]?.name);
-    if (array[j]) {
-      [array[i] as any, array[j] as any] = [array[j], array[i]];
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+
+  for (let i = 2; i < array.length; i++) {
+    if (array[i].name === array[i - 1].name && array[i].name === array[i - 2].name) {
+      for (let j = i + 1; j < array.length; j++) {
+        if (array[j].name !== array[i].name) {
+          [array[i], array[j]] = [array[j], array[i]];
+          break;
+        }
+      }
     }
   }
+
   return array;
 }
 
