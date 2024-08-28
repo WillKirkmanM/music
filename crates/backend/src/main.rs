@@ -2,7 +2,8 @@ mod routes;
 mod structures;
 mod utils;
 
-use std::env;
+use std::io::Write;
+use std::{env, io};
 use std::error::Error;
 
 use actix_cors::Cors;
@@ -16,7 +17,7 @@ use tokio::task;
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 
-use routes::album;
+use routes::{album, database};
 use routes::artist;
 use routes::authentication::{login, register, validator};
 use routes::filesystem;
@@ -33,7 +34,7 @@ use routes::song;
 use routes::user;
 
 use utils::config;
-use utils::database::database::migrations_ran;
+use utils::database::database::{migrations_ran, redo_migrations};
 use utils::database::database::run_migrations;
 // use utils::update::check_for_updates;
 use utils::websocket::ws;
@@ -96,6 +97,7 @@ async fn main() -> std::io::Result<()> {
     // }
 
     let mut port = 3001;
+    let mut redo = false;
 
     let args: Vec<String> = env::args().collect();
     for i in 0..args.len() {
@@ -103,9 +105,30 @@ async fn main() -> std::io::Result<()> {
             if i + 1 < args.len() {
                 port = args[i + 1].parse().unwrap_or(3001);
             }
-            break;
+        } else if args[i] == "redo" {
+            redo = true;
         }
     }
+
+    if redo {
+        print!("Are you sure you would like to redo migrations? This will reset the database. (yes/no): ");
+        io::stdout().flush().unwrap();
+
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        let input = input.trim().to_lowercase();
+
+        if input == "yes" || input == "y" {
+            match task::spawn_blocking(|| redo_migrations()).await {
+                Ok(Ok(())) => println!("Migrations redone successfully."),
+                Ok(Err(e)) => eprintln!("Failed to redo migrations: {}", e),
+                Err(e) => eprintln!("Task failed: {}", e),
+            }
+        } else {
+            println!("Redo migrations aborted.");
+        }
+    }
+
 
     info!("Starting server on port {}", port); 
 
@@ -146,10 +169,10 @@ async fn main() -> std::io::Result<()> {
             .configure(playlist::configure)
             .configure(config::configure);
 
-        let admin_routes = web::scope("/library")
+        let library_routes = web::scope("/library")
             .wrap(admin)
             .service(process_library);
-        
+
         App::new()
             .wrap(
                 Cors::default()
@@ -173,7 +196,8 @@ async fn main() -> std::io::Result<()> {
                 .configure(server::configure)
             )
             .service(protected)
-            .service(admin_routes)
+            .service(library_routes)
+            .configure(database::configure)
             .route("/{filename:.*}", web::get().to(serve_embedded_file))
     })
     .workers(8)
