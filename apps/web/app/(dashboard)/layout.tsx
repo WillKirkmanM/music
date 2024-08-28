@@ -1,3 +1,5 @@
+"use client"
+
 import "@music/ui/globals.css"
 import { Inter as FontSans } from "next/font/google"
 
@@ -5,23 +7,35 @@ import pl from "@/assets/pl-tp.png"
 import SettingsSidebar from "@/components/Layout/Settings/Sidebar"
 import { cn } from "@music/ui/lib/utils"
 import Link from "next/link"
-import { Metadata } from "next"
 import Image from "next/image"
+import { usePathname, useRouter } from "next/navigation"
+import { useEffect } from "react"
+import getSession from "@/lib/Authentication/JWT/getSession"
 
 const fontSans = FontSans({
   subsets: ["latin"],
   variable: "--font-sans",
 })
 
-export const metadata: Metadata = {
-  title: "ParsonLabs Music"
-}
-
 type RootLayoutProps = {
   children: React.ReactNode
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {
+  const session = getSession()
+  const isAdmin = session?.role === "admin"
+  const pathname = usePathname()
+  const router = useRouter()
+
+  
+  useEffect(() => {
+    const adminPaths = ["/settings/users/", "/settings/server/", "/settings/library/"]
+
+    if (adminPaths.includes(pathname) && !isAdmin) {
+      router.push("/settings")
+    }
+  }, [pathname, isAdmin, router])
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
@@ -46,6 +60,3 @@ export default function RootLayout({ children }: RootLayoutProps) {
     </html>
   )
 }
-
-
-
