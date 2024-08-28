@@ -13,8 +13,9 @@ export default function ServerPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     localStorage.setItem("server", JSON.stringify({ local_address: localAddress }))
-    await setServerInfo(localAddress, serverName, "1.0.0", "ParsonLabs Music", true, loginDisclaimer);
+    await setServerInfo(localAddress, serverName, "1.0.0", "ParsonLabs Music", false, loginDisclaimer);
     localStorage.setItem("server", JSON.stringify({ local_address: localAddress, server_name: serverName, version: "1.0.0", product_name: "ParsonLabs Music", startup_wizard_completed: true, login_disclaimer: loginDisclaimer }))
     push("/setup/account")
   };
