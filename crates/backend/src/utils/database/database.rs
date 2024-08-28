@@ -70,6 +70,16 @@ pub fn run_migrations() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     Ok(())
 }
 
+pub fn redo_migrations() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    let pool = establish_connection();
+    let mut conn = pool.get().expect("Failed to get a connection from the pool");
+
+    conn.revert_last_migration(MIGRATIONS)?;
+    conn.run_pending_migrations(MIGRATIONS)?;
+
+    Ok(())
+}
+
 pub fn migrations_ran() -> bool {
     let pool = establish_connection();
     let mut conn = pool.get().expect("Failed to get a connection from the pool");
