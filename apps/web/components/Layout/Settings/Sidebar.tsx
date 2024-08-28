@@ -22,9 +22,13 @@ export default function SettingsSidebar() {
 
   return (
     <div className="grid gap-4 text-2xl text-muted-foreground text-white" draggable="false" style={{ userSelect: "none" }}>
-      <Link href="/settings" className={`font-semibold ${currentPath === "/settings" ? "font-bold" : "text-primary"} user-select-none`}>General</Link>
+      <Link href="/settings" className={`${currentPath === "/settings/" ? "font-bold" : "text-primary"} user-select-none`}>General</Link>
       {isAdmin && (
-        <Link href="/settings/users" className={`${currentPath === "/settings/users" ? "font-bold" : ""} user-select-none`}>Users</Link>
+        <>
+          <Link href="/settings/users/" className={`${currentPath === "/settings/users/" ? "font-bold" : ""} user-select-none`}>Users</Link>
+          <Link href="/settings/server/" className={`${currentPath === "/settings/server/" ? "font-bold" : ""} user-select-none`}>Server</Link>
+          <Link href="/settings/library/" className={`${currentPath === "/settings/library/" ? "font-bold" : ""} user-select-none`}>Library</Link>
+        </>
       )}
     </div>
   )
