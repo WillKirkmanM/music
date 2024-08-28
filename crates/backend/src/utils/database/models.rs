@@ -121,7 +121,7 @@ pub struct PlaylistToSong {
     pub date_added: NaiveDateTime,
 }
 
-#[derive(Queryable, Selectable, Serialize, Deserialize, Insertable)]
+#[derive(Queryable, Selectable, Serialize, Deserialize, Insertable, AsChangeset)]
 #[diesel(table_name = server_info)]
 pub struct ServerInfo {
     pub local_address: String,
