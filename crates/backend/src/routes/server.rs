@@ -31,11 +31,14 @@ async fn set_server_info(info: web::Json<ServerInfo>) -> Result<impl Responder, 
         version: info.version.clone(),
         product_name: info.product_name.clone(),
         startup_wizard_completed: info.startup_wizard_completed,
-        login_disclaimer: Some(info.login_disclaimer.clone().unwrap_or_default()),
+        login_disclaimer: info.login_disclaimer.clone(),
     };
 
-    diesel::replace_into(server_info)
+    diesel::insert_into(server_info)
         .values(&new_info)
+        .on_conflict((server_name, local_address))
+        .do_update()
+        .set(&new_info)
         .execute(&mut connection)?;
 
     Ok(HttpResponse::Ok().body("Server info set successfully"))
