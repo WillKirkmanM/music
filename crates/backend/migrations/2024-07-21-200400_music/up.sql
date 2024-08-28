@@ -77,7 +77,8 @@ CREATE TABLE IF NOT EXISTS "server_info" (
     "version" TEXT NOT NULL,
     "product_name" TEXT NOT NULL,
     "startup_wizard_completed" BOOLEAN NOT NULL DEFAULT FALSE,
-    "login_disclaimer" TEXT
+    "login_disclaimer" TEXT,
+    CONSTRAINT unique_server_info UNIQUE ("server_name", "local_address")
 );
 
 CREATE UNIQUE INDEX "user_username_key" ON "user"("username");
