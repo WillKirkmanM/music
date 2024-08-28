@@ -45,7 +45,6 @@ pub fn establish_connection() -> DbPool {
     let database_url = get_database_path().to_str().unwrap().to_string();
     let manager = ConnectionManager::<SqliteConnection>::new(database_url);
     let pool = r2d2::Pool::builder()
-        .max_size(16)
         .connection_customizer(Box::new(ConnectionOptions {
             enable_wal: true,
             enable_foreign_keys: true,
@@ -61,10 +60,19 @@ pub fn establish_connection() -> DbPool {
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
 pub fn run_migrations() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
-    let database_url = get_database_path().to_str().unwrap().to_string();
-    let mut conn = SqliteConnection::establish(&database_url)
-        .expect("Failed to establish a database connection.");
+    let pool = establish_connection();
+    let mut conn = pool.get().expect("Failed to get a connection from the pool");
 
+    conn.run_pending_migrations(MIGRATIONS)?;
+
+    Ok(())
+}
+
+pub fn redo_migrations() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    let pool = establish_connection();
+    let mut conn = pool.get().expect("Failed to get a connection from the pool");
+
+    conn.revert_last_migration(MIGRATIONS)?;
     conn.run_pending_migrations(MIGRATIONS)?;
 
     Ok(())
