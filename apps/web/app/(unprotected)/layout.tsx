@@ -29,7 +29,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           fontSans.variable
         )}>
           <div className="flex flex-row text-white items-center font-bold pl-4 pt-3 fixed">
-            <Image src={pl} alt="ParsonLabs" height={30} width={30} />
+            <Image src={pl} alt="ParsonLabs" height={30} width={30} priority />
             <div className="md:text-xl text-white font-bold pl-3">
               ParsonLabs Music
             </div>
