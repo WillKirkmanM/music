@@ -51,7 +51,7 @@ export default function BigCard({ imageSrc, title, artist, songURL, albumURL, ty
   return (
     <div className="w-44 h-44" onMouseEnter={setDominantGradient}>
       <SongContextMenu song={song} album={album} artist={artist}>
-        <Image src={imageSrc} alt={title + " Image"} height={512} width={512} loading="lazy" className="rounded cursor-pointer transition-filter duration-300 hover:brightness-50" onClick={handlePlay}/>
+        <Image src={imageSrc} alt={title + " Image"} height={512} width={512} loading="lazy" className="rounded cursor-pointer transition-filter duration-300 hover:brightness-50 object-fill w-full h-full" onClick={handlePlay}/>
       </SongContextMenu>
 
       <div className="flex flex-col text-left mt-3">
