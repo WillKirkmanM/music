@@ -5,6 +5,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["WillKirkmanM <will@parsonlabs.com>"]
 license = "GPL-3.0"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -50,3 +51,6 @@ tracing-subscriber = { version = "0.3.17", features = ["registry", "env-filter"]
 uuid = { version = "1.10.0", features = ["v4", "fast-rng", "macro-diagnostics", "serde"] }
 walkdir = "2.4.0"
 webp = "0.3.0"
+
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+openssl = { version = "0.10.66", features = ["vendored"] }
