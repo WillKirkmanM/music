@@ -3,7 +3,7 @@ use rand::seq::{IteratorRandom, SliceRandom};
 use serde::{Deserialize, Serialize};
 use tracing::error;
 
-use crate::structures::structures::{Album, Artist};
+use crate::structures::structures::{Album, Artist, Song};
 use crate::utils::config::get_config;
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -124,10 +124,38 @@ async fn get_song_info(id: web::Path<String>) -> HttpResponse {
     }
 }
 
+pub async fn fetch_songs_with_music_videos() -> Result<Vec<Song>, ()> {
+    let config = get_config().await.map_err(|_| ())?;
+    let library: Vec<Artist> = serde_json::from_str(&config).map_err(|_| ())?;
+
+    let mut response_songs = Vec::new();
+
+    for artist in &library {
+        for album in &artist.albums {
+            for song in &album.songs {
+                if song.music_video.is_some() {
+                    response_songs.push(song.clone());
+                }
+            }
+        }
+    }
+
+    Ok(response_songs)
+}
+
+#[get("/music_videos")]
+async fn get_songs_with_music_videos() -> HttpResponse {
+    match fetch_songs_with_music_videos().await {
+        Ok(songs) => HttpResponse::Ok().json(songs),
+        Err(_) => HttpResponse::InternalServerError().json("Failed to load configuration"),
+    }
+}
+
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/song")
             .service(get_song_info)
             .service(get_random_song)
+            .service(get_songs_with_music_videos)
     );
 }
