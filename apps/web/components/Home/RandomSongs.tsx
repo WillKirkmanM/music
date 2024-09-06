@@ -1,7 +1,6 @@
 "use client"
 
 import getBaseURL from "@/lib/Server/getBaseURL";
-
 import getSession from "@/lib/Authentication/JWT/getSession";
 import setCache, { getCache } from "@/lib/Caching/cache";
 import { getRandomSong } from "@music/sdk";
@@ -12,34 +11,52 @@ import ScrollButtons from "./ScrollButtons";
 
 export const revalidate = 3600;
 
-async function getRandomSongs() {
+async function getRandomSongs(genre?: string) {
   const randomSongs = await getRandomSong(10);
+  if (genre) {
+    return randomSongs.filter(song => {
+      const releaseAlbumGenres = song.album_object.release_album?.genres?.some(g => g.name === genre);
+      const releaseGroupAlbumGenres = song.album_object.release_group_album?.genres?.some(g => g.name === genre);
+      return releaseAlbumGenres || releaseGroupAlbumGenres;
+    });
+  }
   return randomSongs;
 }
 
-export default function RandomSongs() {
+interface RandomSongsProps {
+  genre?: string;
+}
+
+export default function RandomSongs({ genre }: RandomSongsProps) {
   const [randomSongs, setRandomSongs] = useState<LibrarySong[]>([]);
-  
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     async function fetchRandomSongs() {
-      const cachedData = getCache("randomSongs");
-  
+      const cacheKey = "randomSongs";
+      const cachedData = genre ? null : getCache(cacheKey);
+
       if (cachedData) {
         setRandomSongs(cachedData);
+        setLoading(false);
       } else {
-        const songs = await getRandomSongs();
+        const songs = await getRandomSongs(genre);
         setRandomSongs(songs);
-        setCache("randomSongs", songs, 3600000);
+        setLoading(false);
+        if (!genre) {
+          setCache(cacheKey, songs, 3600000);
+        }
       }
     }
-  
+
     fetchRandomSongs();
-  }, []);
-  
+  }, [genre]);
+
+  if (loading) return null;
   if (!randomSongs || randomSongs.length === 0) return null;
-  
-  const session = getSession()
-  
+
+  const session = getSession();
+
   return (
     <ScrollButtons heading="Random Selection">
       <div className="flex flex-row">
@@ -55,7 +72,7 @@ export default function RandomSongs() {
                   : `${getBaseURL()}/image/${encodeURIComponent(song.album_object.cover_url)}`
               }
               albumURL=""
-              songURL={`${getBaseURL()}/api/stream/${encodeURIComponent(song.path)}?bitrate=${(session && session.bitrate) ?? 0}`}
+              songURL={`${getBaseURL()}/api/stream/${encodeURIComponent(song.path)}?bitrate=96`}
               type="Song"
               song={song}
             />
@@ -63,5 +80,5 @@ export default function RandomSongs() {
         ))}
       </div>
     </ScrollButtons>
-  )
+  );
 }
