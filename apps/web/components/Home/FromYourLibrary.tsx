@@ -1,7 +1,6 @@
 "use client"
 
 import getBaseURL from "@/lib/Server/getBaseURL";
-
 import getSession from "@/lib/Authentication/JWT/getSession";
 import setCache, { getCache } from "@/lib/Caching/cache";
 import { getPlaylist, getPlaylists, getSongInfo } from "@music/sdk";
@@ -10,7 +9,7 @@ import { useEffect, useState } from "react";
 import BigCard from "../Music/Card/BigCard";
 import ScrollButtons from "./ScrollButtons";
 
-async function getSongsFromYourLibrary(user_id: number) {
+async function getSongsFromYourLibrary(user_id: number, genre?: string) {
   const playlists = await getPlaylists(user_id);
 
   const playlistSongIDsPromises = playlists.map(async (playlist) => {
@@ -25,10 +24,22 @@ async function getSongsFromYourLibrary(user_id: number) {
 
   const songsDetails = await Promise.all(songsDetailsPromises);
 
+  if (genre) {
+    return songsDetails.filter(song => {
+      const releaseAlbumGenres = song.album_object.release_album?.genres?.some(g => g.name === genre);
+      const releaseGroupAlbumGenres = song.album_object.release_group_album?.genres?.some(g => g.name === genre);
+      return releaseAlbumGenres || releaseGroupAlbumGenres;
+    });
+  }
+
   return songsDetails;
 }
 
-export default function FromYourLibrary() {
+interface FromYourLibraryProps {
+  genre?: string;
+}
+
+export default function FromYourLibrary({ genre }: FromYourLibraryProps) {
   const [librarySongs, setLibrarySongs] = useState<LibrarySong[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -36,23 +47,26 @@ export default function FromYourLibrary() {
     const session = getSession();
   
     async function fetchSongs() {
-      const cachedData = getCache("fromYourLibrary");
+      const cacheKey = "fromYourLibrary";
+      const cachedData = genre ? null : getCache(cacheKey);
   
       if (cachedData) {
         setLibrarySongs(cachedData);
         setLoading(false);
       } else {
         if (session) {
-          const songs = await getSongsFromYourLibrary(Number(session.sub));
+          const songs = await getSongsFromYourLibrary(Number(session.sub), genre);
           setLibrarySongs(songs);
           setLoading(false);
-          setCache("fromYourLibrary", songs, 3600000);
+          if (!genre) {
+            setCache(cacheKey, songs, 3600000);
+          }
         }
       }
     }
   
     fetchSongs();
-  }, []);
+  }, [genre]);
 
   if (loading) return null;
   if (!librarySongs || librarySongs.length === 0) return null;
