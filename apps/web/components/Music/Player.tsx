@@ -200,6 +200,7 @@ export default function Player() {
 
         {song.music_video?.url && <VideoPlayerDialog url={song.music_video.url} /> }
 
+
         {process.env.NEXT_PUBLIC_AI_URL && (
           <button onClick={toggleAI}>
             <BookAudioIcon />
