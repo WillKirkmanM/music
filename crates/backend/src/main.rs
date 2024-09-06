@@ -17,7 +17,7 @@ use tokio::task;
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 
-use routes::{album, database};
+use routes::{album, database, genres};
 use routes::artist;
 use routes::authentication::{login, register, validator};
 use routes::filesystem;
@@ -167,7 +167,8 @@ async fn main() -> std::io::Result<()> {
             .configure(search::configure)
             .configure(social::configure)
             .configure(playlist::configure)
-            .configure(config::configure);
+            .configure(config::configure)
+            .configure(genres::configure);
 
         let library_routes = web::scope("/library")
             .wrap(admin)
