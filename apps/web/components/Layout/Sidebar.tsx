@@ -37,7 +37,7 @@ export default function Sidebar({ children, sidebarContent }: SidebarProps) {
           <Link href="/home">
             <div className={`flex ${isOpen ? "flex-row" : "flex-col"} items-center text-white text-semibold`} style={{ mixBlendMode: 'difference', pointerEvents: 'none' }}>
               <Home className={`h-6 w-6 ${isOpen && "mr-4"}`} />
-              {isOpen && <span className={`${!isOpen && "mt-2"}`}>Home</span>}
+              <span className={`block mt-1`}>Home</span>
             </div>
           </Link>
         </Button>
@@ -45,7 +45,7 @@ export default function Sidebar({ children, sidebarContent }: SidebarProps) {
           <Link href="/history">
             <div className={`flex ${isOpen ? "flex-row" : "flex-col"} items-center text-white text-semibold`} style={{ mixBlendMode: 'difference', pointerEvents: 'none' }}>
               <HistoryIcon className={`h-6 w-6 ${isOpen && "mr-4"}`} />
-              {isOpen && <span className={`${!isOpen && "mt-2"}`}>History</span>}
+              <span className={`${"block mt-1"}`}>History</span>
             </div>
           </Link>
         </Button>
