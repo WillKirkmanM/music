@@ -336,3 +336,21 @@ export interface Relationship {
     end: string;
     url: string;
 }
+
+export interface MusicVideoSong {
+  id: string;
+  name: string;
+  artist: string;
+  contributing_artists: string[];
+  track_number: number;
+  path: string;
+  duration: number;
+  music_video?: {
+    url: string;
+    thumbnail_url?: string;
+    tadb_track_id: string;
+    tadb_album_id: string;
+    description: string;
+    musicbrainz_recording_id: string;
+  };
+}
