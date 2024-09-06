@@ -1,5 +1,3 @@
-"use client"
-
 import getBaseURL from "@/lib/Server/getBaseURL";
 import getSession from "@/lib/Authentication/JWT/getSession";
 import setCache, { getCache } from "@/lib/Caching/cache";
@@ -10,13 +8,18 @@ import PageGradient from "../Layout/PageGradient";
 import BigCard from "../Music/Card/BigCard";
 import ScrollButtons from "./ScrollButtons";
 
-export default function ListenAgain() {
+interface ListenAgainProps {
+  genre?: string;
+}
+
+export default function ListenAgain({ genre }: ListenAgainProps) {
   const [listenHistorySongs, setListenHistorySongs] = useState<LibrarySong[]>([]);
 
   useEffect(() => {
     const fetchListenHistory = async () => {
-      const cachedData = getCache("listenAgain");
-
+      const cacheKey = genre ? `listenAgain_${genre}` : "listenAgain";
+      const cachedData = genre ? null : getCache(cacheKey);
+  
       if (cachedData) {
         setListenHistorySongs(cachedData);
       } else {
@@ -28,9 +31,19 @@ export default function ListenAgain() {
             const uniqueListenHistoryItems = Array.from(new Set(listenHistoryItems.map(item => item.song_id)));
             const songDetailsPromises = uniqueListenHistoryItems.reverse().slice(0, 30).map(song_id => getSongInfo(song_id));
             const songDetails = await Promise.all(songDetailsPromises);
-
-            setListenHistorySongs(songDetails);
-            setCache("listenAgain", songDetails, 3600000);
+  
+            const filteredSongs = genre
+              ? songDetails.filter(song => {
+                  const releaseAlbumGenres = song.album_object.release_album?.genres?.some(g => g.name === genre);
+                  const releaseGroupAlbumGenres = song.album_object.release_group_album?.genres?.some(g => g.name === genre);
+                  return releaseAlbumGenres || releaseGroupAlbumGenres;
+                })
+              : songDetails;
+  
+            setListenHistorySongs(filteredSongs);
+            if (!genre) {
+              setCache(cacheKey, filteredSongs, 3600000);
+            }
           } else {
             console.error("Invalid user ID:", userId);
           }
@@ -39,9 +52,9 @@ export default function ListenAgain() {
         }
       }
     };
-
+  
     fetchListenHistory();
-  }, []);
+  }, [genre]);
 
   if (!(listenHistorySongs[0]) || listenHistorySongs.length === 0) return null;
 
