@@ -54,7 +54,6 @@ export default function GenreButtons({ children }: GenreButtonsProps) {
       </ScrollArea>
       {selectedGenre && (
         <>
-          <p className="text-center mt-4">{capitalizeWords(selectedGenre)} Selected</p>
           <ListenAgain genre={selectedGenre} />
           <RecommendedAlbums genre={selectedGenre} />
           <RandomSongs genre={selectedGenre} />
