@@ -12,4 +12,4 @@ export * from "./lib/server"
 export * from "./lib/social"
 export * from "./lib/song"
 export * from "./lib/user"
-
+export * from "./lib/genres"
