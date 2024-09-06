@@ -1,8 +1,6 @@
-"use client"
+"use client";
 
 import getBaseURL from "@/lib/Server/getBaseURL";
-;
-
 import {
   createContext,
   useCallback,
@@ -13,8 +11,14 @@ import {
 } from "react";
 
 import getSession from "@/lib/Authentication/JWT/getSession";
-import { addSongToListenHistory, getRandomSong, setNowPlaying } from "@music/sdk";
-import { Album, Artist, LibrarySong, } from "@music/sdk/types";
+import {
+  addSongToListenHistory,
+  getRandomSong,
+  getSongInfo,
+  getSongsByGenres,
+  setNowPlaying,
+} from "@music/sdk";
+import { Album, Artist, Genre, LibrarySong } from "@music/sdk/types";
 
 const isBrowser = typeof window !== "undefined";
 const audioElement = isBrowser ? new Audio() : null;
@@ -78,10 +82,34 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     track_number: 0,
     id: "",
     duration: 0,
-    artist_object: {albums: [], description: "", followers: 0, icon_url: "", id: "", name: ""},
-    album_object: {cover_url: "", description: "", first_release_date: "", id: "", musicbrainz_id: "", name: "", primary_type: "", songs: [], wikidata_id: ""},
+    artist_object: {
+      albums: [],
+      description: "",
+      followers: 0,
+      icon_url: "",
+      id: "",
+      name: "",
+    },
+    album_object: {
+      cover_url: "",
+      description: "",
+      first_release_date: "",
+      id: "",
+      musicbrainz_id: "",
+      name: "",
+      primary_type: "",
+      songs: [],
+      wikidata_id: "",
+    },
   });
-  const [artist, setArtist] = useState<Artist>({ albums: [], id: "", name: "", followers: 0, icon_url: "", description: "" });
+  const [artist, setArtist] = useState<Artist>({
+    albums: [],
+    id: "",
+    name: "",
+    followers: 0,
+    icon_url: "",
+    description: "",
+  });
   const [album, setAlbum] = useState<Album>({
     cover_url: "",
     id: "",
@@ -98,33 +126,33 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const [queue, setQueueState] = useState<Queue[]>([]);
 
   const queueRef = useRef<Queue[]>([]);
-  
+
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [onLoop, setOnLoop] = useState(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(100);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [base64Image, setBase64Image] = useState("")
-  const [bufferedTime, setBufferedTime] = useState(0)
+  const [base64Image, setBase64Image] = useState("");
+  const [bufferedTime, setBufferedTime] = useState(0);
 
   const lastAddedSongIdRef = useRef<string | null>(null);
 
-  let bitrate = 0
+  let bitrate = 0;
 
-  const session = getSession()
+  const session = getSession();
 
   useEffect(() => {
     if (song.id && lastAddedSongIdRef.current != String(song.id)) {
       if (session) {
-        setNowPlaying(Number(session.sub), String(song.id))
-        addSongToListenHistory(Number(session.sub), String(song.id))
-        
-        lastAddedSongIdRef.current = String(song.id)
+        setNowPlaying(Number(session.sub), String(song.id));
+        addSongToListenHistory(Number(session.sub), String(song.id));
+
+        lastAddedSongIdRef.current = String(song.id);
       }
     }
   }, [song.id, session]);
-  
+
   const playAudioSource = useCallback(() => {
     if (audio) {
       audio.pause();
@@ -155,9 +183,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         //   const base64Data = `data:image/jpg;base64,${base64}`;
         //   setBase64Image(base64Data);
         // });
-          setImageSrc(`${getBaseURL()}/image/${encodeURIComponent(album.cover_url)}`);
+        setImageSrc(
+          `${getBaseURL()}/image/${encodeURIComponent(album.cover_url)}`
+        );
       }
-      setAudioSource(`${getBaseURL()}/api/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`);
+      setAudioSource(
+        `${getBaseURL()}/api/stream/${encodeURIComponent(song.path)}?bitrate=${bitrate}`
+      );
 
       const index = queueRef.current.findIndex((q) => q.song.id === song.id);
       if (index !== -1) {
@@ -174,30 +206,78 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }
     setCurrentSongIndex(nextSongIndex);
     const next = queueRef.current[nextSongIndex];
-  
+
     if (next) {
-      const nextSong = next.song;
-      const nextArtist = next.artist;
-      const nextAlbum = next.album;
-  
+      const { song: nextSong, artist: nextArtist, album: nextAlbum } = next;
+
       if (nextSong) {
         setSongCallback(nextSong, nextArtist, nextAlbum);
         playAudioSource();
       }
     } else {
-      const randomSongs = await getRandomSong(1);
-      if (randomSongs && randomSongs.length > 0) {
-        const randomSong = randomSongs[0];
-        if (randomSong) {
-          const randomArtist = randomSong.artist_object;
-          const randomAlbum = randomSong.album_object;
-      
-          setSongCallback(randomSong, randomArtist, randomAlbum);
-          playAudioSource();
+      let songGenres: Genre[] = [];
+      if (song.album_object?.release_album?.genres) {
+        songGenres = song.album_object.release_album.genres;
+      } else if (song.album_object?.release_group_album?.genres) {
+        songGenres = song.album_object.release_group_album.genres;
+      }
+
+      let recommendedSong = null;
+      for (let i = 0; i < songGenres.length; i++) {
+        const genre = songGenres[i];
+        if (genre?.name) {
+          const recommendedSongs = await getSongsByGenres([genre.name]);
+          const shuffledRecommendedSongs = [...recommendedSongs];
+
+          for (let i = shuffledRecommendedSongs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [
+              shuffledRecommendedSongs[i] as any,
+              shuffledRecommendedSongs[j] as any,
+            ] = [shuffledRecommendedSongs[j], shuffledRecommendedSongs[i]];
+          }
+
+          for (let shuffledSong of shuffledRecommendedSongs) {
+            if (shuffledSong.name !== song.name) {
+              recommendedSong = await getSongInfo(shuffledSong.id);
+              break;
+            }
+          }
+
+          if (recommendedSong) break;
+        }
+      }
+
+      if (recommendedSong) {
+        const {
+          artist_object: recommendedArtist,
+          album_object: recommendedAlbum,
+        } = recommendedSong;
+        setSongCallback(recommendedSong, recommendedArtist, recommendedAlbum);
+        playAudioSource();
+      } else {
+        const randomSongs = await getRandomSong(1);
+        if (randomSongs.length > 0) {
+          const randomSong = randomSongs[0];
+          if (randomSong) {
+            setSongCallback(
+              randomSong,
+              randomSong.artist_object,
+              randomSong.album_object
+            );
+            playAudioSource();
+          }
         }
       }
     }
-  }, [currentSongIndex, setSongCallback, playAudioSource]);
+  }, [
+    currentSongIndex,
+    setSongCallback,
+    playAudioSource,
+    song.album_object?.release_album?.genres,
+    song.album_object?.release_group_album?.genres,
+    song.name,
+  ]);
 
   const playPreviousSong = useCallback(() => {
     let previousSongIndex = currentSongIndex - 1;
@@ -210,15 +290,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       const previousSong = previous.song;
       const previousArtist = previous.artist;
       const previousAlbum = previous.album;
-      
+
       if (previousSong) {
         setSongCallback(previousSong, previousArtist, previousAlbum);
         playAudioSource();
       }
     }
-}, [currentSongIndex, setSongCallback, playAudioSource])
-
-
+  }, [currentSongIndex, setSongCallback, playAudioSource]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -234,32 +312,46 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       };
       audio.addEventListener("ended", playNextSong);
 
-      if ('mediaSession' in navigator) {
+      if ("mediaSession" in navigator) {
         // Normalizing the path is necessary to remove the Windows long path prefix ("\\?\") if present.
         // This prefix allows Windows applications to handle paths longer than the MAX_PATH limit (260 characters),
         // but it's not recognized by web browsers or servers. Removing it ensures the path can be used in URLs
         // More Here:
         // https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
-        let normalisedAlbumPath = album.cover_url.startsWith("\\\\?\\") ? album.cover_url.substring(4) : album.cover_url
-        let albumPath = `${getBaseURL()}/image/${encodeURIComponent(normalisedAlbumPath)}?raw=true`
+        let normalisedAlbumPath = album.cover_url.startsWith("\\\\?\\")
+          ? album.cover_url.substring(4)
+          : album.cover_url;
+        let albumPath = `${getBaseURL()}/image/${encodeURIComponent(normalisedAlbumPath)}?raw=true`;
 
         navigator.mediaSession.metadata = new MediaMetadata({
           title: song.name,
           artist: song.artist,
           album: album.name,
-          artwork: [{ src: albumPath, type: "image/jpeg" }]
+          artwork: [{ src: albumPath, type: "image/jpeg" }],
         });
-          navigator.mediaSession.setActionHandler('play', () => audio.play());
-          navigator.mediaSession.setActionHandler('pause', () => audio.pause());
-          navigator.mediaSession.setActionHandler('previoustrack', playPreviousSong);
-          navigator.mediaSession.setActionHandler('nexttrack', playNextSong);
+        navigator.mediaSession.setActionHandler("play", () => audio.play());
+        navigator.mediaSession.setActionHandler("pause", () => audio.pause());
+        navigator.mediaSession.setActionHandler(
+          "previoustrack",
+          playPreviousSong
+        );
+        navigator.mediaSession.setActionHandler("nexttrack", playNextSong);
       }
     }
 
     return () => {
       audio.removeEventListener("ended", playNextSong);
     };
-  }, [audioSource, audio, song, playNextSong, album.name, imageSrc, playPreviousSong, album.cover_url]);
+  }, [
+    audioSource,
+    audio,
+    song,
+    playNextSong,
+    album.name,
+    imageSrc,
+    playPreviousSong,
+    album.cover_url,
+  ]);
 
   const removeFromQueue = useCallback((index: number) => {
     const newQueue = [...queueRef.current];
@@ -268,11 +360,14 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     setQueueState(newQueue);
   }, []);
 
-  const addToQueue = useCallback((song: LibrarySong, album: Album, artist: Artist) => {
-    const newQueue = [...queueRef.current, { song, album, artist }];
-    queueRef.current = newQueue;
-    setQueueState(newQueue);
-  }, []);
+  const addToQueue = useCallback(
+    (song: LibrarySong, album: Album, artist: Artist) => {
+      const newQueue = [...queueRef.current, { song, album, artist }];
+      queueRef.current = newQueue;
+      setQueueState(newQueue);
+    },
+    []
+  );
 
   const toggleMute = useCallback(() => {
     const audio = audioRef.current || new Audio();
@@ -323,9 +418,9 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     if (audio) {
       setCurrentTime(audio.currentTime);
       setDuration(audio.duration);
-      const buffer = audio.buffered
+      const buffer = audio.buffered;
       if (buffer && buffer.length > 0) {
-        setBufferedTime(buffer.end(buffer.length - 1))
+        setBufferedTime(buffer.end(buffer.length - 1));
       }
     }
   }, []);
