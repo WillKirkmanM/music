@@ -1,8 +1,8 @@
 "use client"
 
-import getBaseURL from "@/lib/Server/getBaseURL";
 import getSession from "@/lib/Authentication/JWT/getSession";
 import setCache, { getCache } from "@/lib/Caching/cache";
+import getBaseURL from "@/lib/Server/getBaseURL";
 import { getRandomSong } from "@music/sdk";
 import { LibrarySong } from "@music/sdk/types";
 import { useEffect, useState } from "react";
@@ -72,7 +72,7 @@ export default function RandomSongs({ genre }: RandomSongsProps) {
                   : `${getBaseURL()}/image/${encodeURIComponent(song.album_object.cover_url)}`
               }
               albumURL=""
-              songURL={`${getBaseURL()}/api/stream/${encodeURIComponent(song.path)}?bitrate=96`}
+              songURL={`${getBaseURL()}/api/stream/${encodeURIComponent(song.path)}?bitrate=${(session && session.bitrate) ?? 0}`}
               type="Song"
               song={song}
             />
