@@ -18,9 +18,35 @@ struct AddSongToPlaylistRequest {
 
 #[post("/add_song")]
 async fn add_song(item: web::Json<AddSongToPlaylistRequest>) -> Result<impl Responder, Box<dyn Error>> {
+    use crate::utils::database::schema::playlist::dsl::playlist;
+    use crate::utils::database::schema::song::dsl::song;
     use crate::utils::database::schema::_playlist_to_song::dsl::*;
 
     let mut connection = establish_connection().get().unwrap();
+
+    let playlist_exists = playlist
+        .filter(crate::utils::database::schema::playlist::dsl::id.eq(item.playlist_id))
+        .select(crate::utils::database::schema::playlist::dsl::id)
+        .first::<i32>(&mut connection)
+        .optional()?
+        .is_some();
+
+    if !playlist_exists {
+        return Ok(HttpResponse::BadRequest().body("Playlist does not exist"));
+    }
+
+    let song_exists = song
+        .filter(crate::utils::database::schema::song::dsl::id.eq(item.song_id.clone()))
+        .select(crate::utils::database::schema::song::dsl::id)
+        .first::<String>(&mut connection)
+        .optional()?
+        .is_some();
+
+    if !song_exists {
+        diesel::insert_into(song)
+            .values(crate::utils::database::schema::song::dsl::id.eq(item.song_id.clone()))
+            .execute(&mut connection)?;
+    }
 
     diesel::insert_into(_playlist_to_song)
         .values((a.eq(item.playlist_id), b.eq(item.song_id.clone())))
