@@ -1,6 +1,6 @@
 import { AxiosResponse } from 'axios';
 import axios from './axios';
-import { LibrarySong } from './types';
+import { LibrarySong, MusicVideoSong } from './types';
 
 /**
  * Get a random song.
@@ -19,5 +19,16 @@ export async function getRandomSong(amount: number): Promise<LibrarySong[]> {
  */
 export async function getSongInfo(id: string): Promise<LibrarySong> {
   const response: AxiosResponse<LibrarySong> = await axios.get(`/song/info/${id}`);
+  return response.data;
+}
+
+
+
+/**
+ * Get all songs with music videos.
+ * @returns {Promise<MusicVideoSong[]>} 
+ */
+export async function getSongsWithMusicVideos(): Promise<MusicVideoSong[]> {
+  const response: AxiosResponse<MusicVideoSong[]> = await axios.get(`/song/music_videos`);
   return response.data;
 }
