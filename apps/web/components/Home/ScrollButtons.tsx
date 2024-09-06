@@ -57,8 +57,8 @@ export default function ScrollButtons({ children, heading }: ScrollButtonsProps)
 
   return (
     <>
-      <div className='flex flex-row gap-4 justify-between items-center pb-4 mr-8'>
-        <h1 className="text-3xl font-bold">{heading}</h1>
+      <div className="flex flex-row gap-4 justify-between items-center pb-4 mr-8">
+        <h1 className="font-bold text-base md:text-2xl lg:text-3xl mr-5">{heading}</h1>
         <div className='flex flex-row gap-4 items-center'>
           {false ? (
             <button
