@@ -31,8 +31,6 @@ dist
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-yarn.lock
-bun.lockb
 
 # Misc
 .DS_Store
