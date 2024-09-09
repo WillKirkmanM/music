@@ -34,31 +34,39 @@ export default function MainPage() {
   const { push } = useRouter();
 
   useEffect(() => {
-    const checkServerUrl = async () => {
-      try {
-        const storedServer = localStorage.getItem("server");
-        const response = await fetch(`${storedServer && JSON.parse(storedServer).local_address || window.location.origin}/api/s/server/info`);
-        let JSONResponse: ServerInfo = await response.json();
+      const checkServerUrl = async () => {
+          setLoading(true);
   
-        if (storedServer || (response.ok && JSONResponse.startup_wizard_completed)) {
-          const session = getSession();
-          if (session) {
-            push("/home");
-          } else {
-            push("/login");
+          try {
+              const storedServer = localStorage.getItem("server");
+              const response = await fetch(`${storedServer && JSON.parse(storedServer).local_address || window.location.origin}/api/s/server/info`);
+              let serverInfo: ServerInfo = await response.json();
+  
+              const session = getSession();
+              if (serverInfo.product_name && serverInfo.startup_wizard_completed) {
+                  localStorage.setItem("server", JSON.stringify(serverInfo));
+  
+                  if (session) {
+                      push("/home");
+                  } else {
+                      push("/login");
+                  }
+              } else {
+                  if (!serverInfo.startup_wizard_completed && session) {
+                      push("/setup/library");
+                  } else {
+                      push("/setup");
+                  }
+              }
+          } catch (error) {
+              console.error("Error checking server URL:", error);
+              push("/setup");
+          } finally {
+              setLoading(false);
           }
-        } else {
-          setShowServerURLInput(true);
-        }
-      } catch (error) {
-        console.error("Error checking server URL:", error);
-        setShowServerURLInput(true);
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
   
-    checkServerUrl();
+      checkServerUrl();
   }, [push]);
 
   const form = useForm<FormData>({
@@ -68,30 +76,34 @@ export default function MainPage() {
   const { handleSubmit } = form;
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
-      setLoading(true);
-  
-      try {
-          localStorage.setItem("server", JSON.stringify({ local_address: data.serverUrl }));
-          let serverInfo = await getServerInfo();
-          
-          if (serverInfo.product_name) {
-              localStorage.setItem("server", JSON.stringify(serverInfo));
-  
-              const session = getSession();
-              if (session) {
-                push("/home");
+        setLoading(true);
+    
+        try {
+            localStorage.setItem("server", JSON.stringify({ local_address: data.serverUrl }));
+            let serverInfo = await getServerInfo();
+            
+            const session = getSession();
+            if (serverInfo.product_name && serverInfo.startup_wizard_completed) {
+                localStorage.setItem("server", JSON.stringify(serverInfo));
+    
+                if (session) {
+                    push("/home");
+                } else {
+                    push("/login");
+                }
+            } else {
+              if (!serverInfo.startup_wizard_completed && session) {
+                push("/setup/library");
               } else {
-                push("/login");
+                push("/setup")
               }
-          } else {
+            }
+        } catch (error) {
             push("/setup");
-          }
-      } catch (error) {
-        push("/setup")
-      } finally {
-          setLoading(false);
-      }
-  };;
+        } finally {
+            setLoading(false);
+        }
+    };
 
   if (loading) {
     return (
