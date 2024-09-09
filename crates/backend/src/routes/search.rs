@@ -1,14 +1,15 @@
+use dirs;
+use reqwest::get;
 use std::collections::HashSet;
 use std::error::Error;
 use std::{env, fs};
-use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
-use std::process::Command;
-use std::io::Write;
 use std::fs::File;
-use reqwest::get;
-use dirs;
-
+use std::io::Write;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt; // Import for setting executable permissions on Unix-like systems
+use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::sync::{Arc, Mutex};
 
 use actix_web::{delete, get, post, web, HttpResponse, Responder};
 use chrono::NaiveDateTime;
@@ -16,13 +17,14 @@ use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use meilisearch_sdk::client::Client;
 use meilisearch_sdk::settings::{Settings, TypoToleranceSettings};
 use serde::{Deserialize, Serialize};
+use tracing::info;
 use uuid::Uuid;
 
 use crate::routes::album::fetch_album_info;
 use crate::routes::artist::fetch_artist_info;
 use crate::routes::song::fetch_song_info;
 use crate::structures::structures::Artist;
-use crate::utils::config::get_config;
+use crate::utils::config::{get_config, is_docker};
 use crate::utils::database::database::establish_connection;
 use crate::utils::database::models::{NewSearchItem, SearchItem};
 
@@ -54,8 +56,15 @@ fn extract_acronym(name: &str) -> String {
     }
 }
 
-pub async fn populate_search_data() -> Result<Vec<CombinedItem>, Box<dyn std::error::Error>> {
-    let config = get_config().await?;
+pub async fn populate_search_data() -> Result<Vec<CombinedItem>, Box<dyn Error + Send + Sync>> {
+    let config = match get_config().await {
+        Ok(config) => config,
+        Err(_e) => {
+            let no_config = "Meilisearch could not populate the search data! This is expected if the library has not been indexed yet or music.json file is not present.";
+            return Err(no_config.to_string().into());
+        }
+    };
+
     let library: Vec<Artist> = serde_json::from_str(&config)?;
 
     let generated_ids = Arc::new(Mutex::new(HashSet::new()));
@@ -373,13 +382,20 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
 }
 
 pub fn get_meilisearch_path() -> PathBuf {
-    let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
-    path.push("ParsonLabs");
-    path.push("Music");
-    path.push("Meilisearch");
+    let path = if is_docker() {
+        Path::new("/ParsonLabsMusic/Meilisearch").to_path_buf()
+    } else {
+        let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
+        path.push("ParsonLabs");
+        path.push("Music");
+        path.push("Meilisearch");
+        path
+    };
+
     if let Err(e) = fs::create_dir_all(&path) {
         eprintln!("Failed to create directories: {}", e);
     }
+
     path
 }
 
@@ -388,18 +404,18 @@ pub async fn ensure_meilisearch_is_installed() -> Result<(), Box<dyn std::error:
     let (meilisearch_binary, url) = match std::env::consts::OS {
         "windows" => (
             base_dir.join("meilisearch-windows-amd64.exe"),
-            "https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-windows-amd64.exe",
+            "https://github.com/meilisearch/meilisearch/releases/latest/download/meilisearch-windows-amd64.exe",
         ),
         "macos" => {
             if std::env::consts::ARCH == "aarch64" {
                 (
                     base_dir.join("meilisearch-macos-apple-silicon"),
-                    "https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-macos-apple-silicon",
+                    "https://github.com/meilisearch/meilisearch/releases/latest/download/meilisearch-macos-apple-silicon",
                 )
             } else {
                 (
                     base_dir.join("meilisearch-macos-amd64"),
-                    "https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-macos-amd64",
+                    "https://github.com/meilisearch/meilisearch/releases/latest/download/meilisearch-macos-amd64",
                 )
             }
         }
@@ -407,12 +423,12 @@ pub async fn ensure_meilisearch_is_installed() -> Result<(), Box<dyn std::error:
             if std::env::consts::ARCH == "aarch64" {
                 (
                     base_dir.join("meilisearch-linux-aarch64"),
-                    "https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-linux-aarch64",
+                    "https://github.com/meilisearch/meilisearch/releases/latest/download/meilisearch-linux-aarch64",
                 )
             } else {
                 (
                     base_dir.join("meilisearch-linux-amd64"),
-                    "https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-linux-amd64",
+                    "https://github.com/meilisearch/meilisearch/releases/latest/download/meilisearch-linux-amd64",
                 )
             }
         }
@@ -425,6 +441,13 @@ pub async fn ensure_meilisearch_is_installed() -> Result<(), Box<dyn std::error:
     if !meilisearch_binary.exists() {
         println!("Downloading Meilisearch from {}...", url);
         download_file(url, &meilisearch_binary).await?;
+
+        #[cfg(unix)]
+        {
+            let mut perms = fs::metadata(&meilisearch_binary)?.permissions();
+            perms.set_mode(0o755); // rwxr-xr-x
+            fs::set_permissions(&meilisearch_binary, perms)?;
+        }
     }
 
     run_meilisearch(&meilisearch_binary).await;
@@ -432,10 +455,44 @@ pub async fn ensure_meilisearch_is_installed() -> Result<(), Box<dyn std::error:
 }
 
 async fn download_file(url: &str, dest: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    let response = get(url).await?;
-    let bytes = response.bytes().await?;
-    let mut file = File::create(dest)?;
-    file.write_all(&bytes)?;
+    println!("Starting download from {}", url);
+
+    let response = match get(url).await {
+        Ok(resp) => resp,
+        Err(e) => {
+            eprintln!("Failed to send request: {} ({:?})", e, e);
+            return Err(Box::new(e));
+        }
+    };
+
+    if !response.status().is_success() {
+        let status = response.status();
+        eprintln!("Failed to download file: HTTP {}", status);
+        return Err(format!("Failed to download file: HTTP {}", status).into());
+    }
+
+    let bytes = match response.bytes().await {
+        Ok(b) => b,
+        Err(e) => {
+            eprintln!("Failed to read response bytes: {} ({:?})", e, e);
+            return Err(Box::new(e));
+        }
+    };
+
+    let mut file = match File::create(dest) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("Failed to create file: {} ({:?})", e, e);
+            return Err(Box::new(e));
+        }
+    };
+
+    if let Err(e) = file.write_all(&bytes) {
+        eprintln!("Failed to write to file: {} ({:?})", e, e);
+        return Err(Box::new(e));
+    }
+
+    println!("Download completed successfully");
     Ok(())
 }
 
