@@ -2,7 +2,7 @@
 members = [
   "apps/web/src-tauri",
   "crates/backend",
-  "crates/release"
+  # "crates/release"
 ]
 
 resolver = "2"
