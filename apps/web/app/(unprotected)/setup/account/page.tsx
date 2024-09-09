@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { register } from "@music/sdk"
+import { login, register } from "@music/sdk"
 import { Button } from "@music/ui/components/button"
 import {
   Form,
@@ -36,7 +36,8 @@ export default function Register() {
 const { push } = useRouter()
  
 async function onSubmit(values: z.infer<typeof registerSchema>) {
-  let loginData = await register({ username: values.username, password: values.password, role: "admin" })
+  await register({ username: values.username, password: values.password, role: "admin" })
+  await login({ username: values.username, password: values.password, role: "admin" })
   push("/setup/library")
 }
 
