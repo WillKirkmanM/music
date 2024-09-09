@@ -12,7 +12,7 @@ import ReactPlayer from 'react-player/youtube';
 import { usePlayer } from './usePlayer';
 
 export type VideoPlayerDialogProps = {
-  url: string;
+  url: string | undefined;
 };
 
 export default function VideoPlayerDialog({ url }: VideoPlayerDialogProps) {
@@ -22,7 +22,7 @@ export default function VideoPlayerDialog({ url }: VideoPlayerDialogProps) {
   const playerRef = useRef<ReactPlayer>(null);
   const hasUpdatedTimeRef = useRef(false);
 
-  useEffect(() => {
+   useEffect(() => {
     if (isPlaying && isDialogOpen) {
       togglePlayPause();
     }
@@ -67,14 +67,14 @@ export default function VideoPlayerDialog({ url }: VideoPlayerDialogProps) {
         <div className="flex items-center space-x-2 h-full rounded-sm">
           <ReactPlayer 
             ref={playerRef}
-            url={url}
             controls
             width="100%"
-            height={500}
+            height={400}
             pip={true}
             playing={isDialogOpen}
             onReady={handleReady}
             onProgress={handleProgress}
+            url={url}
           />
         </div>
         <DialogFooter className="sm:justify-start">
