@@ -1,28 +1,15 @@
-version: '3'
+version: '3.8'
+
 services:
-  frontend:
-    build:
-      context: .
-      dockerfile: ./docker/production/Dockerfile.frontend
+  music-server:
+    image: ghcr.io/willkirkmanm/music
+    container_name: parsonlabs-music
     ports:
-      - "3000:3000"
+      - "1993:1993"
+      - "7700:7700"
     volumes:
-      - MEDIA_PATH:/Music
-      - MISSING_COVER_ART_PATH:/missing_cover_art
-      - CONFIG_PATH:/Config
+      - "C:/Users/willi/Desktop/plm:/ParsonLabsMusic"
+      - "C:/Users/willi/Desktop/ParsonLabs Music/tpab:/music"
     environment:
-      - BACKEND_PORT=3001
-      - NEXTAUTH_SECRET=SALKDNAKFB@!WQ#
-      - NEXTAUTH_URL=http://localhost:3000
-      - NODE_ENV=production
-      - DEPLOYMENT_TYPE=docker
-  backend:
-    build:
-      context: .
-      dockerfile: ./docker/production/Dockerfile.backend
-    ports:
-      - "3001:3001"
-    volumes:
-      - MEDIA_PATH:/Music
-      - MISSING_COVER_ART_PATH:/missing_cover_art
-      - CONFIG_PATH:/Config
+      - JWT_SECRET=your_auth_secret_here
+    restart: unless-stopped
