@@ -5,12 +5,14 @@ use std::path::Path;
 use std::process::Stdio;
 use std::time::Instant;
 
+use actix_web::body::BodyStream;
 use actix_web::http::header;
 use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
 use futures::stream::StreamExt;
 use lofty::AudioFile;
 use serde::Deserialize;
 use tokio::fs;
+use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tokio::process::Command;
 use tokio_util::io::ReaderStream;
 use tracing::{info, warn};
@@ -171,10 +173,10 @@ async fn stream_song(
     let song = path.into_inner();
     let bitrate = bitrate.into_inner().bitrate;
 
-    let file = fs::metadata(&song).await.unwrap();
+    let file = tokio::fs::metadata(&song).await.unwrap();
     let song_file_size = file.len();
 
-    let path = Path::new(&song);
+    let path = std::path::Path::new(&song);
 
     if !path.is_file() {
         panic!("ERROR: Path is not a file!");
@@ -201,15 +203,15 @@ async fn stream_song(
     };
 
     let content_range = format!("bytes {}-{}/{}", start, end, song_file_size);
-    let content_length = (end - start + 1).to_string();
+    use actix_web::web::Bytes;
 
     if bitrate == 0 {
-        let mut file = File::open(&song).unwrap();
+        let mut file = tokio::fs::File::open(&song).await.unwrap();
         let mut buffer = vec![0; (end - start + 1) as usize];
-        file.seek(SeekFrom::Start(start)).unwrap();
-        file.read_exact(&mut buffer).unwrap();
+        file.seek(tokio::io::SeekFrom::Start(start)).await.unwrap();
+        file.read_exact(&mut buffer).await.unwrap();
 
-        let extension = path.extension().and_then(OsStr::to_str);
+        let extension = path.extension().and_then(std::ffi::OsStr::to_str);
         let mime_type = match extension {
             Some("mp3") => "audio/mpeg",
             Some("flac") => "audio/flac",
@@ -222,38 +224,31 @@ async fn stream_song(
         HttpResponse::PartialContent()
             .append_header((header::CONTENT_TYPE, mime_type))
             .append_header((header::CONTENT_RANGE, content_range))
-            .append_header((header::CONTENT_LENGTH, content_length))
-            .body(buffer)
-    } else {
-        let audio_bitrate = tagged_file.properties().audio_bitrate().unwrap() as f64 * 1000.0 / 8.0;
-        let start_time = (start) as f64 / audio_bitrate;
-        let duration = (end - start) as f64 / audio_bitrate;
-
+            .body(Bytes::from(buffer))
+       } else {
+        let audio_bitrate = (tagged_file.properties().audio_bitrate().unwrap() * 1000 / 8) as u64;
+        let start_time = start / audio_bitrate;
+        let duration = (end - start + 1) / audio_bitrate;
+    
         let mut command = Command::new("ffmpeg")
-            .args([
-                "-ss",
-                &start_time.to_string(),
-                "-t",
-                &duration.to_string(),
-                "-i",
-                &song,
-                "-af",
-                "loudnorm=I=-14:LRA=11:TP=-1",
-                "-ab",
-                &format!("{}k", bitrate),
-                "-f",
-                "mp3",
+            .args(&[
+                "-ss", &start_time.to_string(),
+                "-t", &duration.to_string(),
+                "-i", &song,
+                "-af", "loudnorm=I=-14:LRA=11:TP=-1",
+                "-ab", &format!("{}k", bitrate),
+                "-f", "mp3",
                 "pipe:1",
             ])
             .stdout(Stdio::piped())
             .spawn()
             .expect("Failed to start ffmpeg process");
-
+    
         let stdout = command
             .stdout
             .take()
             .expect("Failed to take stdout of ffmpeg");
-
+    
         let stream = ReaderStream::new(stdout);
         let body_stream = stream.map(|result| {
             result.map(|bytes| bytes.into()).map_err(|e| {
@@ -261,12 +256,15 @@ async fn stream_song(
                 actix_web::error::ErrorInternalServerError(e)
             })
         });
-
-        HttpResponse::Ok()
+    
+        let new_content_length = (duration * bitrate as u64 * 1000 / 8) as u64;
+        let new_end = start + new_content_length - 1;
+        let new_content_range = format!("bytes {}-{}/{}", start, new_end, new_content_length);
+    
+        HttpResponse::PartialContent()
             .append_header((header::CONTENT_TYPE, "audio/mpeg"))
-            .append_header((header::CONTENT_RANGE, content_range))
-            .append_header((header::CONTENT_LENGTH, content_length))
-            .streaming(body_stream)
+            .append_header((header::CONTENT_RANGE, new_content_range))
+            .body(BodyStream::new(body_stream))
     }
 }
 
