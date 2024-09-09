@@ -41,7 +41,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
 }
 
 pub async fn get_config() -> Result<String, Box<dyn Error>> {
-    let config_path = get_config_path().await;
+    let config_path = get_config_path();
 
     let mut file = File::open(config_path).await?;
     let mut contents = String::new();
@@ -50,24 +50,29 @@ pub async fn get_config() -> Result<String, Box<dyn Error>> {
     Ok(contents)
 }
 
-pub async fn get_config_path() -> PathBuf {
-    if is_docker() {
-        return Path::new("/ParsonLabsMusic/Config/music.json").to_path_buf()
+pub fn get_config_path() -> PathBuf {
+    let path = if is_docker() {
+        Path::new("/ParsonLabsMusic/Config/music.json").to_path_buf()
+    } else {
+        let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
+        path.push("ParsonLabs");
+        path.push("Music");
+        path.push("Config");
+        path.push("music.json");
+        path
+    };
+
+    if let Some(parent) = path.parent() {
+        if let Err(e) = fs::create_dir_all(parent) {
+            eprintln!("Failed to create directories: {}", e);
+        }
     }
 
-    let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
-    path.push("ParsonLabs");
-    path.push("Music");
-    path.push("Config");
-    if let Err(e) = fs::create_dir_all(&path) {
-        eprintln!("Failed to create directories: {}", e);
-    }
-    path.push("music.json");
     path
 }
 
 pub async fn save_config(indexed_json: &String) -> std::io::Result<()> {
-  let config_path = get_config_path().await;
+  let config_path = get_config_path();
   let config_dir = config_path.parent().unwrap();
   let config_filename = config_path.file_stem().unwrap().to_str().unwrap();
   let config_extension = config_path.extension().unwrap().to_str().unwrap();
@@ -91,48 +96,63 @@ pub async fn save_config(indexed_json: &String) -> std::io::Result<()> {
 }
 
 pub fn get_icon_art_path() -> PathBuf {
-    if is_docker() {
+    let path = if is_docker() {
         Path::new("/ParsonLabsMusic/Artist Icons").to_path_buf()
     } else {
         let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
         path.push("ParsonLabs");
         path.push("Music");
         path.push("Artist Icons");
-        if let Err(e) = fs::create_dir_all(&path) {
+        path
+    };
+
+    if let Some(parent) = path.parent() {
+        if let Err(e) = fs::create_dir_all(parent) {
             eprintln!("Failed to create directories: {}", e);
         }
-        path
     }
+
+    path
 }
 
 pub fn get_cover_art_path() -> PathBuf {
-    if is_docker() {
+    let path = if is_docker() {
         Path::new("/ParsonLabsMusic/Album Covers").to_path_buf()
     } else {
         let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
         path.push("ParsonLabs");
         path.push("Music");
         path.push("Album Covers");
-        if let Err(e) = fs::create_dir_all(&path) {
+        path
+    };
+
+    if let Some(parent) = path.parent() {
+        if let Err(e) = fs::create_dir_all(parent) {
             eprintln!("Failed to create directories: {}", e);
         }
-        path
     }
+
+    path
 }
 
 pub fn get_profile_picture_path() -> PathBuf {
-    if is_docker() {
+    let path = if is_docker() {
         Path::new("/ParsonLabsMusic/Profile Pictures").to_path_buf()
     } else {
         let mut path = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
         path.push("ParsonLabs");
         path.push("Music");
         path.push("Profile Pictures");
-        if let Err(e) = fs::create_dir_all(&path) {
+        path
+    };
+
+    if let Some(parent) = path.parent() {
+        if let Err(e) = fs::create_dir_all(parent) {
             eprintln!("Failed to create directories: {}", e);
         }
-        path
     }
+
+    path
 }
 
 pub fn get_jwt_secret() -> String {
