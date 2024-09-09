@@ -32,7 +32,7 @@ export default function SettingsPage() {
     },
   })
 
-  const [file, setFile] = useState<File | null>(null)
+  const [file, setFile] = useState(null)
   const [message, setMessage] = useState<string | null>(null)
   const [profilePicture, setProfilePicture] = useState<string | null>(null)
   const [username, setUsername] = useState<string>("")
@@ -70,10 +70,12 @@ export default function SettingsPage() {
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0] || null
-    setFile(selectedFile)
-    if (selectedFile) {
-      setProfilePicture(URL.createObjectURL(selectedFile))
+    if (typeof window !== 'undefined' && window.File) {
+      const selectedFile: File | null = e.target.files?.[0] || null;
+      setFile(selectedFile as any);
+      if (selectedFile) {
+        setProfilePicture(URL.createObjectURL(selectedFile));
+      }
     }
   }
 
