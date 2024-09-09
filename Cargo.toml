@@ -1,7 +1,8 @@
 [workspace]
 members = [
+  "apps/web/src-tauri",
   "crates/backend",
-  "apps/web/src-tauri"
+  "crates/release"
 ]
 
 resolver = "2"
